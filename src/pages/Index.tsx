@@ -17,7 +17,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { getServicePrice, getSupplyPrice, loading: pricingLoading } = usePricing();
-  const { supplies, loading: suppliesLoading } = useSupplies();
+  const { supplies: dbSupplies, loading: suppliesLoading } = useSupplies();
   const { saveDailySales, loadDailySales, loading: salesLoading } = useSalesRecords();
 
   // Move all useState hooks to the top, before any conditional returns
@@ -28,7 +28,7 @@ const Index = () => {
     bwPrints: { yesterday: 0, today: 0 }
   });
 
-  const [supplies, setSupplies] = React.useState({
+  const [suppliesData, setSuppliesData] = React.useState({
     coloredFolders: { startStock: 0, endStock: 0 },
     radiographicEnvelopes: { startStock: 0, endStock: 0 }
   });
@@ -42,7 +42,7 @@ const Index = () => {
           setServices(prev => ({ ...prev, ...salesData.services }));
         }
         if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
-          setSupplies(prev => ({ ...prev, ...salesData.supplies }));
+          setSuppliesData(prev => ({ ...prev, ...salesData.supplies }));
         }
       }
     };
@@ -51,16 +51,16 @@ const Index = () => {
 
   // Update supplies state when dynamic supplies are loaded
   React.useEffect(() => {
-    if (supplies?.length > 0) {
+    if (dbSupplies?.length > 0) {
       const dynamicSupplies = {};
-      supplies.forEach(supply => {
+      dbSupplies.forEach(supply => {
         if (supply.supply_name) {
-          dynamicSupplies[supply.supply_name] = supplies[supply.supply_name] || { startStock: 0, endStock: 0 };
+          dynamicSupplies[supply.supply_name] = suppliesData[supply.supply_name] || { startStock: 0, endStock: 0 };
         }
       });
-      setSupplies(prev => ({ ...prev, ...dynamicSupplies }));
+      setSuppliesData(prev => ({ ...prev, ...dynamicSupplies }));
     }
-  }, [supplies]);
+  }, [dbSupplies]);
 
   // Now the conditional returns come after all hooks
   if (authLoading || pricingLoading || suppliesLoading) {
@@ -89,7 +89,7 @@ const Index = () => {
   };
 
   const updateSupply = (supplyId: string, field: string, value: number) => {
-    setSupplies(prev => ({
+    setSuppliesData(prev => ({
       ...prev,
       [supplyId]: {
         ...prev[supplyId],
@@ -115,7 +115,7 @@ const Index = () => {
       calculateServiceTotal(services.colorPrints, getServicePrice('color_prints')) +
       calculateServiceTotal(services.bwPrints, getServicePrice('bw_prints'));
     
-    const supplyTotal = Object.entries(supplies).reduce((total, [supplyName, supplyData]) => {
+    const supplyTotal = Object.entries(suppliesData).reduce((total, [supplyName, supplyData]) => {
       return total + calculateSupplyTotal(supplyData, getSupplyPrice(supplyName));
     }, 0);
     
@@ -131,11 +131,11 @@ const Index = () => {
     };
 
     const supplyPrices = {};
-    Object.keys(supplies).forEach(supplyName => {
+    Object.keys(suppliesData).forEach(supplyName => {
       supplyPrices[supplyName] = getSupplyPrice(supplyName);
     });
 
-    await saveDailySales(services, supplies, servicePrices, supplyPrices);
+    await saveDailySales(services, suppliesData, servicePrices, supplyPrices);
   };
 
   return (
@@ -233,10 +233,10 @@ const Index = () => {
                   icon="file"
                   iconColor="text-blue-500"
                   backgroundColor="bg-blue-50"
-                  supply={supplies.coloredFolders}
+                  supply={suppliesData.coloredFolders}
                   onUpdate={(field, value) => updateSupply('coloredFolders', field, value)}
-                  total={calculateSupplyTotal(supplies.coloredFolders, getSupplyPrice('coloredFolders'))}
-                  sold={Math.max(0, supplies.coloredFolders.startStock - supplies.coloredFolders.endStock)}
+                  total={calculateSupplyTotal(suppliesData.coloredFolders, getSupplyPrice('coloredFolders'))}
+                  sold={Math.max(0, suppliesData.coloredFolders.startStock - suppliesData.coloredFolders.endStock)}
                   price={getSupplyPrice('coloredFolders')}
                 />
                 
@@ -245,15 +245,15 @@ const Index = () => {
                   icon="file"
                   iconColor="text-green-500"
                   backgroundColor="bg-green-50"
-                  supply={supplies.radiographicEnvelopes}
+                  supply={suppliesData.radiographicEnvelopes}
                   onUpdate={(field, value) => updateSupply('radiographicEnvelopes', field, value)}
-                  total={calculateSupplyTotal(supplies.radiographicEnvelopes, getSupplyPrice('radiographicEnvelopes'))}
-                  sold={Math.max(0, supplies.radiographicEnvelopes.startStock - supplies.radiographicEnvelopes.endStock)}
+                  total={calculateSupplyTotal(suppliesData.radiographicEnvelopes, getSupplyPrice('radiographicEnvelopes'))}
+                  sold={Math.max(0, suppliesData.radiographicEnvelopes.startStock - suppliesData.radiographicEnvelopes.endStock)}
                   price={getSupplyPrice('radiographicEnvelopes')}
                 />
 
                 {/* Dynamic supplies from database */}
-                {supplies.filter(s => s.supply_name && 
+                {dbSupplies?.filter(s => s.supply_name && 
                   !['coloredFolders', 'radiographicEnvelopes'].includes(s.supply_name)
                 ).map((supply, index) => (
                   <SupplyCard
@@ -262,10 +262,10 @@ const Index = () => {
                     icon="file"
                     iconColor="text-purple-500"
                     backgroundColor="bg-purple-50"
-                    supply={supplies[supply.supply_name!] || { startStock: 0, endStock: 0 }}
+                    supply={suppliesData[supply.supply_name!] || { startStock: 0, endStock: 0 }}
                     onUpdate={(field, value) => updateSupply(supply.supply_name!, field, value)}
-                    total={calculateSupplyTotal(supplies[supply.supply_name!] || { startStock: 0, endStock: 0 }, supply.unit_price)}
-                    sold={Math.max(0, (supplies[supply.supply_name!]?.startStock || 0) - (supplies[supply.supply_name!]?.endStock || 0))}
+                    total={calculateSupplyTotal(suppliesData[supply.supply_name!] || { startStock: 0, endStock: 0 }, supply.unit_price)}
+                    sold={Math.max(0, (suppliesData[supply.supply_name!]?.startStock || 0) - (suppliesData[supply.supply_name!]?.endStock || 0))}
                     price={supply.unit_price}
                   />
                 ))}

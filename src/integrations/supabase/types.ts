@@ -9,6 +9,64 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      fotocopiadoras: {
+        Row: {
+          id: string
+          nombre: string | null
+          ubicacion: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: string
+          nombre?: string | null
+          ubicacion?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: string
+          nombre?: string | null
+          ubicacion?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotocopiadoras_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      insumos: {
+        Row: {
+          id: string
+          nombre: string
+          precio: number
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          precio: number
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: string
+          nombre?: string
+          precio?: number
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insumos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       machines: {
         Row: {
           created_at: string | null
@@ -40,6 +98,35 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      precios: {
+        Row: {
+          id: string
+          precio: number | null
+          tipo: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: string
+          precio?: number | null
+          tipo?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: string
+          precio?: number | null
+          tipo?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
@@ -224,6 +311,81 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      usuarios: {
+        Row: {
+          email: string
+          id: string
+          nombre: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          nombre?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          nombre?: string | null
+        }
+        Relationships: []
+      }
+      ventas: {
+        Row: {
+          cantidad: number | null
+          fecha: string
+          fotocopiadora_id: string | null
+          id: string
+          nombre_insumo: string | null
+          precio_unitario: number | null
+          tipo: string | null
+          total: number | null
+          usuario_id: string | null
+          valor_actual: number | null
+          valor_anterior: number | null
+        }
+        Insert: {
+          cantidad?: number | null
+          fecha: string
+          fotocopiadora_id?: string | null
+          id?: string
+          nombre_insumo?: string | null
+          precio_unitario?: number | null
+          tipo?: string | null
+          total?: number | null
+          usuario_id?: string | null
+          valor_actual?: number | null
+          valor_anterior?: number | null
+        }
+        Update: {
+          cantidad?: number | null
+          fecha?: string
+          fotocopiadora_id?: string | null
+          id?: string
+          nombre_insumo?: string | null
+          precio_unitario?: number | null
+          tipo?: string | null
+          total?: number | null
+          usuario_id?: string | null
+          valor_actual?: number | null
+          valor_anterior?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ventas_fotocopiadora_id_fkey"
+            columns: ["fotocopiadora_id"]
+            isOneToOne: false
+            referencedRelation: "fotocopiadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ventas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

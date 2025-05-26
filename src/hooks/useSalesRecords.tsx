@@ -8,7 +8,7 @@ export interface SalesRecord {
   id?: string;
   machine_id: string;
   date: string;
-  service_type: string;
+  service_type: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints';
   previous_value: number;
   current_value: number;
   unit_price: number;
@@ -70,10 +70,10 @@ export const useSalesRecords = () => {
       }
 
       // Save service records
-      const serviceRecords: SalesRecord[] = [];
+      const serviceRecords: Omit<SalesRecord, 'id'>[] = [];
       Object.entries(services).forEach(([serviceKey, serviceData]: [string, any]) => {
         if (serviceData.today > 0 || serviceData.yesterday > 0) {
-          const serviceType = serviceKey.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+          const serviceType = serviceKey.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '') as 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints';
           serviceRecords.push({
             machine_id: machineId,
             date: today,
@@ -96,7 +96,7 @@ export const useSalesRecords = () => {
       }
 
       // Save supply records
-      const supplyRecords: SupplySalesRecord[] = [];
+      const supplyRecords: Omit<SupplySalesRecord, 'id'>[] = [];
       Object.entries(supplies).forEach(([supplyKey, supplyData]: [string, any]) => {
         if (supplyData.startStock > 0 || supplyData.endStock > 0) {
           supplyRecords.push({

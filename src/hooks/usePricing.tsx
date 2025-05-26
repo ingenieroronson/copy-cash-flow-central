@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface PricingData {
   id: string;
-  service_type?: string;
+  service_type?: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints';
   supply_name?: string;
   unit_price: number;
 }
@@ -47,7 +47,7 @@ export const usePricing = () => {
     }
   }, [user]);
 
-  const getServicePrice = (serviceType: string) => {
+  const getServicePrice = (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints') => {
     const priceData = pricing.find(p => p.service_type === serviceType);
     return priceData?.unit_price || 0;
   };
@@ -57,7 +57,7 @@ export const usePricing = () => {
     return priceData?.unit_price || 0;
   };
 
-  const updateServicePrice = async (serviceType: string, price: number) => {
+  const updateServicePrice = async (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints', price: number) => {
     if (!user) return;
 
     try {
