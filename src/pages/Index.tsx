@@ -28,10 +28,7 @@ const Index = () => {
     bwPrints: { yesterday: 0, today: 0 }
   });
 
-  const [suppliesData, setSuppliesData] = React.useState({
-    coloredFolders: { startStock: 0, endStock: 0 },
-    radiographicEnvelopes: { startStock: 0, endStock: 0 }
-  });
+  const [suppliesData, setSuppliesData] = React.useState<Record<string, { startStock: number; endStock: number }>>({});
 
   // Load existing sales data when component mounts
   React.useEffect(() => {
@@ -52,7 +49,7 @@ const Index = () => {
   // Update supplies state when dynamic supplies are loaded
   React.useEffect(() => {
     if (dbSupplies?.length > 0) {
-      const dynamicSupplies = {};
+      const dynamicSupplies: Record<string, { startStock: number; endStock: number }> = {};
       dbSupplies.forEach(supply => {
         if (supply.supply_name) {
           dynamicSupplies[supply.supply_name] = suppliesData[supply.supply_name] || { startStock: 0, endStock: 0 };
@@ -130,7 +127,7 @@ const Index = () => {
       bw_prints: getServicePrice('bw_prints')
     };
 
-    const supplyPrices = {};
+    const supplyPrices: Record<string, number> = {};
     Object.keys(suppliesData).forEach(supplyName => {
       supplyPrices[supplyName] = getSupplyPrice(supplyName);
     });
@@ -226,50 +223,35 @@ const Index = () => {
             {/* Supply Sales */}
             <div>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Ventas de Suministros</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {/* Static supplies */}
-                <SupplyCard
-                  title="Carpetas de colores"
-                  icon="file"
-                  iconColor="text-blue-500"
-                  backgroundColor="bg-blue-50"
-                  supply={suppliesData.coloredFolders}
-                  onUpdate={(field, value) => updateSupply('coloredFolders', field, value)}
-                  total={calculateSupplyTotal(suppliesData.coloredFolders, getSupplyPrice('coloredFolders'))}
-                  sold={Math.max(0, suppliesData.coloredFolders.startStock - suppliesData.coloredFolders.endStock)}
-                  price={getSupplyPrice('coloredFolders')}
-                />
-                
-                <SupplyCard
-                  title="Sobres radiográficos"
-                  icon="file"
-                  iconColor="text-green-500"
-                  backgroundColor="bg-green-50"
-                  supply={suppliesData.radiographicEnvelopes}
-                  onUpdate={(field, value) => updateSupply('radiographicEnvelopes', field, value)}
-                  total={calculateSupplyTotal(suppliesData.radiographicEnvelopes, getSupplyPrice('radiographicEnvelopes'))}
-                  sold={Math.max(0, suppliesData.radiographicEnvelopes.startStock - suppliesData.radiographicEnvelopes.endStock)}
-                  price={getSupplyPrice('radiographicEnvelopes')}
-                />
-
-                {/* Dynamic supplies from database */}
-                {dbSupplies?.filter(s => s.supply_name && 
-                  !['coloredFolders', 'radiographicEnvelopes'].includes(s.supply_name)
-                ).map((supply, index) => (
-                  <SupplyCard
-                    key={supply.id}
-                    title={supply.supply_name || 'Suministro'}
-                    icon="file"
-                    iconColor="text-purple-500"
-                    backgroundColor="bg-purple-50"
-                    supply={suppliesData[supply.supply_name!] || { startStock: 0, endStock: 0 }}
-                    onUpdate={(field, value) => updateSupply(supply.supply_name!, field, value)}
-                    total={calculateSupplyTotal(suppliesData[supply.supply_name!] || { startStock: 0, endStock: 0 }, supply.unit_price)}
-                    sold={Math.max(0, (suppliesData[supply.supply_name!]?.startStock || 0) - (suppliesData[supply.supply_name!]?.endStock || 0))}
-                    price={supply.unit_price}
-                  />
-                ))}
-              </div>
+              {dbSupplies && dbSupplies.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {dbSupplies.map((supply, index) => (
+                    <SupplyCard
+                      key={supply.id}
+                      title={supply.supply_name || 'Suministro'}
+                      icon="file"
+                      iconColor="text-purple-500"
+                      backgroundColor="bg-purple-50"
+                      supply={suppliesData[supply.supply_name!] || { startStock: 0, endStock: 0 }}
+                      onUpdate={(field, value) => updateSupply(supply.supply_name!, field, value)}
+                      total={calculateSupplyTotal(suppliesData[supply.supply_name!] || { startStock: 0, endStock: 0 }, supply.unit_price)}
+                      sold={Math.max(0, (suppliesData[supply.supply_name!]?.startStock || 0) - (suppliesData[supply.supply_name!]?.endStock || 0))}
+                      price={supply.unit_price}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                  <p className="text-gray-500 text-lg mb-4">No hay suministros configurados</p>
+                  <Button
+                    onClick={() => navigate('/settings')}
+                    variant="outline"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Ir a Configuración
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Summary */}

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +54,7 @@ const Settings = () => {
     return <AuthForm />;
   }
 
-  const handleServicePriceUpdate = async (serviceType: string, price: number) => {
+  const handleServicePriceUpdate = async (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints', price: number) => {
     try {
       await updateServicePrice(serviceType, price);
       toast({
@@ -86,10 +87,10 @@ const Settings = () => {
   };
 
   const handleAddSupply = async () => {
-    if (!newSupply.name.trim() || newSupply.price <= 0) {
+    if (!newSupply.name.trim()) {
       toast({
         title: "Error",
-        description: "Por favor ingresa un nombre y precio válidos.",
+        description: "Por favor ingresa un nombre válido.",
         variant: "destructive",
       });
       return;
@@ -271,44 +272,48 @@ const Settings = () => {
                 {/* Existing Supplies */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Suministros Existentes</h3>
-                  <div className="space-y-3">
-                    {supplies.map((supply) => (
-                      <div key={supply.id} className="flex flex-col sm:flex-row gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <Input
-                            value={supply.supply_name}
-                            onChange={(e) => updateSupply(supply.id, { supply_name: e.target.value })}
-                            placeholder="Nombre del suministro"
-                          />
+                  {supplies.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No hay suministros configurados. Agrega uno nuevo arriba.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {supplies.map((supply) => (
+                        <div key={supply.id} className="flex flex-col sm:flex-row gap-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <Input
+                              value={supply.supply_name || ''}
+                              onChange={(e) => updateSupply(supply.id, { supply_name: e.target.value })}
+                              placeholder="Nombre del suministro"
+                            />
+                          </div>
+                          <div className="w-full sm:w-32">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={supply.unit_price}
+                              onChange={(e) => updateSupply(supply.id, { unit_price: parseFloat(e.target.value) || 0 })}
+                              placeholder="Precio"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleSupplyPriceUpdate(supply.supply_name || '', supply.unit_price)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <Save className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteSupply(supply.supply_name || '')}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="w-full sm:w-32">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={supply.unit_price}
-                            onChange={(e) => updateSupply(supply.id, { unit_price: parseFloat(e.target.value) || 0 })}
-                            placeholder="Precio"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => handleSupplyPriceUpdate(supply.supply_name || '', supply.unit_price)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Save className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteSupply(supply.supply_name || '')}
-                            size="sm"
-                            variant="destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
