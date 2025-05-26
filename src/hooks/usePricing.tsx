@@ -57,11 +57,49 @@ export const usePricing = () => {
     return priceData?.unit_price || 0;
   };
 
+  const updateServicePrice = async (serviceType: string, price: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .update({ unit_price: price })
+        .eq('user_id', user.id)
+        .eq('service_type', serviceType);
+
+      if (error) throw error;
+      await fetchPricing();
+    } catch (error) {
+      console.error('Error updating service price:', error);
+      throw error;
+    }
+  };
+
+  const updateSupplyPrice = async (supplyName: string, price: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .update({ unit_price: price })
+        .eq('user_id', user.id)
+        .eq('supply_name', supplyName);
+
+      if (error) throw error;
+      await fetchPricing();
+    } catch (error) {
+      console.error('Error updating supply price:', error);
+      throw error;
+    }
+  };
+
   return {
     pricing,
     loading,
     getServicePrice,
     getSupplyPrice,
+    updateServicePrice,
+    updateSupplyPrice,
     refetch: fetchPricing,
   };
 };

@@ -5,12 +5,20 @@ import { SupplyCard } from '../components/SupplyCard';
 import { SummaryCard } from '../components/SummaryCard';
 import { Header } from '../components/Header';
 import { AuthForm } from '../components/AuthForm';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '../hooks/useAuth';
 import { usePricing } from '../hooks/usePricing';
+import { useSupplies } from '../hooks/useSupplies';
+import { useSalesRecords } from '../hooks/useSalesRecords';
+import { Save, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { getServicePrice, getSupplyPrice, loading: pricingLoading } = usePricing();
+  const { supplies, loading: suppliesLoading } = useSupplies();
+  const { saveDailySales, loadDailySales, loading: salesLoading } = useSalesRecords();
 
   // Move all useState hooks to the top, before any conditional returns
   const [services, setServices] = React.useState({
@@ -25,8 +33,37 @@ const Index = () => {
     radiographicEnvelopes: { startStock: 0, endStock: 0 }
   });
 
+  // Load existing sales data when component mounts
+  React.useEffect(() => {
+    const loadExistingSales = async () => {
+      if (user) {
+        const salesData = await loadDailySales();
+        if (salesData.services && Object.keys(salesData.services).length > 0) {
+          setServices(prev => ({ ...prev, ...salesData.services }));
+        }
+        if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
+          setSupplies(prev => ({ ...prev, ...salesData.supplies }));
+        }
+      }
+    };
+    loadExistingSales();
+  }, [user]);
+
+  // Update supplies state when dynamic supplies are loaded
+  React.useEffect(() => {
+    if (supplies?.length > 0) {
+      const dynamicSupplies = {};
+      supplies.forEach(supply => {
+        if (supply.supply_name) {
+          dynamicSupplies[supply.supply_name] = supplies[supply.supply_name] || { startStock: 0, endStock: 0 };
+        }
+      });
+      setSupplies(prev => ({ ...prev, ...dynamicSupplies }));
+    }
+  }, [supplies]);
+
   // Now the conditional returns come after all hooks
-  if (authLoading) {
+  if (authLoading || pricingLoading || suppliesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -78,11 +115,27 @@ const Index = () => {
       calculateServiceTotal(services.colorPrints, getServicePrice('color_prints')) +
       calculateServiceTotal(services.bwPrints, getServicePrice('bw_prints'));
     
-    const supplyTotal = 
-      calculateSupplyTotal(supplies.coloredFolders, getSupplyPrice('coloredFolders')) +
-      calculateSupplyTotal(supplies.radiographicEnvelopes, getSupplyPrice('radiographicEnvelopes'));
+    const supplyTotal = Object.entries(supplies).reduce((total, [supplyName, supplyData]) => {
+      return total + calculateSupplyTotal(supplyData, getSupplyPrice(supplyName));
+    }, 0);
     
     return serviceTotal + supplyTotal;
+  };
+
+  const handleSaveSales = async () => {
+    const servicePrices = {
+      color_copies: getServicePrice('color_copies'),
+      bw_copies: getServicePrice('bw_copies'),
+      color_prints: getServicePrice('color_prints'),
+      bw_prints: getServicePrice('bw_prints')
+    };
+
+    const supplyPrices = {};
+    Object.keys(supplies).forEach(supplyName => {
+      supplyPrices[supplyName] = getSupplyPrice(supplyName);
+    });
+
+    await saveDailySales(services, supplies, servicePrices, supplyPrices);
   };
 
   return (
@@ -91,8 +144,28 @@ const Index = () => {
       
       <div className="py-6 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <p className="text-xl text-gray-600">Calculadora de Ventas Diarias</p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div className="text-center sm:text-left">
+              <p className="text-xl text-gray-600">Calculadora de Ventas Diarias</p>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                onClick={() => navigate('/settings')}
+                variant="outline"
+                className="flex-1 sm:flex-none"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Configuración
+              </Button>
+              <Button
+                onClick={handleSaveSales}
+                disabled={salesLoading}
+                className="flex-1 sm:flex-none"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {salesLoading ? 'Guardando...' : 'Guardar Ventas'}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-8">
@@ -154,6 +227,7 @@ const Index = () => {
             <div>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Ventas de Suministros</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {/* Static supplies */}
                 <SupplyCard
                   title="Carpetas de colores"
                   icon="file"
@@ -177,6 +251,24 @@ const Index = () => {
                   sold={Math.max(0, supplies.radiographicEnvelopes.startStock - supplies.radiographicEnvelopes.endStock)}
                   price={getSupplyPrice('radiographicEnvelopes')}
                 />
+
+                {/* Dynamic supplies from database */}
+                {supplies.filter(s => s.supply_name && 
+                  !['coloredFolders', 'radiographicEnvelopes'].includes(s.supply_name)
+                ).map((supply, index) => (
+                  <SupplyCard
+                    key={supply.id}
+                    title={supply.supply_name || 'Suministro'}
+                    icon="file"
+                    iconColor="text-purple-500"
+                    backgroundColor="bg-purple-50"
+                    supply={supplies[supply.supply_name!] || { startStock: 0, endStock: 0 }}
+                    onUpdate={(field, value) => updateSupply(supply.supply_name!, field, value)}
+                    total={calculateSupplyTotal(supplies[supply.supply_name!] || { startStock: 0, endStock: 0 }, supply.unit_price)}
+                    sold={Math.max(0, (supplies[supply.supply_name!]?.startStock || 0) - (supplies[supply.supply_name!]?.endStock || 0))}
+                    price={supply.unit_price}
+                  />
+                ))}
               </div>
             </div>
 
