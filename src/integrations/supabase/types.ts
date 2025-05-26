@@ -9,7 +9,222 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      machines: {
+        Row: {
+          created_at: string | null
+          id: string
+          location: string | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machines_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          id: string
+          is_active: boolean | null
+          machine_id: string | null
+          service_type: Database["public"]["Enums"]["service_type"] | null
+          supply_name: string | null
+          unit_price: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          machine_id?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"] | null
+          supply_name?: string | null
+          unit_price: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          is_active?: boolean | null
+          machine_id?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"] | null
+          supply_name?: string | null
+          unit_price?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pricing_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_records: {
+        Row: {
+          created_at: string | null
+          current_value: number
+          date: string
+          id: string
+          machine_id: string
+          previous_value: number
+          quantity: number | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          total: number | null
+          unit_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number
+          date?: string
+          id?: string
+          machine_id: string
+          previous_value?: number
+          quantity?: number | null
+          service_type: Database["public"]["Enums"]["service_type"]
+          total?: number | null
+          unit_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number
+          date?: string
+          id?: string
+          machine_id?: string
+          previous_value?: number
+          quantity?: number | null
+          service_type?: Database["public"]["Enums"]["service_type"]
+          total?: number | null
+          unit_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_records_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supply_sales: {
+        Row: {
+          created_at: string | null
+          date: string
+          final_stock: number
+          id: string
+          initial_stock: number
+          quantity_sold: number | null
+          supply_name: string
+          total: number | null
+          unit_price: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          final_stock?: number
+          id?: string
+          initial_stock?: number
+          quantity_sold?: number | null
+          supply_name: string
+          total?: number | null
+          unit_price: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          final_stock?: number
+          id?: string
+          initial_stock?: number
+          quantity_sold?: number | null
+          supply_name?: string
+          total?: number | null
+          unit_price?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supply_sales_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          business_name: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_name?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +233,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      service_type: "color_copies" | "bw_copies" | "color_prints" | "bw_prints"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +348,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      service_type: ["color_copies", "bw_copies", "color_prints", "bw_prints"],
+    },
   },
 } as const
