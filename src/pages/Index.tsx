@@ -12,6 +12,20 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { getServicePrice, getSupplyPrice, loading: pricingLoading } = usePricing();
 
+  // Move all useState hooks to the top, before any conditional returns
+  const [services, setServices] = React.useState({
+    colorCopies: { yesterday: 0, today: 0 },
+    bwCopies: { yesterday: 0, today: 0 },
+    colorPrints: { yesterday: 0, today: 0 },
+    bwPrints: { yesterday: 0, today: 0 }
+  });
+
+  const [supplies, setSupplies] = React.useState({
+    coloredFolders: { startStock: 0, endStock: 0 },
+    radiographicEnvelopes: { startStock: 0, endStock: 0 }
+  });
+
+  // Now the conditional returns come after all hooks
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -26,19 +40,6 @@ const Index = () => {
   if (!user) {
     return <AuthForm />;
   }
-
-  // Mock data for now - will be connected to database later
-  const [services, setServices] = React.useState({
-    colorCopies: { yesterday: 0, today: 0 },
-    bwCopies: { yesterday: 0, today: 0 },
-    colorPrints: { yesterday: 0, today: 0 },
-    bwPrints: { yesterday: 0, today: 0 }
-  });
-
-  const [supplies, setSupplies] = React.useState({
-    coloredFolders: { startStock: 0, endStock: 0 },
-    radiographicEnvelopes: { startStock: 0, endStock: 0 }
-  });
 
   const updateService = (serviceId: string, field: string, value: number) => {
     setServices(prev => ({
