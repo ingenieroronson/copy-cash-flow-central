@@ -1,28 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
-
-export interface SalesRecord {
-  id?: string;
-  machine_id: string;
-  date: string;
-  service_type: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints';
-  previous_value: number;
-  current_value: number;
-  unit_price: number;
-}
-
-export interface SupplySalesRecord {
-  id?: string;
-  user_id: string;
-  date: string;
-  supply_name: string;
-  initial_stock: number;
-  final_stock: number;
-  unit_price: number;
-}
 
 export const useSalesRecords = () => {
   const [loading, setLoading] = useState(false);
@@ -31,7 +11,7 @@ export const useSalesRecords = () => {
 
   const saveDailySales = async (
     services: any,
-    supplies: any,
+    suppliesData: any,
     servicePrices: any,
     supplyPrices: any
   ) => {
@@ -40,82 +20,112 @@ export const useSalesRecords = () => {
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
+
+      // Save service records to ventas table
+      const serviceRecords = [];
       
-      // Get user's default machine (create one if doesn't exist)
-      let { data: machines, error: machinesError } = await supabase
-        .from('machines')
-        .select('*')
-        .eq('user_id', user.id)
-        .limit(1);
-
-      if (machinesError) throw machinesError;
-
-      let machineId;
-      if (!machines || machines.length === 0) {
-        // Create default machine
-        const { data: newMachine, error: createError } = await supabase
-          .from('machines')
-          .insert({
-            user_id: user.id,
-            name: 'Máquina Principal',
-            location: 'Local'
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        machineId = newMachine.id;
-      } else {
-        machineId = machines[0].id;
-      }
-
-      // Save service records
-      const serviceRecords: Omit<SalesRecord, 'id'>[] = [];
-      Object.entries(services).forEach(([serviceKey, serviceData]: [string, any]) => {
-        if (serviceData.today > 0 || serviceData.yesterday > 0) {
-          const serviceType = serviceKey.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '') as 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints';
+      // Color copies
+      if (services.colorCopies && (services.colorCopies.today > 0 || services.colorCopies.yesterday > 0)) {
+        const cantidad = Math.max(0, services.colorCopies.today - services.colorCopies.yesterday);
+        if (cantidad > 0) {
           serviceRecords.push({
-            machine_id: machineId,
-            date: today,
-            service_type: serviceType,
-            previous_value: serviceData.yesterday,
-            current_value: serviceData.today,
-            unit_price: servicePrices[serviceType] || 0
+            usuario_id: user.id,
+            fecha: today,
+            tipo: 'copias_color',
+            cantidad: cantidad,
+            precio_unitario: servicePrices.color_copies || 0,
+            total: cantidad * (servicePrices.color_copies || 0),
+            valor_anterior: services.colorCopies.yesterday,
+            valor_actual: services.colorCopies.today
           });
         }
-      });
+      }
 
+      // BW copies
+      if (services.bwCopies && (services.bwCopies.today > 0 || services.bwCopies.yesterday > 0)) {
+        const cantidad = Math.max(0, services.bwCopies.today - services.bwCopies.yesterday);
+        if (cantidad > 0) {
+          serviceRecords.push({
+            usuario_id: user.id,
+            fecha: today,
+            tipo: 'copias_bn',
+            cantidad: cantidad,
+            precio_unitario: servicePrices.bw_copies || 0,
+            total: cantidad * (servicePrices.bw_copies || 0),
+            valor_anterior: services.bwCopies.yesterday,
+            valor_actual: services.bwCopies.today
+          });
+        }
+      }
+
+      // Color prints
+      if (services.colorPrints && (services.colorPrints.today > 0 || services.colorPrints.yesterday > 0)) {
+        const cantidad = Math.max(0, services.colorPrints.today - services.colorPrints.yesterday);
+        if (cantidad > 0) {
+          serviceRecords.push({
+            usuario_id: user.id,
+            fecha: today,
+            tipo: 'impresion_color',
+            cantidad: cantidad,
+            precio_unitario: servicePrices.color_prints || 0,
+            total: cantidad * (servicePrices.color_prints || 0),
+            valor_anterior: services.colorPrints.yesterday,
+            valor_actual: services.colorPrints.today
+          });
+        }
+      }
+
+      // BW prints
+      if (services.bwPrints && (services.bwPrints.today > 0 || services.bwPrints.yesterday > 0)) {
+        const cantidad = Math.max(0, services.bwPrints.today - services.bwPrints.yesterday);
+        if (cantidad > 0) {
+          serviceRecords.push({
+            usuario_id: user.id,
+            fecha: today,
+            tipo: 'impresion_bn',
+            cantidad: cantidad,
+            precio_unitario: servicePrices.bw_prints || 0,
+            total: cantidad * (servicePrices.bw_prints || 0),
+            valor_anterior: services.bwPrints.yesterday,
+            valor_actual: services.bwPrints.today
+          });
+        }
+      }
+
+      // Insert service records if any
       if (serviceRecords.length > 0) {
         const { error: serviceError } = await supabase
-          .from('sales_records')
-          .upsert(serviceRecords, {
-            onConflict: 'machine_id,date,service_type'
-          });
+          .from('ventas')
+          .insert(serviceRecords);
 
         if (serviceError) throw serviceError;
       }
 
-      // Save supply records
-      const supplyRecords: Omit<SupplySalesRecord, 'id'>[] = [];
-      Object.entries(supplies).forEach(([supplyKey, supplyData]: [string, any]) => {
+      // Save supply records to supply_sales table
+      const supplyRecords = [];
+      Object.entries(suppliesData).forEach(([supplyName, supplyData]: [string, any]) => {
         if (supplyData.startStock > 0 || supplyData.endStock > 0) {
-          supplyRecords.push({
-            user_id: user.id,
-            date: today,
-            supply_name: supplyKey,
-            initial_stock: supplyData.startStock,
-            final_stock: supplyData.endStock,
-            unit_price: supplyPrices[supplyKey] || 0
-          });
+          const cantidad = Math.max(0, supplyData.startStock - supplyData.endStock);
+          if (cantidad > 0) {
+            supplyRecords.push({
+              user_id: user.id,
+              date: today,
+              supply_name: supplyName,
+              initial_stock: supplyData.startStock,
+              final_stock: supplyData.endStock,
+              quantity_sold: cantidad,
+              unit_price: supplyPrices[supplyName] || 0,
+              total: cantidad * (supplyPrices[supplyName] || 0)
+            });
+          }
         }
       });
 
+      // Insert supply records if any
       if (supplyRecords.length > 0) {
         const { error: supplyError } = await supabase
           .from('supply_sales')
-          .upsert(supplyRecords, {
-            onConflict: 'user_id,date,supply_name'
-          });
+          .insert(supplyRecords);
 
         if (supplyError) throw supplyError;
       }
@@ -143,19 +153,16 @@ export const useSalesRecords = () => {
     const targetDate = date || new Date().toISOString().split('T')[0];
 
     try {
-      // Load service records
+      // Load service records from ventas table
       const { data: serviceRecords, error: serviceError } = await supabase
-        .from('sales_records')
-        .select(`
-          *,
-          machines!inner(user_id)
-        `)
-        .eq('machines.user_id', user.id)
-        .eq('date', targetDate);
+        .from('ventas')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .eq('fecha', targetDate);
 
       if (serviceError) throw serviceError;
 
-      // Load supply records
+      // Load supply records from supply_sales table
       const { data: supplyRecords, error: supplyError } = await supabase
         .from('supply_sales')
         .select('*')
@@ -169,11 +176,28 @@ export const useSalesRecords = () => {
       const supplies = {};
 
       serviceRecords?.forEach(record => {
-        const serviceKey = record.service_type.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        services[serviceKey] = {
-          yesterday: record.previous_value,
-          today: record.current_value
-        };
+        let serviceKey = '';
+        switch (record.tipo) {
+          case 'copias_color':
+            serviceKey = 'colorCopies';
+            break;
+          case 'copias_bn':
+            serviceKey = 'bwCopies';
+            break;
+          case 'impresion_color':
+            serviceKey = 'colorPrints';
+            break;
+          case 'impresion_bn':
+            serviceKey = 'bwPrints';
+            break;
+        }
+        
+        if (serviceKey) {
+          services[serviceKey] = {
+            yesterday: record.valor_anterior || 0,
+            today: record.valor_actual || 0
+          };
+        }
       });
 
       supplyRecords?.forEach(record => {
