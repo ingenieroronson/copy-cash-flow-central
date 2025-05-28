@@ -2,14 +2,7 @@
 import React from 'react';
 import { SupplyCard } from './SupplyCard';
 import { EmptySuppliesState } from './EmptySuppliesState';
-
-interface Supply {
-  id: string;
-  supply_name: string | null;
-  unit_price: number;
-  is_active: boolean | null;
-  negocio_id: string | null;
-}
+import { Supply } from '@/hooks/useSupplies';
 
 interface SupplySectionProps {
   dbSupplies: Supply[];

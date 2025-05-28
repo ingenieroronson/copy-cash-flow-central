@@ -5,7 +5,29 @@ import { useAuth } from './useAuth';
 import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
-import type { Services, Supplies, ServicePrices, SupplyPrices } from '@/types/sales';
+
+// Define simplified types to avoid deep type instantiation
+interface ServicesData {
+  colorCopies?: { yesterday: number; today: number; errors: number };
+  bwCopies?: { yesterday: number; today: number; errors: number };
+  colorPrints?: { yesterday: number; today: number; errors: number };
+  bwPrints?: { yesterday: number; today: number; errors: number };
+}
+
+interface SuppliesData {
+  [supplyName: string]: { startStock: number; endStock: number };
+}
+
+interface ServicePricesData {
+  color_copies?: number;
+  bw_copies?: number;
+  color_prints?: number;
+  bw_prints?: number;
+}
+
+interface SupplyPricesData {
+  [supplyName: string]: number;
+}
 
 export const useSaveSales = () => {
   const [loading, setLoading] = useState(false);
@@ -14,10 +36,10 @@ export const useSaveSales = () => {
   const { toast } = useToast();
 
   const saveDailySales = async (
-    services: Services,
-    suppliesData: Supplies,
-    servicePrices: ServicePrices,
-    supplyPrices: SupplyPrices,
+    services: ServicesData,
+    suppliesData: SuppliesData,
+    servicePrices: ServicePricesData,
+    supplyPrices: SupplyPricesData,
     photocopierId: string,
     selectedDate?: string
   ): Promise<void> => {

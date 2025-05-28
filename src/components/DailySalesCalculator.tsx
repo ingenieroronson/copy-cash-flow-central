@@ -10,13 +10,7 @@ import { SummaryCard } from './SummaryCard';
 import { PhotocopierSelector } from './PhotocopierSelector';
 import { DateSelector } from './DateSelector';
 import { Photocopier } from '@/hooks/usePhotocopiers';
-
-interface Supply {
-  id: string;
-  supply_name: string | null;
-  unit_price: number;
-  is_active: boolean | null;
-}
+import { Supply } from '@/hooks/useSupplies';
 
 interface DailySalesCalculatorProps {
   services: {

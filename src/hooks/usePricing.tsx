@@ -65,17 +65,17 @@ export const usePricing = () => {
     }
   }, [user, currentBusinessId]);
 
-  const getServicePrice = (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints') => {
+  const getServicePrice = (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints'): number => {
     const priceData = pricing.find(p => p.service_type === serviceType);
     return priceData?.unit_price || 0;
   };
 
-  const getSupplyPrice = (supplyName: string) => {
+  const getSupplyPrice = (supplyName: string): number => {
     const priceData = pricing.find(p => p.supply_name === supplyName);
     return priceData?.unit_price || 0;
   };
 
-  const updateServicePrice = async (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints', price: number) => {
+  const updateServicePrice = async (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints', price: number): Promise<void> => {
     if (!user || !currentBusinessId) return;
 
     try {
@@ -94,7 +94,7 @@ export const usePricing = () => {
     }
   };
 
-  const updateSupplyPrice = async (supplyName: string, price: number) => {
+  const updateSupplyPrice = async (supplyName: string, price: number): Promise<void> => {
     if (!user || !currentBusinessId) return;
 
     try {
