@@ -118,20 +118,18 @@ export const useSalesRecords = () => {
         if (serviceError) throw serviceError;
       }
 
-      // Save supply records to supply_sales table
+      // Save supply records to supply_sales table with correct column names
       const supplyRecords = [];
       Object.entries(suppliesData).forEach(([supplyName, supplyData]: [string, any]) => {
         if (supplyData.startStock > 0 || supplyData.endStock > 0) {
           const cantidad = Math.max(0, supplyData.startStock - supplyData.endStock);
           if (cantidad > 0) {
             supplyRecords.push({
-              user_id: user.id,
-              date: today,
-              supply_name: supplyName,
-              initial_stock: supplyData.startStock,
-              final_stock: supplyData.endStock,
-              quantity_sold: cantidad,
-              unit_price: supplyPrices[supplyName] || 0,
+              usuario_id: user.id,
+              fecha: today,
+              nombre_insumo: supplyName,
+              cantidad: cantidad,
+              precio_unitario: supplyPrices[supplyName] || 0,
               total: cantidad * (supplyPrices[supplyName] || 0)
             });
           }
@@ -185,12 +183,12 @@ export const useSalesRecords = () => {
 
       if (serviceError) throw serviceError;
 
-      // Load supply records from supply_sales table
+      // Load supply records from supply_sales table using correct column names
       const { data: supplyRecords, error: supplyError } = await supabase
         .from('supply_sales')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('date', targetDate);
+        .eq('usuario_id', user.id)
+        .eq('fecha', targetDate);
 
       if (supplyError) throw supplyError;
 
@@ -224,9 +222,11 @@ export const useSalesRecords = () => {
       });
 
       supplyRecords?.forEach(record => {
-        supplies[record.supply_name] = {
-          startStock: record.initial_stock,
-          endStock: record.final_stock
+        // Calculate initial and final stock from the quantity sold
+        const initialStock = record.cantidad || 0;
+        supplies[record.nombre_insumo] = {
+          startStock: initialStock,
+          endStock: 0 // We only store the sold quantity, so end stock is 0
         };
       });
 

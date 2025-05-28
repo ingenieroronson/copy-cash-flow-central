@@ -237,50 +237,44 @@ export type Database = {
       }
       supply_sales: {
         Row: {
+          cantidad: number
           created_at: string | null
-          date: string
-          final_stock: number
+          fecha: string
           id: string
-          initial_stock: number
-          quantity_sold: number | null
-          supply_name: string
-          total: number | null
-          unit_price: number
+          nombre_insumo: string
+          precio_unitario: number
+          total: number
           updated_at: string | null
-          user_id: string
+          usuario_id: string
         }
         Insert: {
+          cantidad?: number
           created_at?: string | null
-          date?: string
-          final_stock?: number
+          fecha?: string
           id?: string
-          initial_stock?: number
-          quantity_sold?: number | null
-          supply_name: string
-          total?: number | null
-          unit_price: number
+          nombre_insumo: string
+          precio_unitario?: number
+          total?: number
           updated_at?: string | null
-          user_id: string
+          usuario_id: string
         }
         Update: {
+          cantidad?: number
           created_at?: string | null
-          date?: string
-          final_stock?: number
+          fecha?: string
           id?: string
-          initial_stock?: number
-          quantity_sold?: number | null
-          supply_name?: string
-          total?: number | null
-          unit_price?: number
+          nombre_insumo?: string
+          precio_unitario?: number
+          total?: number
           updated_at?: string | null
-          user_id?: string
+          usuario_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "supply_sales_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "supply_sales_usuario_id_fkey"
+            columns: ["usuario_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
