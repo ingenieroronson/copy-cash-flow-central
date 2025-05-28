@@ -2,11 +2,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Package, Plus, Minus } from 'lucide-react';
+import { AlertTriangle, Package, Plus } from 'lucide-react';
 import { useInventory, InventoryItem } from '@/hooks/useInventory';
 import { InventoryAddForm } from './InventoryAddForm';
 import { InventoryStockAdjustment } from './InventoryStockAdjustment';
@@ -16,7 +13,7 @@ interface InventoryManagementProps {
 }
 
 export const InventoryManagement = ({ negocioId }: InventoryManagementProps) => {
-  const { inventory, loading, lowStockItems, updateInventoryItem } = useInventory(negocioId);
+  const { inventory, loading, lowStockItems } = useInventory(negocioId);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAdjustment, setShowAdjustment] = useState<InventoryItem | null>(null);
 
@@ -83,11 +80,14 @@ export const InventoryManagement = ({ negocioId }: InventoryManagementProps) => 
                     <h3 className="font-medium">{item.supply_name}</h3>
                     <div className="text-sm text-gray-600 space-y-1">
                       <p>Cantidad: {item.quantity} {item.unit_type}</p>
-                      <p>Costo: ${item.unit_cost} MXN</p>
+                      <p>Costo: ${item.unit_cost} MXN (solo lectura)</p>
                       <p>Mínimo: {item.threshold_quantity} {item.unit_type}</p>
                       {item.sheets_per_block && (
                         <p>Hojas por bloque: {item.sheets_per_block}</p>
                       )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Los precios se editan desde la pestaña "Suministros"
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

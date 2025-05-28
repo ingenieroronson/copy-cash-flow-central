@@ -127,11 +127,14 @@ export const UserInventoryManagement = () => {
                         <h3 className="font-medium">{item.supply_name}</h3>
                         <div className="text-sm text-gray-600 space-y-1">
                           <p>Cantidad: {item.quantity} {item.unit_type}</p>
-                          <p>Costo: ${item.unit_cost} MXN</p>
+                          <p>Costo: ${item.unit_cost} MXN (solo lectura)</p>
                           <p>Mínimo: {item.threshold_quantity} {item.unit_type}</p>
                           {item.sheets_per_block && (
                             <p>Hojas por bloque: {item.sheets_per_block}</p>
                           )}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Los precios se editan desde la pestaña "Suministros"
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

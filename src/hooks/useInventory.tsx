@@ -65,7 +65,7 @@ export const useInventory = (negocioId?: string) => {
       }
       
       // Check for low stock items
-      const lowStock = (inventory).filter(item => item.quantity < item.threshold_quantity);
+      const lowStock = (data || []).filter(item => item.quantity < item.threshold_quantity);
       setLowStockItems(lowStock);
       
     } catch (error) {
@@ -113,9 +113,11 @@ export const useInventory = (negocioId?: string) => {
         });
       }
 
+      // Check if "Hojas Blancas" already exists in supplies
+      const hasHojasBlancas = userSupplies?.some(s => s.supply_name === 'Hojas Blancas');
+      
       // Add default "Hojas Blancas" item only if it doesn't exist
-      const hasWhitePaper = userSupplies?.some(s => s.supply_name === 'Hojas Blancas');
-      if (!hasWhitePaper) {
+      if (!hasHojasBlancas) {
         inventoryItems.push({
           negocio_id: negocioId,
           supply_name: 'Hojas Blancas',
@@ -127,15 +129,29 @@ export const useInventory = (negocioId?: string) => {
         });
       }
 
-      // Insert all items at once
+      // Insert all items at once, but check for duplicates first
       if (inventoryItems.length > 0) {
-        const { error: insertError } = await supabase
-          .from('inventory')
-          .insert(inventoryItems);
+        for (const item of inventoryItems) {
+          const { data: existingItem, error: checkError } = await supabase
+            .from('inventory')
+            .select('id')
+            .eq('negocio_id', negocioId)
+            .eq('supply_name', item.supply_name)
+            .maybeSingle();
 
-        if (insertError) throw insertError;
+          if (checkError) throw checkError;
+
+          // Only insert if item doesn't exist
+          if (!existingItem) {
+            const { error: insertError } = await supabase
+              .from('inventory')
+              .insert(item);
+
+            if (insertError) throw insertError;
+          }
+        }
         
-        console.log(`Initialized inventory with ${inventoryItems.length} items`);
+        console.log(`Initialized inventory with supplies for business ${negocioId}`);
       }
     } catch (error) {
       console.error('Error initializing inventory from supplies:', error);
@@ -147,6 +163,25 @@ export const useInventory = (negocioId?: string) => {
     if (!user || !negocioId) return;
 
     try {
+      // Check for duplicates before adding
+      const { data: existingItem, error: checkError } = await supabase
+        .from('inventory')
+        .select('id')
+        .eq('negocio_id', negocioId)
+        .eq('supply_name', item.supply_name)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingItem) {
+        toast({
+          title: "Error",
+          description: "Ya existe un artículo con ese nombre en el inventario",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('inventory')
         .insert({
@@ -176,9 +211,12 @@ export const useInventory = (negocioId?: string) => {
     if (!user) return;
 
     try {
+      // Don't allow unit_cost updates from inventory view
+      const { unit_cost, ...allowedUpdates } = updates;
+      
       const { error } = await supabase
         .from('inventory')
-        .update(updates)
+        .update(allowedUpdates)
         .eq('id', id);
 
       if (error) throw error;
