@@ -47,7 +47,7 @@ const Index = () => {
         } else {
           // If no existing sales, prefill "yesterday" values from latest counters
           const latestCounters = await loadLatestCounters(selectedPhotocopierId);
-          if (latestCounters && Object.keys(latestCounters).length > 0) {
+          if (latestCounters && Object.keys(latestCounters).length > 0 && 'colorCopies' in latestCounters) {
             setServices(prev => ({
               colorCopies: { yesterday: latestCounters.colorCopies?.yesterday || 0, today: prev.colorCopies.today },
               bwCopies: { yesterday: latestCounters.bwCopies?.yesterday || 0, today: prev.bwCopies.today },
