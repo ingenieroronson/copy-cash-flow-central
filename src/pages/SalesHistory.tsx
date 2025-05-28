@@ -74,12 +74,12 @@ const SalesHistory = () => {
 
       if (serviceError) throw serviceError;
 
-      // Load supply sales from supply_sales table
+      // Load supply sales from supply_sales table using correct column names
       const { data: supplyRecords, error: supplyError } = await supabase
         .from('supply_sales')
         .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .eq('usuario_id', user.id)
+        .order('fecha', { ascending: false });
 
       if (supplyError) throw supplyError;
 
@@ -97,13 +97,13 @@ const SalesHistory = () => {
         })) || []),
         ...(supplyRecords?.map(record => ({
           id: record.id,
-          fecha: record.date,
+          fecha: record.fecha,
           tipo: 'suministro',
-          cantidad: record.quantity_sold || 0,
-          precio_unitario: record.unit_price || 0,
+          cantidad: record.cantidad || 0,
+          precio_unitario: record.precio_unitario || 0,
           total: record.total || 0,
           source: 'supply' as const,
-          supply_name: record.supply_name
+          supply_name: record.nombre_insumo
         })) || [])
       ];
 
