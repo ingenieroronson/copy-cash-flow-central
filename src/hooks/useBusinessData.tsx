@@ -60,7 +60,7 @@ export const useBusinessData = (user: User | null) => {
   };
 
   const loadBusinessesForSuperAdmin = async () => {
-    console.log('Loading all businesses for super admin using fallback logic');
+    console.log('Loading all businesses for super admin using database check');
     
     try {
       // Load all businesses directly for super admin

@@ -5,8 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { AuthForm } from '@/components/AuthForm';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { NoBusinessAccess } from '@/components/NoBusinessAccess';
+import { NoAccess } from '@/components/NoAccess';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 import { RoleGuard } from '@/components/RoleGuard';
+import { AdminAccessPanel } from '@/components/AdminAccessPanel';
 import { useBusinesses } from '@/hooks/useBusinesses';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,10 +17,15 @@ import { Settings as SettingsIcon, Building2, Users, Crown } from 'lucide-react'
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
   const { currentBusinessId, businesses, currentUserRole, loading: businessLoading } = useBusinesses();
-  const { isSuperAdmin } = useSuperAdmin();
+  const { isSuperAdmin, loading: superAdminLoading } = useSuperAdmin();
 
-  if (authLoading || businessLoading) return <LoadingSpinner />;
+  if (authLoading || businessLoading || superAdminLoading) return <LoadingSpinner />;
   if (!user) return <AuthForm />;
+
+  // If user is not super admin, show no access page
+  if (!isSuperAdmin) {
+    return <NoAccess />;
+  }
 
   // If user has no businesses, show no access component
   if (businesses.length === 0) {
@@ -56,6 +63,11 @@ const Settings = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Admin Access Panel - Only visible to super admin */}
+          {isSuperAdmin && (
+            <AdminAccessPanel userEmail={user.email || ''} />
+          )}
+
           {/* Super Admin Status */}
           {isSuperAdmin && (
             <Card className="border-yellow-200 bg-yellow-50">

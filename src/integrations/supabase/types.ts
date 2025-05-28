@@ -410,16 +410,19 @@ export type Database = {
         Row: {
           email: string
           id: string
+          is_super_admin: boolean
           nombre: string | null
         }
         Insert: {
           email: string
           id?: string
+          is_super_admin?: boolean
           nombre?: string | null
         }
         Update: {
           email?: string
           id?: string
+          is_super_admin?: boolean
           nombre?: string | null
         }
         Relationships: []
@@ -574,6 +577,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      is_super_admin_from_usuarios: {
         Args: { _user_id: string }
         Returns: boolean
       }
