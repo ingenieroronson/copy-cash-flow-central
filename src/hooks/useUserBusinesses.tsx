@@ -115,6 +115,7 @@ export const useUserBusinesses = () => {
         // If there are duplicates, keep only the first one and delete the rest
         if (principalBusinesses && principalBusinesses.length > 1) {
           const businessesToDelete = principalBusinesses.slice(1).map(b => b.id);
+          const keepBusinessId = principalBusinesses[0].id;
           
           console.log(`Found ${principalBusinesses.length} duplicate "Negocio Principal" entries, cleaning up...`);
           
@@ -122,13 +123,19 @@ export const useUserBusinesses = () => {
           if (businessesToDelete.length > 0) {
             await supabase
               .from('fotocopiadoras')
-              .update({ negocio_id: principalBusinesses[0].id })
+              .update({ negocio_id: keepBusinessId })
               .in('negocio_id', businessesToDelete);
 
             // Update any inventory linked to duplicate businesses
             await supabase
               .from('inventory')
-              .update({ negocio_id: principalBusinesses[0].id })
+              .update({ negocio_id: keepBusinessId })
+              .in('negocio_id', businessesToDelete);
+
+            // Update any sales records linked to duplicate businesses
+            await supabase
+              .from('ventas')
+              .update({ negocio_id: keepBusinessId })
               .in('negocio_id', businessesToDelete);
 
             // Delete duplicate businesses

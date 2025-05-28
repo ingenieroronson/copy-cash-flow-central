@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -20,6 +21,9 @@ export const useSupplies = () => {
     if (!user) return;
 
     try {
+      // Clean up duplicates first
+      await cleanupDuplicateSupplies();
+
       const { data, error } = await supabase
         .from('pricing')
         .select('*')
@@ -56,9 +60,10 @@ export const useSupplies = () => {
       if (businesses && businesses.length > 0) {
         // For each business, check if inventory item exists and create if not
         for (const business of businesses) {
+          // Check for existing item to avoid duplicates
           const { data: existingItem, error: checkError } = await supabase
             .from('inventory')
-            .select('id')
+            .select('id, unit_cost')
             .eq('negocio_id', business.id)
             .eq('supply_name', supplyName)
             .maybeSingle();
@@ -81,7 +86,7 @@ export const useSupplies = () => {
             if (insertError) throw insertError;
             console.log(`Auto-created inventory item for ${supplyName} in business ${business.id}`);
           } else {
-            // Update the unit cost if item exists
+            // Update the unit cost if item exists (but don't change selling price)
             const { error: updateError } = await supabase
               .from('inventory')
               .update({ unit_cost: unitPrice })
@@ -112,7 +117,7 @@ export const useSupplies = () => {
       console.log(`Removed inventory items for ${supplyName} from all businesses`);
     } catch (error) {
       console.error('Error removing supply from inventory:', error);
-      // Don't throw error to avoid blocking supply deletion
+      throw error; // Throw error to prevent supply deletion if inventory cleanup fails
     }
   };
 
@@ -151,6 +156,9 @@ export const useSupplies = () => {
             
             console.log(`Found ${supplies.length} duplicate "${supplyName}" supplies, keeping oldest and removing ${suppliesToDelete.length}`);
             
+            // Remove corresponding inventory items first
+            await removeSupplyFromAllBusinesses(supplyName);
+            
             // Soft delete duplicate supplies
             if (suppliesToDelete.length > 0) {
               await supabase
@@ -160,6 +168,9 @@ export const useSupplies = () => {
                 
               console.log(`Successfully cleaned up duplicate supplies for ${supplyName}`);
             }
+            
+            // Re-sync the remaining supply to inventory
+            await syncSupplyToAllBusinesses(supplyName, supplies[0].unit_price || 0);
           }
         }
       }
@@ -211,6 +222,11 @@ export const useSupplies = () => {
       await syncSupplyToAllBusinesses(name, price);
       
       await fetchSupplies();
+      
+      toast({
+        title: "Suministro agregado",
+        description: "El suministro se agregó correctamente y se sincronizó con el inventario",
+      });
     } catch (error) {
       console.error('Error adding supply:', error);
       throw error;
@@ -265,10 +281,15 @@ export const useSupplies = () => {
       
       toast({
         title: "Suministro eliminado",
-        description: "El suministro y sus registros de inventario han sido eliminados",
+        description: "El suministro y sus registros de inventario han sido eliminados completamente",
       });
     } catch (error) {
       console.error('Error deleting supply:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el suministro completamente",
+        variant: "destructive",
+      });
       throw error;
     }
   };

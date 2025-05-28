@@ -133,8 +133,9 @@ export const UserInventoryManagement = () => {
                             <p>Hojas por bloque: {item.sheets_per_block}</p>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Los precios de venta se gestionan desde "Suministros"
+                        <div className="text-xs text-gray-500 mt-2 p-2 bg-blue-50 rounded">
+                          <strong>Nota:</strong> Los precios de venta se gestionan exclusivamente desde "Suministros".
+                          Aquí solo puedes gestionar cantidades y costos de compra.
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

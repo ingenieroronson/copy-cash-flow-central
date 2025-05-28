@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -39,6 +40,9 @@ export const useInventory = (negocioId?: string) => {
     if (!user || !negocioId) return;
 
     try {
+      // Clean up duplicate inventory items first
+      await cleanupDuplicateInventoryItems(negocioId);
+
       const { data, error } = await supabase
         .from('inventory')
         .select('*')
