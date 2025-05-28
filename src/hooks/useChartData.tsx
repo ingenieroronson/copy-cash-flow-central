@@ -11,6 +11,7 @@ export const useChartData = (filters: ChartFilters) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [summaryData, setSummaryData] = useState<SummaryData>({
     services: 0,
+    procedures: 0,
     supplies: 0,
     total: 0,
     dateRange: filters.dateRange
@@ -40,6 +41,21 @@ export const useChartData = (filters: ChartFilters) => {
       const { data: servicesData, error: servicesError } = await servicesQuery;
       if (servicesError) throw servicesError;
 
+      // Fetch procedure sales data
+      let proceduresQuery = supabase
+        .from('procedure_sales')
+        .select('fecha, total')
+        .eq('usuario_id', user.id)
+        .gte('fecha', filters.dateRange.startDate)
+        .lte('fecha', filters.dateRange.endDate);
+
+      if (filters.photocopierId) {
+        proceduresQuery = proceduresQuery.eq('fotocopiadora_id', filters.photocopierId);
+      }
+
+      const { data: proceduresData, error: proceduresError } = await proceduresQuery;
+      if (proceduresError) throw proceduresError;
+
       // Fetch supply sales data
       let suppliesQuery = supabase
         .from('supply_sales')
@@ -56,20 +72,28 @@ export const useChartData = (filters: ChartFilters) => {
       if (suppliesError) throw suppliesError;
 
       // Group data by date
-      const dailyTotals = new Map<string, { services: number; supplies: number }>();
+      const dailyTotals = new Map<string, { services: number; procedures: number; supplies: number }>();
 
       // Process service data
       (servicesData || []).forEach(record => {
         if (!dailyTotals.has(record.fecha)) {
-          dailyTotals.set(record.fecha, { services: 0, supplies: 0 });
+          dailyTotals.set(record.fecha, { services: 0, procedures: 0, supplies: 0 });
         }
         dailyTotals.get(record.fecha)!.services += record.total || 0;
+      });
+
+      // Process procedure data
+      (proceduresData || []).forEach(record => {
+        if (!dailyTotals.has(record.fecha)) {
+          dailyTotals.set(record.fecha, { services: 0, procedures: 0, supplies: 0 });
+        }
+        dailyTotals.get(record.fecha)!.procedures += record.total || 0;
       });
 
       // Process supply data
       (suppliesData || []).forEach(record => {
         if (!dailyTotals.has(record.fecha)) {
-          dailyTotals.set(record.fecha, { services: 0, supplies: 0 });
+          dailyTotals.set(record.fecha, { services: 0, procedures: 0, supplies: 0 });
         }
         dailyTotals.get(record.fecha)!.supplies += record.total || 0;
       });
@@ -79,8 +103,9 @@ export const useChartData = (filters: ChartFilters) => {
         .map(([date, totals]) => ({
           date,
           services: totals.services,
+          procedures: totals.procedures,
           supplies: totals.supplies,
-          total: totals.services + totals.supplies
+          total: totals.services + totals.procedures + totals.supplies
         }))
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -88,11 +113,13 @@ export const useChartData = (filters: ChartFilters) => {
 
       // Calculate summary data
       const totalServices = chartPoints.reduce((sum, point) => sum + point.services, 0);
+      const totalProcedures = chartPoints.reduce((sum, point) => sum + point.procedures, 0);
       const totalSupplies = chartPoints.reduce((sum, point) => sum + point.supplies, 0);
-      const grandTotal = totalServices + totalSupplies;
+      const grandTotal = totalServices + totalProcedures + totalSupplies;
 
       setSummaryData({
         services: totalServices,
+        procedures: totalProcedures,
         supplies: totalSupplies,
         total: grandTotal,
         dateRange: filters.dateRange

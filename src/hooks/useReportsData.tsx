@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -10,6 +11,7 @@ export const useReportsData = (filters: ReportFilters) => {
   const [summaryData, setSummaryData] = useState<SummaryData>({
     totalSales: 0,
     servicesSales: 0,
+    proceduresSales: 0,
     suppliesSales: 0,
     totalTransactions: 0
   });
@@ -49,6 +51,30 @@ export const useReportsData = (filters: ReportFilters) => {
       const { data: servicesData, error: servicesError } = await servicesQuery;
       if (servicesError) throw servicesError;
 
+      // Fetch procedure sales from procedure_sales table
+      let proceduresQuery = supabase
+        .from('procedure_sales')
+        .select(`
+          fecha,
+          procedure_name,
+          cantidad,
+          precio_unitario,
+          total,
+          errores,
+          fotocopiadora_id,
+          fotocopiadoras!procedure_sales_fotocopiadora_id_fkey(nombre)
+        `)
+        .eq('usuario_id', user.id)
+        .gte('fecha', filters.dateRange.startDate)
+        .lte('fecha', filters.dateRange.endDate);
+
+      if (filters.photocopierId) {
+        proceduresQuery = proceduresQuery.eq('fotocopiadora_id', filters.photocopierId);
+      }
+
+      const { data: proceduresData, error: proceduresError } = await proceduresQuery;
+      if (proceduresError) throw proceduresError;
+
       // Fetch supply sales from supply_sales table with photocopier information
       let suppliesQuery = supabase
         .from('supply_sales')
@@ -84,6 +110,18 @@ export const useReportsData = (filters: ReportFilters) => {
         errors: record.errores || 0
       }));
 
+      // Process procedures data
+      const processedProceduresData: DetailedSalesRecord[] = (proceduresData || []).map(record => ({
+        date: record.fecha,
+        type: 'procedure' as const,
+        procedure_name: record.procedure_name,
+        quantity: record.cantidad,
+        unit_price: record.precio_unitario,
+        total: record.total,
+        photocopier_name: record.fotocopiadoras?.nombre || 'N/A',
+        errors: record.errores || 0
+      }));
+
       // Process supplies data
       const processedSuppliesData: DetailedSalesRecord[] = (suppliesData || []).map(record => ({
         date: record.fecha,
@@ -96,13 +134,14 @@ export const useReportsData = (filters: ReportFilters) => {
       }));
 
       // Combine all data
-      const allDetailedData = [...processedServicesData, ...processedSuppliesData];
+      const allDetailedData = [...processedServicesData, ...processedProceduresData, ...processedSuppliesData];
       setDetailedData(allDetailedData);
 
       // Calculate summary data
       const servicesSales = processedServicesData.reduce((sum, record) => sum + record.total, 0);
+      const proceduresSales = processedProceduresData.reduce((sum, record) => sum + record.total, 0);
       const suppliesSales = processedSuppliesData.reduce((sum, record) => sum + record.total, 0);
-      const totalSales = servicesSales + suppliesSales;
+      const totalSales = servicesSales + proceduresSales + suppliesSales;
       
       // Count distinct days with sales instead of total transactions
       const uniqueDates = new Set(allDetailedData.map(record => record.date));
@@ -111,6 +150,7 @@ export const useReportsData = (filters: ReportFilters) => {
       setSummaryData({
         totalSales,
         servicesSales,
+        proceduresSales,
         suppliesSales,
         totalTransactions: daysWithSales
       });
