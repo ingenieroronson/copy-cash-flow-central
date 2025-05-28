@@ -30,7 +30,7 @@ export const useSupplies = () => {
     try {
       const { data, error } = await supabase
         .from('pricing')
-        .select('*')
+        .select('id, supply_name, unit_price, is_active, negocio_id')
         .eq('user_id', user.id)
         .eq('negocio_id', currentBusinessId)
         .eq('is_active', true)

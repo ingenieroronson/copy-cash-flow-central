@@ -7,15 +7,26 @@ import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
 
 // Define simplified types to avoid deep type instantiation
+interface ServiceData {
+  yesterday: number;
+  today: number;
+  errors: number;
+}
+
 interface ServicesData {
-  colorCopies?: { yesterday: number; today: number; errors: number };
-  bwCopies?: { yesterday: number; today: number; errors: number };
-  colorPrints?: { yesterday: number; today: number; errors: number };
-  bwPrints?: { yesterday: number; today: number; errors: number };
+  colorCopies?: ServiceData;
+  bwCopies?: ServiceData;
+  colorPrints?: ServiceData;
+  bwPrints?: ServiceData;
+}
+
+interface SupplyData {
+  startStock: number;
+  endStock: number;
 }
 
 interface SuppliesData {
-  [supplyName: string]: { startStock: number; endStock: number };
+  [supplyName: string]: SupplyData;
 }
 
 interface ServicePricesData {
@@ -62,7 +73,7 @@ export const useSaveSales = () => {
       console.log('Saving sales for date:', targetDate, 'business:', currentBusinessId);
 
       // Ensure user exists in usuarios table
-      await supabase
+      const { error: userError } = await supabase
         .from('usuarios')
         .upsert({ 
           id: user.id, 
@@ -72,8 +83,10 @@ export const useSaveSales = () => {
           onConflict: 'id' 
         });
 
+      if (userError) throw userError;
+
       // Delete existing records for this date, user, and photocopier to prevent duplicates
-      await supabase
+      const { error: deleteVentasError } = await supabase
         .from('ventas')
         .delete()
         .eq('usuario_id', user.id)
@@ -81,13 +94,17 @@ export const useSaveSales = () => {
         .eq('fotocopiadora_id', photocopierId)
         .eq('negocio_id', currentBusinessId);
 
-      await supabase
+      if (deleteVentasError) throw deleteVentasError;
+
+      const { error: deleteSupplyError } = await supabase
         .from('supply_sales')
         .delete()
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate)
         .eq('fotocopiadora_id', photocopierId)
         .eq('negocio_id', currentBusinessId);
+
+      if (deleteSupplyError) throw deleteSupplyError;
 
       // Process and save service records with business ID
       const serviceRecords = processServiceRecords(
