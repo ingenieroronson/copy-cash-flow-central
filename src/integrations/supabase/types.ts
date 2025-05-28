@@ -344,6 +344,7 @@ export type Database = {
       ventas: {
         Row: {
           cantidad: number | null
+          errores: number | null
           fecha: string
           fotocopiadora_id: string | null
           id: string
@@ -357,6 +358,7 @@ export type Database = {
         }
         Insert: {
           cantidad?: number | null
+          errores?: number | null
           fecha: string
           fotocopiadora_id?: string | null
           id?: string
@@ -370,6 +372,7 @@ export type Database = {
         }
         Update: {
           cantidad?: number | null
+          errores?: number | null
           fecha?: string
           fotocopiadora_id?: string | null
           id?: string

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -24,7 +23,7 @@ export const useReportsData = (filters: ReportFilters) => {
 
     setLoading(true);
     try {
-      // Fetch service sales from ventas table
+      // Fetch service sales from ventas table with error information
       let servicesQuery = supabase
         .from('ventas')
         .select(`
@@ -33,6 +32,7 @@ export const useReportsData = (filters: ReportFilters) => {
           cantidad,
           precio_unitario,
           total,
+          errores,
           fotocopiadora_id,
           fotocopiadoras!ventas_fotocopiadora_id_fkey(nombre)
         `)
@@ -72,7 +72,7 @@ export const useReportsData = (filters: ReportFilters) => {
       const { data: suppliesData, error: suppliesError } = await suppliesQuery;
       if (suppliesError) throw suppliesError;
 
-      // Process services data
+      // Process services data with error information
       const processedServicesData: DetailedSalesRecord[] = (servicesData || []).map(record => ({
         date: record.fecha,
         type: 'service' as const,
@@ -80,7 +80,8 @@ export const useReportsData = (filters: ReportFilters) => {
         quantity: record.cantidad || 0,
         unit_price: record.precio_unitario || 0,
         total: record.total || 0,
-        photocopier_name: record.fotocopiadoras?.nombre || 'N/A'
+        photocopier_name: record.fotocopiadoras?.nombre || 'N/A',
+        errors: record.errores || 0
       }));
 
       // Process supplies data

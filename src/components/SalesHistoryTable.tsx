@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -133,6 +134,7 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDat
                     <TableRow>
                       <TableHead className="text-xs md:text-sm">Tipo</TableHead>
                       <TableHead className="text-right text-xs md:text-sm">Cant.</TableHead>
+                      <TableHead className="text-right text-xs md:text-sm hidden sm:table-cell">Errores</TableHead>
                       <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">Precio Unit.</TableHead>
                       <TableHead className="text-right text-xs md:text-sm">Total</TableHead>
                       <TableHead className="w-8 md:w-16"></TableHead>
@@ -152,6 +154,9 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDat
                           </div>
                         </TableCell>
                         <TableCell className="text-right text-xs md:text-sm py-2 md:py-4">{record.cantidad}</TableCell>
+                        <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden sm:table-cell">
+                          {record.source === 'service' && record.errors !== undefined ? record.errors : '-'}
+                        </TableCell>
                         <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden md:table-cell">
                           {formatCurrency(record.precio_unitario)}
                         </TableCell>

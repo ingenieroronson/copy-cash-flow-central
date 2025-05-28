@@ -13,6 +13,7 @@ export interface DetailedSalesRecord {
   unit_price: number;
   total: number;
   photocopier_name?: string;
+  errors?: number;
 }
 
 interface DetailedReportsTableProps {
@@ -117,6 +118,7 @@ export const DetailedReportsTable = ({ data }: DetailedReportsTableProps) => {
                   <TableRow>
                     <TableHead className="text-xs md:text-sm">Tipo/Producto</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">Cant.</TableHead>
+                    <TableHead className="text-right text-xs md:text-sm hidden sm:table-cell">Errores</TableHead>
                     <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">Precio Unit.</TableHead>
                     <TableHead className="text-right text-xs md:text-sm">Total</TableHead>
                     <TableHead className="text-xs md:text-sm hidden lg:table-cell">Fotocopiadora</TableHead>
@@ -140,6 +142,9 @@ export const DetailedReportsTable = ({ data }: DetailedReportsTableProps) => {
                       </TableCell>
                       <TableCell className="text-right text-xs md:text-sm py-2 md:py-4">
                         {record.quantity}
+                      </TableCell>
+                      <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden sm:table-cell">
+                        {record.type === 'service' && record.errors !== undefined ? record.errors : '-'}
                       </TableCell>
                       <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden md:table-cell">
                         {formatCurrency(record.unit_price)}

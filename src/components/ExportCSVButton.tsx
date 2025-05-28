@@ -21,6 +21,7 @@ export const ExportCSVButton = ({ data, filters, disabled = false }: ExportCSVBu
       'Tipo',
       'Producto/Servicio',
       'Cantidad',
+      'Errores',
       'Precio Unitario',
       'Total',
       'Fotocopiadora'
@@ -43,6 +44,7 @@ export const ExportCSVButton = ({ data, filters, disabled = false }: ExportCSVBu
         ? formatServiceType(record.service_type!) 
         : record.supply_name || '',
       record.quantity.toString(),
+      record.type === 'service' && record.errors !== undefined ? record.errors.toString() : '',
       record.unit_price.toFixed(2),
       record.total.toFixed(2),
       record.photocopier_name || 'N/A'

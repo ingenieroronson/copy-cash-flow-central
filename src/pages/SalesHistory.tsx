@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +19,7 @@ export interface SalesRecord {
   source: 'service' | 'supply';
   supply_name?: string;
   fotocopiadora_id?: string;
+  errors?: number;
 }
 
 export interface DailySales {
@@ -59,7 +59,7 @@ const SalesHistory = () => {
           onConflict: 'id' 
         });
 
-      // Load service sales from ventas table
+      // Load service sales from ventas table with error information
       let serviceQuery = supabase
         .from('ventas')
         .select('*')
@@ -89,7 +89,7 @@ const SalesHistory = () => {
 
       if (supplyError) throw supplyError;
 
-      // Transform and combine data
+      // Transform and combine data with error information
       const allRecords: SalesRecord[] = [
         ...(serviceRecords?.map(record => ({
           id: record.id,
@@ -99,7 +99,8 @@ const SalesHistory = () => {
           precio_unitario: record.precio_unitario || 0,
           total: record.total || 0,
           source: 'service' as const,
-          fotocopiadora_id: record.fotocopiadora_id
+          fotocopiadora_id: record.fotocopiadora_id,
+          errors: record.errores || 0
         })) || []),
         ...(supplyRecords?.map(record => ({
           id: record.id,

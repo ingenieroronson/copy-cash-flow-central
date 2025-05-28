@@ -1,3 +1,4 @@
+
 export interface ServiceData {
   yesterday: number;
   today: number;
@@ -48,6 +49,7 @@ export interface ServiceRecord {
   valor_anterior: number;
   valor_actual: number;
   fotocopiadora_id: string;
+  errores?: number;
 }
 
 export interface SupplyRecord {
