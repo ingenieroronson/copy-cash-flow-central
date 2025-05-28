@@ -545,6 +545,10 @@ export type Database = {
         Args: { _user_id: string; _negocio_id: string }
         Returns: Database["public"]["Enums"]["business_role"]
       }
+      get_user_business_role_with_super_admin: {
+        Args: { _user_id: string; _negocio_id: string }
+        Returns: Database["public"]["Enums"]["business_role"]
+      }
       has_business_role: {
         Args: {
           _user_id: string
@@ -559,6 +563,18 @@ export type Database = {
           _negocio_id: string
           _minimum_role: Database["public"]["Enums"]["business_role"]
         }
+        Returns: boolean
+      }
+      has_minimum_business_role_with_super_admin: {
+        Args: {
+          _user_id: string
+          _negocio_id: string
+          _minimum_role: Database["public"]["Enums"]["business_role"]
+        }
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: { _user_id: string }
         Returns: boolean
       }
     }

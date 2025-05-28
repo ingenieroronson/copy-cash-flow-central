@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -6,7 +5,7 @@ import { Business, UserBusinessRole } from '@/types/business';
 import { useSuperAdmin } from './useSuperAdmin';
 import type { User } from '@supabase/supabase-js';
 
-const OWNER_EMAIL = 'ingeieroeduardoochoa@gmail.com';
+const OWNER_EMAIL = 'ingenieroeduardoochoa@gmail.com';
 
 export const useBusinessData = (user: User | null) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
