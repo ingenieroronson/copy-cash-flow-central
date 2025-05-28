@@ -50,43 +50,51 @@ export const useLoadSales = () => {
     }
   };
 
-  const loadLatestCounters = async (photocopierId?: string) => {
-    if (!user || !photocopierId) return {};
+  const loadLatestCounters = async (photocopierId?: string, selectedDate?: string) => {
+    if (!user || !photocopierId || !selectedDate) return {};
 
     try {
-      // Get the latest records for each service type for this photocopier
-      const { data: latestRecords, error } = await supabase
+      // Calculate the previous day
+      const currentDate = new Date(selectedDate);
+      const previousDay = new Date(currentDate);
+      previousDay.setDate(currentDate.getDate() - 1);
+      const previousDayString = previousDay.toISOString().split('T')[0];
+
+      console.log('Loading counters for previous day:', previousDayString);
+
+      // Get the records from the previous day for this photocopier
+      const { data: previousRecords, error } = await supabase
         .from('ventas')
-        .select('tipo, valor_actual, fecha')
+        .select('tipo, valor_actual')
         .eq('usuario_id', user.id)
         .eq('fotocopiadora_id', photocopierId)
-        .not('valor_actual', 'is', null)
-        .order('fecha', { ascending: false })
-        .order('created_at', { ascending: false });
+        .eq('fecha', previousDayString)
+        .not('valor_actual', 'is', null);
 
       if (error) throw error;
 
-      if (!latestRecords || latestRecords.length === 0) {
+      if (!previousRecords || previousRecords.length === 0) {
+        console.log('No previous records found for:', previousDayString);
         return {};
       }
 
-      // Group by service type and get the most recent value for each
-      const latestCounters: Record<string, number> = {};
-      const processedTypes = new Set<string>();
-
-      for (const record of latestRecords) {
-        if (record.tipo && !processedTypes.has(record.tipo)) {
-          latestCounters[record.tipo] = record.valor_actual || 0;
-          processedTypes.add(record.tipo);
+      // Group by service type and get the value for each
+      const previousCounters: Record<string, number> = {};
+      
+      for (const record of previousRecords) {
+        if (record.tipo && record.valor_actual !== null) {
+          previousCounters[record.tipo] = record.valor_actual;
         }
       }
 
+      console.log('Previous counters found:', previousCounters);
+
       // Map to the format expected by the services state
       const prefillData = {
-        colorCopies: { yesterday: latestCounters['copias_color'] || 0, today: 0 },
-        bwCopies: { yesterday: latestCounters['copias_bn'] || 0, today: 0 },
-        colorPrints: { yesterday: latestCounters['impresion_color'] || 0, today: 0 },
-        bwPrints: { yesterday: latestCounters['impresion_bn'] || 0, today: 0 }
+        colorCopies: { yesterday: previousCounters['copias_color'] || 0, today: 0 },
+        bwCopies: { yesterday: previousCounters['copias_bn'] || 0, today: 0 },
+        colorPrints: { yesterday: previousCounters['impresion_color'] || 0, today: 0 },
+        bwPrints: { yesterday: previousCounters['impresion_bn'] || 0, today: 0 }
       };
 
       return prefillData;
