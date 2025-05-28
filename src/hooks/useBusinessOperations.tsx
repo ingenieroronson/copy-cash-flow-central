@@ -2,25 +2,27 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Business } from '@/types/business';
+import { useSuperAdmin } from './useSuperAdmin';
 import type { User } from '@supabase/supabase-js';
 
 const OWNER_EMAIL = 'ingenieroeduardoochoa@gmail.com';
 
 export const useBusinessOperations = (user: User | null) => {
   const { toast } = useToast();
+  const { isSuperAdmin } = useSuperAdmin();
 
   const isOwner = (email: string | undefined) => {
     return email === OWNER_EMAIL;
   };
 
   const createOwnerDefaultBusiness = async () => {
-    if (!user || !isOwner(user.email)) {
-      console.log('User is not the owner, cannot create default business');
+    if (!user || (!isOwner(user.email) && !isSuperAdmin)) {
+      console.log('User is not the owner or super admin, cannot create default business');
       return null;
     }
 
     try {
-      // Create default business for owner
+      // Create default business for owner/super admin
       const { data: businessData, error: businessError } = await supabase
         .from('negocios')
         .insert({
@@ -32,7 +34,7 @@ export const useBusinessOperations = (user: User | null) => {
 
       if (businessError) throw businessError;
 
-      // Assign admin role to owner
+      // Assign admin role to owner/super admin
       const { error: roleError } = await supabase
         .from('usuarios_negocios')
         .insert({
@@ -61,8 +63,8 @@ export const useBusinessOperations = (user: User | null) => {
   };
 
   const createDefaultBusiness = async () => {
-    // Only the owner can create default businesses
-    if (!user || !isOwner(user.email)) {
+    // Only the owner or super admin can create default businesses
+    if (!user || (!isOwner(user.email) && !isSuperAdmin)) {
       toast({
         title: "Sin permisos",
         description: "Solo el propietario puede crear negocios.",
@@ -75,8 +77,8 @@ export const useBusinessOperations = (user: User | null) => {
   };
 
   const createBusiness = async (businessData: { nombre: string; descripcion?: string; direccion?: string; telefono?: string; email?: string }) => {
-    // Only the owner can create new businesses
-    if (!user || !isOwner(user.email)) {
+    // Only the owner or super admin can create new businesses
+    if (!user || (!isOwner(user.email) && !isSuperAdmin)) {
       toast({
         title: "Sin permisos",
         description: "Solo el propietario puede crear negocios.",
@@ -94,7 +96,7 @@ export const useBusinessOperations = (user: User | null) => {
 
       if (businessError) throw businessError;
 
-      // Assign admin role to owner
+      // Assign admin role to owner/super admin
       const { error: roleError } = await supabase
         .from('usuarios_negocios')
         .insert({

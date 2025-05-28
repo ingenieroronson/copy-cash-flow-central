@@ -8,12 +8,14 @@ import { NoBusinessAccess } from '@/components/NoBusinessAccess';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 import { RoleGuard } from '@/components/RoleGuard';
 import { useBusinesses } from '@/hooks/useBusinesses';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings as SettingsIcon, Building2, Users } from 'lucide-react';
+import { Settings as SettingsIcon, Building2, Users, Crown } from 'lucide-react';
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
   const { currentBusinessId, businesses, currentUserRole, loading: businessLoading } = useBusinesses();
+  const { isSuperAdmin } = useSuperAdmin();
 
   if (authLoading || businessLoading) return <LoadingSpinner />;
   if (!user) return <AuthForm />;
@@ -54,6 +56,23 @@ const Settings = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Super Admin Status */}
+          {isSuperAdmin && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-yellow-800">
+                  <Crown className="w-5 h-5" />
+                  Super Administrador
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-yellow-700">
+                  Tienes acceso completo a todos los negocios y funcionalidades del sistema como super administrador.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Business Information */}
           <Card>
             <CardHeader>
@@ -70,7 +89,12 @@ const Settings = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Tu Rol</label>
-                  <p className="text-gray-900 capitalize">{currentUserRole}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-gray-900 capitalize">
+                      {isSuperAdmin ? 'Super Admin' : currentUserRole}
+                    </p>
+                    {isSuperAdmin && <Crown className="w-4 h-4 text-yellow-500" />}
+                  </div>
                 </div>
                 {currentBusiness?.descripcion && (
                   <div>
