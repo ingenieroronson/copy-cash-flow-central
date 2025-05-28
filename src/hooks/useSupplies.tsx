@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useSuppliesActions } from './useSuppliesActions';
-import { cleanupDuplicateSupplies, cleanupOrphanedInventoryItems } from '@/utils/suppliesCleanup';
 
 export interface Supply {
   id: string;
@@ -23,9 +21,6 @@ export const useSupplies = () => {
     if (!user) return;
 
     try {
-      // Clean up duplicates first
-      await cleanupDuplicateSupplies(user.id);
-
       const { data, error } = await supabase
         .from('pricing')
         .select('*')
@@ -48,17 +43,68 @@ export const useSupplies = () => {
     }
   };
 
-  const { addSupply, updateSupply, deleteSupply } = useSuppliesActions(user, supplies, setSupplies, fetchSupplies);
-
-  // Run cleanup operations when component mounts or user changes
   useEffect(() => {
     if (user) {
-      // Run comprehensive cleanup first, then fetch supplies
-      cleanupDuplicateSupplies(user.id).then(() => {
-        fetchSupplies();
-      });
+      fetchSupplies();
     }
   }, [user]);
+
+  const addSupply = async (name: string, price: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .insert({
+          user_id: user.id,
+          supply_name: name,
+          unit_price: price,
+          is_active: true
+        });
+
+      if (error) throw error;
+      await fetchSupplies();
+    } catch (error) {
+      console.error('Error adding supply:', error);
+      throw error;
+    }
+  };
+
+  const updateSupply = async (id: string, updates: Partial<Supply>) => {
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setSupplies(prev => prev.map(supply => 
+        supply.id === id ? { ...supply, ...updates } : supply
+      ));
+    } catch (error) {
+      console.error('Error updating supply:', error);
+      throw error;
+    }
+  };
+
+  const deleteSupply = async (supplyName: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .update({ is_active: false })
+        .eq('user_id', user.id)
+        .eq('supply_name', supplyName);
+
+      if (error) throw error;
+      await fetchSupplies();
+    } catch (error) {
+      console.error('Error deleting supply:', error);
+      throw error;
+    }
+  };
 
   return {
     supplies,
@@ -67,6 +113,5 @@ export const useSupplies = () => {
     updateSupply,
     deleteSupply,
     refetch: fetchSupplies,
-    cleanupOrphanedInventoryItems: () => cleanupOrphanedInventoryItems(user?.id || ''),
   };
 };

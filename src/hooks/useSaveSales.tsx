@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -16,8 +17,7 @@ export const useSaveSales = () => {
     servicePrices: ServicePrices,
     supplyPrices: SupplyPrices,
     photocopierId: string,
-    selectedDate?: string,
-    negocioId?: string
+    selectedDate?: string
   ) => {
     if (!user || !photocopierId) {
       toast({
@@ -97,11 +97,6 @@ export const useSaveSales = () => {
         if (supplyError) throw supplyError;
       }
 
-      // Automatically deduct inventory if negocioId is provided
-      if (negocioId) {
-        await deductInventoryForSales(services, suppliesData, photocopierId, targetDate, negocioId);
-      }
-
       toast({
         title: "Ventas guardadas",
         description: `Las ventas del día ${targetDate} se han guardado correctamente.`,
@@ -116,89 +111,6 @@ export const useSaveSales = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const deductInventoryForSales = async (
-    servicesData: Services,
-    suppliesData: Supplies,
-    photocopierId: string,
-    salesDate: string,
-    negocioId: string
-  ) => {
-    try {
-      // Get inventory for this business
-      const { data: inventory, error: inventoryError } = await supabase
-        .from('inventory')
-        .select('*')
-        .eq('negocio_id', negocioId);
-
-      if (inventoryError) throw inventoryError;
-
-      // Calculate total sheets used for white paper
-      let totalSheetsUsed = 0;
-      
-      // Sum sheets from services (copies, prints, and errors)
-      Object.values(servicesData).forEach((service: any) => {
-        if (service && typeof service === 'object') {
-          const sold = Math.max(0, service.today - service.yesterday);
-          const errors = service.errors || 0;
-          totalSheetsUsed += sold + errors;
-        }
-      });
-
-      // Deduct white paper if sheets were used
-      if (totalSheetsUsed > 0) {
-        const whitePaperItem = inventory?.find(item => item.supply_name === 'white_paper');
-        if (whitePaperItem && whitePaperItem.sheets_per_block) {
-          const blocksUsed = totalSheetsUsed / whitePaperItem.sheets_per_block;
-          
-          const { error: transactionError } = await supabase
-            .from('inventory_transactions')
-            .insert({
-              inventory_id: whitePaperItem.id,
-              transaction_type: 'sale',
-              quantity_change: -blocksUsed,
-              reference_type: 'service_sale',
-              notes: `Automatic deduction: ${totalSheetsUsed} sheets (${blocksUsed.toFixed(2)} blocks) used for photocopying services on ${salesDate}`
-            });
-
-          if (transactionError) throw transactionError;
-        }
-      }
-
-      // Deduct other supplies based on sold quantities
-      for (const [supplyName, supplyData] of Object.entries(suppliesData)) {
-        if (supplyData && typeof supplyData === 'object') {
-          const sold = Math.max(0, supplyData.startStock - supplyData.endStock);
-          
-          if (sold > 0) {
-            const inventoryItem = inventory?.find(item => item.supply_name === supplyName);
-            if (inventoryItem) {
-              const { error: transactionError } = await supabase
-                .from('inventory_transactions')
-                .insert({
-                  inventory_id: inventoryItem.id,
-                  transaction_type: 'sale',
-                  quantity_change: -sold,
-                  reference_type: 'supply_sale',
-                  notes: `Automatic deduction: ${sold} units sold on ${salesDate}`
-                });
-
-              if (transactionError) throw transactionError;
-            }
-          }
-        }
-      }
-
-    } catch (error) {
-      console.error('Error deducting inventory for sales:', error);
-      // Don't throw error to avoid blocking sales save
-      toast({
-        title: "Advertencia",
-        description: "Las ventas se guardaron pero no se pudo actualizar el inventario automáticamente",
-        variant: "destructive",
-      });
     }
   };
 
