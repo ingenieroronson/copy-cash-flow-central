@@ -131,7 +131,7 @@ export const useBusinesses = () => {
     }
   };
 
-  const createBusiness = async (businessData: Partial<Business>) => {
+  const createBusiness = async (businessData: { nombre: string; descripcion?: string; direccion?: string; telefono?: string; email?: string }) => {
     if (!user) return;
 
     try {

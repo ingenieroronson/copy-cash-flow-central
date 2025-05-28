@@ -55,7 +55,15 @@ const Index = () => {
               </div>
             }
           >
-            <DailySalesCalculator {...salesState} />
+            <DailySalesCalculator 
+              {...salesState}
+              onUpdateService={salesState.updateService}
+              onUpdateSupply={salesState.updateSupply}
+              onPhotocopierChange={salesState.setSelectedPhotocopierId}
+              onDateChange={salesState.setSelectedDate}
+              onSaveSales={salesState.handleSaveSales}
+              totalSales={salesState.getTotalSales()}
+            />
           </RoleGuard>
         </main>
       </div>
