@@ -54,11 +54,15 @@ export const useLoadSales = () => {
     if (!user || !photocopierId || !selectedDate) return {};
 
     try {
-      // Calculate the previous day
-      const currentDate = new Date(selectedDate);
-      const previousDay = new Date(currentDate);
-      previousDay.setDate(currentDate.getDate() - 1);
-      const previousDayString = previousDay.toISOString().split('T')[0];
+      // Convert selected date to Mexico City timezone for proper date calculation
+      const selectedDateObj = new Date(selectedDate + 'T00:00:00-06:00'); // Mexico City timezone
+      const previousDay = new Date(selectedDateObj);
+      previousDay.setDate(selectedDateObj.getDate() - 1);
+      
+      // Format as YYYY-MM-DD in local timezone
+      const previousDayString = previousDay.toLocaleDateString('en-CA', {
+        timeZone: 'America/Mexico_City'
+      });
 
       console.log('Loading counters for previous day:', previousDayString);
 

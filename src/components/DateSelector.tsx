@@ -10,6 +10,12 @@ interface DateSelectorProps {
 }
 
 export const DateSelector = ({ selectedDate, onDateChange }: DateSelectorProps) => {
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = e.target.value;
+    console.log('Date selected:', newDate);
+    onDateChange(newDate);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
       <div className="flex items-center gap-3">
@@ -22,9 +28,12 @@ export const DateSelector = ({ selectedDate, onDateChange }: DateSelectorProps) 
             id="sales-date"
             type="date"
             value={selectedDate}
-            onChange={(e) => onDateChange(e.target.value)}
+            onChange={handleDateChange}
             className="w-full"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Zona horaria: América/Ciudad_de_México
+          </p>
         </div>
       </div>
     </div>

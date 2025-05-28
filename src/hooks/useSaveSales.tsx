@@ -30,7 +30,12 @@ export const useSaveSales = () => {
 
     setLoading(true);
     try {
-      const today = selectedDate || new Date().toISOString().split('T')[0];
+      // Use the exact selected date, or today's date in Mexico City timezone if none provided
+      const targetDate = selectedDate || new Date().toLocaleDateString('en-CA', {
+        timeZone: 'America/Mexico_City'
+      });
+
+      console.log('Saving sales for date:', targetDate);
 
       // Ensure user exists in usuarios table
       await supabase
@@ -48,14 +53,14 @@ export const useSaveSales = () => {
         .from('ventas')
         .delete()
         .eq('usuario_id', user.id)
-        .eq('fecha', today)
+        .eq('fecha', targetDate)
         .eq('fotocopiadora_id', photocopierId);
 
       await supabase
         .from('supply_sales')
         .delete()
         .eq('usuario_id', user.id)
-        .eq('fecha', today)
+        .eq('fecha', targetDate)
         .eq('fotocopiadora_id', photocopierId);
 
       // Process and save service records
@@ -63,7 +68,7 @@ export const useSaveSales = () => {
         services,
         servicePrices,
         user.id,
-        today,
+        targetDate,
         photocopierId
       );
 
@@ -80,8 +85,8 @@ export const useSaveSales = () => {
         suppliesData,
         supplyPrices,
         user.id,
-        today,
-        photocopierId // This ensures photocopier ID is always included
+        targetDate,
+        photocopierId
       );
 
       if (supplyRecords.length > 0) {
@@ -94,7 +99,7 @@ export const useSaveSales = () => {
 
       toast({
         title: "Ventas guardadas",
-        description: "Las ventas del día se han guardado correctamente.",
+        description: `Las ventas del día ${targetDate} se han guardado correctamente.`,
       });
 
     } catch (error) {

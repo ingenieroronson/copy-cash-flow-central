@@ -18,7 +18,13 @@ const Index = () => {
   const { photocopiers, loading: photocopiersLoading } = usePhotocopiers();
 
   const [selectedPhotocopierId, setSelectedPhotocopierId] = React.useState<string>('');
-  const [selectedDate, setSelectedDate] = React.useState<string>(new Date().toISOString().split('T')[0]);
+  
+  // Format date in Mexico City timezone to avoid date shifting
+  const [selectedDate, setSelectedDate] = React.useState<string>(() => {
+    const now = new Date();
+    return now.toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+  });
+  
   const [services, setServices] = React.useState<ServiceState>({
     colorCopies: { yesterday: 0, today: 0 },
     bwCopies: { yesterday: 0, today: 0 },
@@ -35,7 +41,7 @@ const Index = () => {
     }
   }, [photocopiers, selectedPhotocopierId]);
 
-  // Load existing sales data and prefill "yesterday" values when photocopier or date changes
+  // Load existing sales data and prefill "yesterday" values for services only when photocopier or date changes
   React.useEffect(() => {
     const loadExistingSales = async () => {
       if (user && selectedPhotocopierId) {
@@ -46,7 +52,7 @@ const Index = () => {
         if (salesData.services && Object.keys(salesData.services).length > 0) {
           setServices(prev => ({ ...prev, ...salesData.services }));
         } else {
-          // If no existing sales, prefill "yesterday" values from previous day's records
+          // If no existing sales, prefill "yesterday" values for services only from previous day's records
           const latestCounters = await loadLatestCounters(selectedPhotocopierId, selectedDate);
           if (latestCounters && Object.keys(latestCounters).length > 0 && 'colorCopies' in latestCounters) {
             const typedCounters = latestCounters as ServiceState;
@@ -59,15 +65,27 @@ const Index = () => {
           }
         }
         
+        // For supplies, only load existing data for the selected date - never preload from previous days
         if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
           setSuppliesData(prev => ({ ...prev, ...salesData.supplies }));
+        } else {
+          // Reset supplies to empty for new dates - no prefilling from previous days
+          const emptySupplies: Record<string, { startStock: number; endStock: number }> = {};
+          if (dbSupplies?.length > 0) {
+            dbSupplies.forEach(supply => {
+              if (supply.supply_name) {
+                emptySupplies[supply.supply_name] = { startStock: 0, endStock: 0 };
+              }
+            });
+          }
+          setSuppliesData(emptySupplies);
         }
       }
     };
     loadExistingSales();
-  }, [user, selectedPhotocopierId, selectedDate]);
+  }, [user, selectedPhotocopierId, selectedDate, dbSupplies]);
 
-  // Update supplies state when dynamic supplies are loaded
+  // Update supplies state when dynamic supplies are loaded (only if not already set)
   React.useEffect(() => {
     if (dbSupplies?.length > 0) {
       const dynamicSupplies: Record<string, { startStock: number; endStock: number }> = {};
