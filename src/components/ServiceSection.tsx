@@ -22,8 +22,8 @@ export const ServiceSection = ({
 }: ServiceSectionProps) => {
   return (
     <div>
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Servicios de Fotocopiado</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 px-2">Servicios de Fotocopiado</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6 px-2">
         <ServiceCard
           title="Copias a color"
           icon="printer"

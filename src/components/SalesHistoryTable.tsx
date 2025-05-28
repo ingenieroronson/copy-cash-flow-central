@@ -49,42 +49,42 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord }: SalesHistoryTab
 
   if (salesData.length === 0) {
     return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <p className="text-gray-500 text-lg">No hay ventas registradas</p>
+      <Card className="mx-2">
+        <CardContent className="text-center py-8 md:py-12">
+          <p className="text-gray-500 text-base md:text-lg">No hay ventas registradas</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4 px-2">
       {salesData.map((dailySale) => (
         <Card key={dailySale.date}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          <CardHeader className="pb-3 md:pb-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => toggleDateExpansion(dailySale.date)}
-                  className="p-0 h-auto"
+                  className="p-0 h-auto flex-shrink-0"
                 >
                   {expandedDates.has(dailySale.date) ? (
-                    <ChevronDown className="w-5 h-5" />
+                    <ChevronDown className="w-4 h-4 md:w-5 md:h-5" />
                   ) : (
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                   )}
                 </Button>
-                <CardTitle className="text-lg">
-                  {format(new Date(dailySale.date), 'EEEE, d MMMM yyyy', { locale: es })}
+                <CardTitle className="text-sm md:text-base lg:text-lg truncate">
+                  {format(new Date(dailySale.date), 'EEE, d MMM yyyy', { locale: es })}
                 </CardTitle>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-green-600">
+              <div className="text-right flex-shrink-0">
+                <p className="text-lg md:text-xl lg:text-2xl font-bold text-green-600">
                   {formatCurrency(dailySale.totalAmount)}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs md:text-sm text-gray-500">
                   {dailySale.records.length} registro{dailySale.records.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -92,71 +92,73 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord }: SalesHistoryTab
           </CardHeader>
 
           {expandedDates.has(dailySale.date) && (
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-right">Precio Unit.</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="w-16"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dailySale.records.map((record) => (
-                    <TableRow key={record.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">
-                            {formatServiceType(record.tipo, record.supply_name)}
-                          </p>
-                          <p className="text-sm text-gray-500 capitalize">
-                            {record.source === 'service' ? 'Servicio' : 'Suministro'}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">{record.cantidad}</TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(record.precio_unitario)}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(record.total)}
-                      </TableCell>
-                      <TableCell>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta acción no se puede deshacer. Se eliminará permanentemente este registro de venta.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDeleteRecord(record)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
+            <CardContent className="pt-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs md:text-sm">Tipo</TableHead>
+                      <TableHead className="text-right text-xs md:text-sm">Cant.</TableHead>
+                      <TableHead className="text-right text-xs md:text-sm hidden md:table-cell">Precio Unit.</TableHead>
+                      <TableHead className="text-right text-xs md:text-sm">Total</TableHead>
+                      <TableHead className="w-8 md:w-16"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {dailySale.records.map((record) => (
+                      <TableRow key={record.id}>
+                        <TableCell className="py-2 md:py-4">
+                          <div>
+                            <p className="font-medium text-xs md:text-sm leading-tight">
+                              {formatServiceType(record.tipo, record.supply_name)}
+                            </p>
+                            <p className="text-xs text-gray-500 capitalize">
+                              {record.source === 'service' ? 'Servicio' : 'Suministro'}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-xs md:text-sm py-2 md:py-4">{record.cantidad}</TableCell>
+                        <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden md:table-cell">
+                          {formatCurrency(record.precio_unitario)}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-xs md:text-sm py-2 md:py-4">
+                          {formatCurrency(record.total)}
+                        </TableCell>
+                        <TableCell className="py-2 md:py-4">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 md:h-8 md:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="mx-2 max-w-md">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-base md:text-lg">¿Eliminar registro?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-sm md:text-base">
+                                  Esta acción no se puede deshacer. Se eliminará permanentemente este registro de venta.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter className="flex-col md:flex-row gap-2">
+                                <AlertDialogCancel className="text-sm">Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => onDeleteRecord(record)}
+                                  className="bg-red-600 hover:bg-red-700 text-sm"
+                                >
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           )}
         </Card>
