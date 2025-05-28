@@ -14,9 +14,13 @@ export const BusinessSelector = () => {
   return (
     <div className="flex items-center gap-2">
       {isSuperAdmin ? (
-        <Crown className="w-4 h-4 text-yellow-500" title="Super Admin" />
+        <span title="Super Admin">
+          <Crown className="w-4 h-4 text-yellow-500" />
+        </span>
       ) : (
-        <Building2 className="w-4 h-4 text-gray-500" />
+        <span title="Negocio">
+          <Building2 className="w-4 h-4 text-gray-500" />
+        </span>
       )}
       <Select value={currentBusinessId} onValueChange={switchBusiness}>
         <SelectTrigger className="w-48">
@@ -28,7 +32,11 @@ export const BusinessSelector = () => {
               <div className="flex flex-col">
                 <div className="flex items-center gap-1">
                   <span>{business.nombre}</span>
-                  {isSuperAdmin && <Crown className="w-3 h-3 text-yellow-500" />}
+                  {isSuperAdmin && (
+                    <span title="Super Admin">
+                      <Crown className="w-3 h-3 text-yellow-500" />
+                    </span>
+                  )}
                 </div>
                 <span className="text-xs text-gray-500 capitalize">
                   {isSuperAdmin ? 'Super Admin' : currentUserRole}
