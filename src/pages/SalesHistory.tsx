@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,8 +17,9 @@ export interface SalesRecord {
   cantidad: number;
   precio_unitario: number;
   total: number;
-  source: 'service' | 'supply';
+  source: 'service' | 'supply' | 'procedure';
   supply_name?: string;
+  procedure_name?: string;
   fotocopiadora_id?: string;
   errors?: number;
 }
@@ -74,6 +76,21 @@ const SalesHistory = () => {
 
       if (serviceError) throw serviceError;
 
+      // Load procedure sales from procedure_sales table
+      let procedureQuery = supabase
+        .from('procedure_sales')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .order('fecha', { ascending: false });
+
+      if (selectedPhotocopierId) {
+        procedureQuery = procedureQuery.eq('fotocopiadora_id', selectedPhotocopierId);
+      }
+
+      const { data: procedureRecords, error: procedureError } = await procedureQuery;
+
+      if (procedureError) throw procedureError;
+
       // Load supply sales from supply_sales table
       let supplyQuery = supabase
         .from('supply_sales')
@@ -99,6 +116,18 @@ const SalesHistory = () => {
           precio_unitario: record.precio_unitario || 0,
           total: record.total || 0,
           source: 'service' as const,
+          fotocopiadora_id: record.fotocopiadora_id,
+          errors: record.errores || 0
+        })) || []),
+        ...(procedureRecords?.map(record => ({
+          id: record.id,
+          fecha: record.fecha,
+          tipo: 'procedimiento',
+          cantidad: record.cantidad || 0,
+          precio_unitario: record.precio_unitario || 0,
+          total: record.total || 0,
+          source: 'procedure' as const,
+          procedure_name: record.procedure_name,
           fotocopiadora_id: record.fotocopiadora_id,
           errors: record.errores || 0
         })) || []),
@@ -149,7 +178,10 @@ const SalesHistory = () => {
 
   const handleDeleteRecord = async (record: SalesRecord) => {
     try {
-      const tableName = record.source === 'service' ? 'ventas' : 'supply_sales';
+      let tableName = 'ventas';
+      if (record.source === 'supply') tableName = 'supply_sales';
+      else if (record.source === 'procedure') tableName = 'procedure_sales';
+
       const { error } = await supabase
         .from(tableName)
         .delete()
@@ -194,6 +226,16 @@ const SalesHistory = () => {
         .eq('fotocopiadora_id', selectedPhotocopierId);
 
       if (serviceError) throw serviceError;
+
+      // Delete all procedure records for this date, user, and photocopier
+      const { error: procedureError } = await supabase
+        .from('procedure_sales')
+        .delete()
+        .eq('usuario_id', user.id)
+        .eq('fecha', date)
+        .eq('fotocopiadora_id', selectedPhotocopierId);
+
+      if (procedureError) throw procedureError;
 
       // Delete all supply records for this date, user, and photocopier
       const { error: supplyError } = await supabase

@@ -27,15 +27,17 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDat
     setExpandedDates(newExpanded);
   };
 
-  const formatServiceType = (tipo: string, supplyName?: string) => {
+  const formatServiceType = (tipo: string, supplyName?: string, procedureName?: string) => {
     if (supplyName) return supplyName;
+    if (procedureName) return procedureName;
     
     const typeMap: Record<string, string> = {
       'copias_color': 'Copias a Color',
       'copias_bn': 'Copias B/N',
       'impresion_color': 'Impresión a Color',
       'impresion_bn': 'Impresión B/N',
-      'suministro': 'Suministro'
+      'suministro': 'Suministro',
+      'procedimiento': 'Procedimiento'
     };
     return typeMap[tipo] || tipo;
   };
@@ -146,16 +148,17 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDat
                         <TableCell className="py-2 md:py-4">
                           <div>
                             <p className="font-medium text-xs md:text-sm leading-tight">
-                              {formatServiceType(record.tipo, record.supply_name)}
+                              {formatServiceType(record.tipo, record.supply_name, record.procedure_name)}
                             </p>
                             <p className="text-xs text-gray-500 capitalize">
-                              {record.source === 'service' ? 'Servicio' : 'Suministro'}
+                              {record.source === 'service' ? 'Servicio' : 
+                               record.source === 'supply' ? 'Suministro' : 'Procedimiento'}
                             </p>
                           </div>
                         </TableCell>
                         <TableCell className="text-right text-xs md:text-sm py-2 md:py-4">{record.cantidad}</TableCell>
                         <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden sm:table-cell">
-                          {record.source === 'service' && record.errors !== undefined ? record.errors : '-'}
+                          {(record.source === 'service' || record.source === 'procedure') && record.errors !== undefined ? record.errors : '-'}
                         </TableCell>
                         <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden md:table-cell">
                           {formatCurrency(record.precio_unitario)}

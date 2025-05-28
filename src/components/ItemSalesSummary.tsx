@@ -22,7 +22,7 @@ export interface ItemSalesFilters {
 
 interface ItemSalesRecord {
   name: string;
-  type: 'service' | 'supply';
+  type: 'service' | 'supply' | 'procedure';
   quantity: number;
   total: number;
 }
@@ -87,7 +87,11 @@ export const ItemSalesSummary = () => {
 
   const groupedData = filters.groupByType 
     ? data.reduce((acc, item) => {
-        const typeKey = item.type === 'service' ? 'Servicios' : 'Suministros';
+        let typeKey = 'Otros';
+        if (item.type === 'service') typeKey = 'Servicios';
+        else if (item.type === 'supply') typeKey = 'Suministros';
+        else if (item.type === 'procedure') typeKey = 'Procedimientos';
+        
         if (!acc[typeKey]) acc[typeKey] = [];
         acc[typeKey].push(item);
         return acc;
@@ -227,9 +231,12 @@ export const ItemSalesSummary = () => {
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 item.type === 'service' 
                                   ? 'bg-blue-100 text-blue-800' 
-                                  : 'bg-green-100 text-green-800'
+                                  : item.type === 'supply'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-purple-100 text-purple-800'
                               }`}>
-                                {item.type === 'service' ? 'Servicio' : 'Suministro'}
+                                {item.type === 'service' ? 'Servicio' : 
+                                 item.type === 'supply' ? 'Suministro' : 'Procedimiento'}
                               </span>
                             </TableCell>
                           )}

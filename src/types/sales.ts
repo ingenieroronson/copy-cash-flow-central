@@ -55,3 +55,39 @@ export interface ProcedurePrices {
 export interface SupplyPrices {
   [supplyName: string]: number;
 }
+
+export interface ServiceRecord {
+  usuario_id: string;
+  fecha: string;
+  tipo: string;
+  cantidad: number;
+  precio_unitario: number;
+  total: number;
+  valor_anterior: number;
+  valor_actual: number;
+  fotocopiadora_id: string;
+  errores: number;
+}
+
+export interface SupplyRecord {
+  usuario_id: string;
+  fecha: string;
+  fotocopiadora_id: string;
+  nombre_insumo: string;
+  cantidad: number;
+  precio_unitario: number;
+  total: number;
+}
+
+export interface ProcedureRecord {
+  usuario_id: string;
+  fecha: string;
+  fotocopiadora_id: string;
+  procedure_name: string;
+  cantidad: number;
+  precio_unitario: number;
+  total: number;
+  valor_anterior: number;
+  valor_actual: number;
+  errores: number;
+}

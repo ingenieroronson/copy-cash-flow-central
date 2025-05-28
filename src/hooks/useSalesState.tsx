@@ -80,7 +80,7 @@ export const useSalesState = () => {
         }
         
         // Handle procedures data
-        if (salesData.procedures && Object.keys(salesData.procedures).length > 0) {
+        if (salesData && 'procedures' in salesData && salesData.procedures && Object.keys(salesData.procedures).length > 0) {
           console.log('Found existing procedure data for photocopier:', selectedPhotocopierId, salesData.procedures);
           setProceduresData({ ...procedures, ...salesData.procedures });
         } else {
@@ -88,7 +88,7 @@ export const useSalesState = () => {
           resetProcedures(dbProcedures);
         }
         
-        if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
+        if (salesData && 'supplies' in salesData && salesData.supplies && Object.keys(salesData.supplies).length > 0) {
           console.log('Found existing supply data for photocopier:', selectedPhotocopierId, salesData.supplies);
           setSuppliesDataDirect({ ...suppliesData, ...salesData.supplies });
         } else {
