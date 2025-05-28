@@ -8,118 +8,99 @@ export const processServiceRecords = (
   date: string,
   photocopierId: string
 ): ServiceRecord[] => {
-  const serviceRecords: ServiceRecord[] = [];
+  const records: ServiceRecord[] = [];
 
-  // Color copies
-  if (services.colorCopies && (services.colorCopies.today > 0 || services.colorCopies.yesterday > 0)) {
-    const cantidad = Math.max(0, services.colorCopies.today - services.colorCopies.yesterday);
-    if (cantidad > 0) {
-      serviceRecords.push({
+  Object.entries(services).forEach(([serviceKey, serviceData]) => {
+    if (!serviceData) return;
+
+    let serviceType = '';
+    let price = 0;
+
+    switch (serviceKey) {
+      case 'colorCopies':
+        serviceType = 'copias_color';
+        price = servicePrices.color_copies || 0;
+        break;
+      case 'bwCopies':
+        serviceType = 'copias_bn';
+        price = servicePrices.bw_copies || 0;
+        break;
+      case 'colorPrints':
+        serviceType = 'impresion_color';
+        price = servicePrices.color_prints || 0;
+        break;
+      case 'bwPrints':
+        serviceType = 'impresion_bn';
+        price = servicePrices.bw_prints || 0;
+        break;
+      default:
+        return;
+    }
+
+    const quantity = Math.max(0, serviceData.today - serviceData.yesterday);
+    const total = quantity * price;
+
+    if (quantity > 0) {
+      records.push({
         usuario_id: userId,
         fecha: date,
-        tipo: 'copias_color',
-        cantidad: cantidad,
-        precio_unitario: servicePrices.color_copies || 0,
-        total: cantidad * (servicePrices.color_copies || 0),
-        valor_anterior: services.colorCopies.yesterday,
-        valor_actual: services.colorCopies.today,
+        tipo: serviceType,
+        cantidad: quantity,
+        precio_unitario: price,
+        total: total,
+        valor_anterior: serviceData.yesterday,
+        valor_actual: serviceData.today,
         fotocopiadora_id: photocopierId
       });
     }
-  }
+  });
 
-  // BW copies
-  if (services.bwCopies && (services.bwCopies.today > 0 || services.bwCopies.yesterday > 0)) {
-    const cantidad = Math.max(0, services.bwCopies.today - services.bwCopies.yesterday);
-    if (cantidad > 0) {
-      serviceRecords.push({
-        usuario_id: userId,
-        fecha: date,
-        tipo: 'copias_bn',
-        cantidad: cantidad,
-        precio_unitario: servicePrices.bw_copies || 0,
-        total: cantidad * (servicePrices.bw_copies || 0),
-        valor_anterior: services.bwCopies.yesterday,
-        valor_actual: services.bwCopies.today,
-        fotocopiadora_id: photocopierId
-      });
-    }
-  }
-
-  // Color prints
-  if (services.colorPrints && (services.colorPrints.today > 0 || services.colorPrints.yesterday > 0)) {
-    const cantidad = Math.max(0, services.colorPrints.today - services.colorPrints.yesterday);
-    if (cantidad > 0) {
-      serviceRecords.push({
-        usuario_id: userId,
-        fecha: date,
-        tipo: 'impresion_color',
-        cantidad: cantidad,
-        precio_unitario: servicePrices.color_prints || 0,
-        total: cantidad * (servicePrices.color_prints || 0),
-        valor_anterior: services.colorPrints.yesterday,
-        valor_actual: services.colorPrints.today,
-        fotocopiadora_id: photocopierId
-      });
-    }
-  }
-
-  // BW prints
-  if (services.bwPrints && (services.bwPrints.today > 0 || services.bwPrints.yesterday > 0)) {
-    const cantidad = Math.max(0, services.bwPrints.today - services.bwPrints.yesterday);
-    if (cantidad > 0) {
-      serviceRecords.push({
-        usuario_id: userId,
-        fecha: date,
-        tipo: 'impresion_bn',
-        cantidad: cantidad,
-        precio_unitario: servicePrices.bw_prints || 0,
-        total: cantidad * (servicePrices.bw_prints || 0),
-        valor_anterior: services.bwPrints.yesterday,
-        valor_actual: services.bwPrints.today,
-        fotocopiadora_id: photocopierId
-      });
-    }
-  }
-
-  return serviceRecords;
+  return records;
 };
 
 export const processSupplyRecords = (
-  supplies: Supplies,
+  suppliesData: Supplies,
   supplyPrices: SupplyPrices,
   userId: string,
   date: string,
   photocopierId: string
 ): SupplyRecord[] => {
-  const supplyRecords: SupplyRecord[] = [];
-  
-  Object.entries(supplies).forEach(([supplyName, supplyData]) => {
-    if (supplyData.startStock > 0 || supplyData.endStock > 0) {
-      const cantidad = Math.max(0, supplyData.startStock - supplyData.endStock);
-      if (cantidad > 0) {
-        supplyRecords.push({
-          usuario_id: userId,
-          fecha: date,
-          fotocopiadora_id: photocopierId,
-          nombre_insumo: supplyName,
-          cantidad: cantidad,
-          precio_unitario: supplyPrices[supplyName] || 0,
-          total: cantidad * (supplyPrices[supplyName] || 0)
-        });
-      }
+  const records: SupplyRecord[] = [];
+
+  Object.entries(suppliesData).forEach(([supplyName, supplyData]) => {
+    if (!supplyData) return;
+
+    const quantity = Math.max(0, supplyData.startStock - supplyData.endStock);
+    const price = supplyPrices[supplyName] || 0;
+    const total = quantity * price;
+
+    if (quantity > 0) {
+      records.push({
+        usuario_id: userId,
+        fecha: date,
+        fotocopiadora_id: photocopierId, // Ensure photocopier ID is always included
+        nombre_insumo: supplyName,
+        cantidad: quantity,
+        precio_unitario: price,
+        total: total
+      });
     }
   });
 
-  return supplyRecords;
+  return records;
 };
 
-export const transformLoadedData = (serviceRecords: any[], supplyRecords: any[]) => {
-  const services: Record<string, any> = {};
-  const supplies: Record<string, any> = {};
+export const transformLoadedData = (
+  serviceRecords: any[],
+  supplyRecords: any[]
+) => {
+  const services: Services = {};
+  const supplies: Supplies = {};
 
-  serviceRecords?.forEach(record => {
+  // Process service records
+  serviceRecords.forEach(record => {
     let serviceKey = '';
+    
     switch (record.tipo) {
       case 'copias_color':
         serviceKey = 'colorCopies';
@@ -133,22 +114,26 @@ export const transformLoadedData = (serviceRecords: any[], supplyRecords: any[])
       case 'impresion_bn':
         serviceKey = 'bwPrints';
         break;
+      default:
+        return;
     }
-    
-    if (serviceKey) {
-      services[serviceKey] = {
-        yesterday: record.valor_anterior || 0,
-        today: record.valor_actual || 0
-      };
-    }
+
+    services[serviceKey] = {
+      yesterday: record.valor_anterior || 0,
+      today: record.valor_actual || 0
+    };
   });
 
-  supplyRecords?.forEach(record => {
-    const initialStock = record.cantidad || 0;
-    supplies[record.nombre_insumo] = {
-      startStock: initialStock,
-      endStock: 0
-    };
+  // Process supply records
+  supplyRecords.forEach(record => {
+    if (record.nombre_insumo) {
+      // Calculate start and end stock from quantity sold
+      const quantitySold = record.cantidad || 0;
+      supplies[record.nombre_insumo] = {
+        startStock: quantitySold, // This would need to be calculated properly in a real scenario
+        endStock: 0
+      };
+    }
   });
 
   return { services, supplies };

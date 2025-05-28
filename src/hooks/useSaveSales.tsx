@@ -19,7 +19,14 @@ export const useSaveSales = () => {
     photocopierId: string,
     selectedDate?: string
   ) => {
-    if (!user || !photocopierId) return;
+    if (!user || !photocopierId) {
+      toast({
+        title: "Error",
+        description: "Usuario o fotocopiadora no seleccionada.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -35,6 +42,21 @@ export const useSaveSales = () => {
         }, { 
           onConflict: 'id' 
         });
+
+      // Delete existing records for this date, user, and photocopier to prevent duplicates
+      await supabase
+        .from('ventas')
+        .delete()
+        .eq('usuario_id', user.id)
+        .eq('fecha', today)
+        .eq('fotocopiadora_id', photocopierId);
+
+      await supabase
+        .from('supply_sales')
+        .delete()
+        .eq('usuario_id', user.id)
+        .eq('fecha', today)
+        .eq('fotocopiadora_id', photocopierId);
 
       // Process and save service records
       const serviceRecords = processServiceRecords(
@@ -53,13 +75,13 @@ export const useSaveSales = () => {
         if (serviceError) throw serviceError;
       }
 
-      // Process and save supply records
+      // Process and save supply records with photocopier ID
       const supplyRecords = processSupplyRecords(
         suppliesData,
         supplyPrices,
         user.id,
         today,
-        photocopierId
+        photocopierId // This ensures photocopier ID is always included
       );
 
       if (supplyRecords.length > 0) {

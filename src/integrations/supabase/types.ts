@@ -240,7 +240,7 @@ export type Database = {
           cantidad: number
           created_at: string | null
           fecha: string
-          fotocopiadora_id: string | null
+          fotocopiadora_id: string
           id: string
           nombre_insumo: string
           precio_unitario: number
@@ -252,7 +252,7 @@ export type Database = {
           cantidad?: number
           created_at?: string | null
           fecha?: string
-          fotocopiadora_id?: string | null
+          fotocopiadora_id: string
           id?: string
           nombre_insumo: string
           precio_unitario?: number
@@ -264,7 +264,7 @@ export type Database = {
           cantidad?: number
           created_at?: string | null
           fecha?: string
-          fotocopiadora_id?: string | null
+          fotocopiadora_id?: string
           id?: string
           nombre_insumo?: string
           precio_unitario?: number
@@ -273,6 +273,13 @@ export type Database = {
           usuario_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_supply_sales_fotocopiadora"
+            columns: ["fotocopiadora_id"]
+            isOneToOne: false
+            referencedRelation: "fotocopiadoras"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "supply_sales_fotocopiadora_id_fkey"
             columns: ["fotocopiadora_id"]
