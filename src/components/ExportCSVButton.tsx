@@ -2,8 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDateInMexicoTimezone } from '@/utils/dateUtils';
 import type { DetailedSalesRecord } from '@/components/DetailedReportsTable';
 import type { ReportFilters } from '@/pages/Reports';
 
@@ -38,7 +37,7 @@ export const ExportCSVButton = ({ data, filters, disabled = false }: ExportCSVBu
     };
 
     const rows = data.map(record => [
-      format(new Date(record.date), 'dd/MM/yyyy', { locale: es }),
+      formatDateInMexicoTimezone(record.date, 'dd/MM/yyyy'),
       record.type === 'service' ? 'Servicio' : 'Suministro',
       record.type === 'service' 
         ? formatServiceType(record.service_type!) 

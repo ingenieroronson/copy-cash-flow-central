@@ -1,12 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDisplayDate, formatDateInMexicoTimezone } from '@/utils/dateUtils';
 import type { DailySales, SalesRecord } from '@/pages/SalesHistory';
 
 interface SalesHistoryTableProps {
@@ -78,7 +76,7 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDat
                   )}
                 </Button>
                 <CardTitle className="text-sm md:text-base lg:text-lg truncate">
-                  {format(new Date(dailySale.date), 'EEE, d MMM yyyy', { locale: es })}
+                  {formatDisplayDate(dailySale.date)}
                 </CardTitle>
               </div>
               <div className="flex items-center gap-2">
@@ -108,7 +106,7 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDat
                       </AlertDialogTitle>
                       <AlertDialogDescription className="text-sm md:text-base">
                         Esta acción eliminará permanentemente todos los registros de ventas del día{' '}
-                        {format(new Date(dailySale.date), 'd MMM yyyy', { locale: es })}.
+                        {formatDateInMexicoTimezone(dailySale.date, 'd MMM yyyy')}.
                         Esta acción no se puede deshacer.
                       </AlertDialogDescription>
                     </AlertDialogHeader>

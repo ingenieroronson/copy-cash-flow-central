@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDisplayDate, formatDateInMexicoTimezone } from '@/utils/dateUtils';
 
 export interface DetailedSalesRecord {
   date: string;
@@ -97,7 +95,7 @@ export const DetailedReportsTable = ({ data }: DetailedReportsTableProps) => {
                 </Button>
                 <div>
                   <h3 className="font-semibold text-sm md:text-base">
-                    {format(new Date(date), 'EEE, d MMM yyyy', { locale: es })}
+                    {formatDisplayDate(date)}
                   </h3>
                   <p className="text-xs md:text-sm text-gray-600">
                     {count} transacción{count !== 1 ? 'es' : ''}

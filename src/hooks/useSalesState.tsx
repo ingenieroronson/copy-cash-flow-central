@@ -5,6 +5,7 @@ import { usePricing } from './usePricing';
 import { useSupplies } from './useSupplies';
 import { useSalesRecords } from './useSalesRecords';
 import { usePhotocopiers } from './usePhotocopiers';
+import { getTodayInMexicoTimezone } from '@/utils/dateUtils';
 import { ServiceState } from '../types/sales';
 
 export const useSalesState = () => {
@@ -16,10 +17,9 @@ export const useSalesState = () => {
 
   const [selectedPhotocopierId, setSelectedPhotocopierId] = React.useState<string>('');
   
-  // Format date in Mexico City timezone to avoid date shifting
+  // Get today's date in Mexico City timezone
   const [selectedDate, setSelectedDate] = React.useState<string>(() => {
-    const now = new Date();
-    return now.toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+    return getTodayInMexicoTimezone();
   });
   
   const [services, setServices] = React.useState<ServiceState>({
