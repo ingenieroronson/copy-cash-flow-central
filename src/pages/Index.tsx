@@ -13,7 +13,7 @@ const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { getServicePrice, getSupplyPrice, loading: pricingLoading } = usePricing();
   const { supplies: dbSupplies, loading: suppliesLoading } = useSupplies();
-  const { saveDailySales, loadDailySales, loading: salesLoading } = useSalesRecords();
+  const { saveDailySales, loadDailySales, loadLatestCounters, loading: salesLoading } = useSalesRecords();
   const { photocopiers, loading: photocopiersLoading } = usePhotocopiers();
 
   const [selectedPhotocopierId, setSelectedPhotocopierId] = React.useState<string>('');
@@ -34,14 +34,29 @@ const Index = () => {
     }
   }, [photocopiers, selectedPhotocopierId]);
 
-  // Load existing sales data when component mounts and photocopier changes
+  // Load existing sales data and prefill "yesterday" values when photocopier or date changes
   React.useEffect(() => {
     const loadExistingSales = async () => {
       if (user && selectedPhotocopierId) {
+        // First, load existing sales for the selected date
         const salesData = await loadDailySales(selectedDate, selectedPhotocopierId);
+        
+        // If there are existing sales for this date, use them
         if (salesData.services && Object.keys(salesData.services).length > 0) {
           setServices(prev => ({ ...prev, ...salesData.services }));
+        } else {
+          // If no existing sales, prefill "yesterday" values from latest counters
+          const latestCounters = await loadLatestCounters(selectedPhotocopierId);
+          if (latestCounters && Object.keys(latestCounters).length > 0) {
+            setServices(prev => ({
+              colorCopies: { yesterday: latestCounters.colorCopies?.yesterday || 0, today: prev.colorCopies.today },
+              bwCopies: { yesterday: latestCounters.bwCopies?.yesterday || 0, today: prev.bwCopies.today },
+              colorPrints: { yesterday: latestCounters.colorPrints?.yesterday || 0, today: prev.colorPrints.today },
+              bwPrints: { yesterday: latestCounters.bwPrints?.yesterday || 0, today: prev.bwPrints.today }
+            }));
+          }
         }
+        
         if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
           setSuppliesData(prev => ({ ...prev, ...salesData.supplies }));
         }

@@ -4,11 +4,12 @@ import { useLoadSales } from './useLoadSales';
 
 export const useSalesRecords = () => {
   const { loading, saveDailySales } = useSaveSales();
-  const { loadDailySales } = useLoadSales();
+  const { loadDailySales, loadLatestCounters } = useLoadSales();
 
   return {
     loading,
     saveDailySales,
     loadDailySales,
+    loadLatestCounters,
   };
 };
