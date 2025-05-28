@@ -11,9 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2, Plus, Save, Settings as SettingsIcon } from 'lucide-react';
 import { AuthForm } from '@/components/AuthForm';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
+import { useSuperAdminCheck } from '@/hooks/useSuperAdminCheck';
+import { SuperAdminInventoryManagement } from '@/components/SuperAdminInventoryManagement';
+import { InventoryManagement } from '@/components/InventoryManagement';
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
+  const { isSuperAdmin, loading: superAdminLoading } = useSuperAdminCheck();
   const { pricing, updateServicePrice, updateSupplyPrice, loading: pricingLoading } = usePricing();
   const { supplies, addSupply, updateSupply, deleteSupply, loading: suppliesLoading } = useSupplies();
   const { toast } = useToast();
@@ -40,7 +44,7 @@ const Settings = () => {
     }
   }, [pricing]);
 
-  if (authLoading || pricingLoading || suppliesLoading) {
+  if (authLoading || pricingLoading || suppliesLoading || superAdminLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -190,19 +194,25 @@ const Settings = () => {
 
             {/* Inventory Management */}
             {activeTab === 'inventory' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl text-gray-800">Gestión de Inventario</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 mb-4">
-                    El inventario se maneja por negocio. Selecciona un negocio desde la página principal para gestionar su inventario.
-                  </p>
-                  <Button onClick={() => window.location.href = '/'} variant="outline">
-                    Ir a Página Principal
-                  </Button>
-                </CardContent>
-              </Card>
+              <>
+                {isSuperAdmin ? (
+                  <SuperAdminInventoryManagement />
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-gray-800">Gestión de Inventario</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600 mb-4">
+                        El inventario se maneja por negocio. Selecciona un negocio desde la página principal para gestionar su inventario.
+                      </p>
+                      <Button onClick={() => window.location.href = '/'} variant="outline">
+                        Ir a Página Principal
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
 
             {/* Service Prices */}
