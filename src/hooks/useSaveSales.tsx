@@ -20,7 +20,7 @@ export const useSaveSales = () => {
     supplyPrices: SupplyPrices,
     photocopierId: string,
     selectedDate?: string
-  ) => {
+  ): Promise<void> => {
     if (!user || !photocopierId || !currentBusinessId) {
       toast({
         title: "Error",

@@ -38,7 +38,17 @@ export const useSupplies = () => {
         .not('supply_name', 'is', null);
 
       if (error) throw error;
-      setSupplies(data || []);
+      
+      // Transform the data to match the Supply interface
+      const transformedData: Supply[] = (data || []).map(item => ({
+        id: item.id,
+        supply_name: item.supply_name,
+        unit_price: item.unit_price,
+        is_active: item.is_active,
+        negocio_id: item.negocio_id
+      }));
+      
+      setSupplies(transformedData);
     } catch (error) {
       console.error('Error fetching supplies:', error);
       toast({

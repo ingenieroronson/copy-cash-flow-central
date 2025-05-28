@@ -36,7 +36,17 @@ export const usePricing = () => {
         .eq('is_active', true);
 
       if (error) throw error;
-      setPricing(data || []);
+      
+      // Transform data to match PricingData interface
+      const transformedData: PricingData[] = (data || []).map(item => ({
+        id: item.id,
+        service_type: item.service_type || undefined,
+        supply_name: item.supply_name || undefined,
+        unit_price: item.unit_price,
+        negocio_id: item.negocio_id
+      }));
+      
+      setPricing(transformedData);
     } catch (error) {
       console.error('Error fetching pricing:', error);
       toast({
