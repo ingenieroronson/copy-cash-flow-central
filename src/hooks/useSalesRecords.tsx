@@ -4,12 +4,13 @@ import { useLoadSales } from './useLoadSales';
 
 export const useSalesRecords = () => {
   const { loading, saveDailySales } = useSaveSales();
-  const { loadDailySales, loadLatestCounters } = useLoadSales();
+  const { loadDailySales, loadServiceCounterPreload, loadLatestCounters } = useLoadSales();
 
   return {
     loading,
     saveDailySales,
     loadDailySales,
-    loadLatestCounters,
+    loadServiceCounterPreload,
+    loadLatestCounters, // Kept for backward compatibility
   };
 };
