@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
 import type { Services, Supplies, ServicePrices, SupplyPrices } from '@/types/sales';
@@ -9,6 +10,7 @@ import type { Services, Supplies, ServicePrices, SupplyPrices } from '@/types/sa
 export const useSaveSales = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { currentBusinessId } = useBusinesses();
   const { toast } = useToast();
 
   const saveDailySales = async (
@@ -19,10 +21,10 @@ export const useSaveSales = () => {
     photocopierId: string,
     selectedDate?: string
   ) => {
-    if (!user || !photocopierId) {
+    if (!user || !photocopierId || !currentBusinessId) {
       toast({
         title: "Error",
-        description: "Usuario o fotocopiadora no seleccionada.",
+        description: "Usuario, fotocopiadora o negocio no seleccionado.",
         variant: "destructive",
       });
       return;
@@ -35,7 +37,7 @@ export const useSaveSales = () => {
         timeZone: 'America/Mexico_City'
       });
 
-      console.log('Saving sales for date:', targetDate);
+      console.log('Saving sales for date:', targetDate, 'business:', currentBusinessId);
 
       // Ensure user exists in usuarios table
       await supabase
@@ -54,23 +56,25 @@ export const useSaveSales = () => {
         .delete()
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate)
-        .eq('fotocopiadora_id', photocopierId);
+        .eq('fotocopiadora_id', photocopierId)
+        .eq('negocio_id', currentBusinessId);
 
       await supabase
         .from('supply_sales')
         .delete()
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate)
-        .eq('fotocopiadora_id', photocopierId);
+        .eq('fotocopiadora_id', photocopierId)
+        .eq('negocio_id', currentBusinessId);
 
-      // Process and save service records
+      // Process and save service records with business ID
       const serviceRecords = processServiceRecords(
         services,
         servicePrices,
         user.id,
         targetDate,
         photocopierId
-      );
+      ).map(record => ({ ...record, negocio_id: currentBusinessId }));
 
       if (serviceRecords.length > 0) {
         const { error: serviceError } = await supabase
@@ -80,14 +84,14 @@ export const useSaveSales = () => {
         if (serviceError) throw serviceError;
       }
 
-      // Process and save supply records with photocopier ID
+      // Process and save supply records with business ID
       const supplyRecords = processSupplyRecords(
         suppliesData,
         supplyPrices,
         user.id,
         targetDate,
         photocopierId
-      );
+      ).map(record => ({ ...record, negocio_id: currentBusinessId }));
 
       if (supplyRecords.length > 0) {
         const { error: supplyError } = await supabase

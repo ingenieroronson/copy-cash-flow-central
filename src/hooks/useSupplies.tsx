@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Supply {
@@ -9,22 +10,29 @@ export interface Supply {
   supply_name: string | null;
   unit_price: number;
   is_active: boolean | null;
+  negocio_id: string | null;
 }
 
 export const useSupplies = () => {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { currentBusinessId } = useBusinesses();
   const { toast } = useToast();
 
   const fetchSupplies = async () => {
-    if (!user) return;
+    if (!user || !currentBusinessId) {
+      setSupplies([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
         .from('pricing')
         .select('*')
         .eq('user_id', user.id)
+        .eq('negocio_id', currentBusinessId)
         .eq('is_active', true)
         .is('service_type', null)
         .not('supply_name', 'is', null);
@@ -44,19 +52,20 @@ export const useSupplies = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && currentBusinessId) {
       fetchSupplies();
     }
-  }, [user]);
+  }, [user, currentBusinessId]);
 
   const addSupply = async (name: string, price: number) => {
-    if (!user) return;
+    if (!user || !currentBusinessId) return;
 
     try {
       const { error } = await supabase
         .from('pricing')
         .insert({
           user_id: user.id,
+          negocio_id: currentBusinessId,
           supply_name: name,
           unit_price: price,
           is_active: true
@@ -89,13 +98,14 @@ export const useSupplies = () => {
   };
 
   const deleteSupply = async (supplyName: string) => {
-    if (!user) return;
+    if (!user || !currentBusinessId) return;
 
     try {
       const { error } = await supabase
         .from('pricing')
         .update({ is_active: false })
         .eq('user_id', user.id)
+        .eq('negocio_id', currentBusinessId)
         .eq('supply_name', supplyName);
 
       if (error) throw error;
