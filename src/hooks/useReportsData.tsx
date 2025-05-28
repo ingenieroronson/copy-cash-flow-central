@@ -61,8 +61,7 @@ export const useReportsData = (filters: ReportFilters) => {
           precio_unitario,
           total,
           errores,
-          fotocopiadora_id,
-          fotocopiadoras!procedure_sales_fotocopiadora_id_fkey(nombre)
+          fotocopiadora_id
         `)
         .eq('usuario_id', user.id)
         .gte('fecha', filters.dateRange.startDate)
@@ -74,6 +73,20 @@ export const useReportsData = (filters: ReportFilters) => {
 
       const { data: proceduresData, error: proceduresError } = await proceduresQuery;
       if (proceduresError) throw proceduresError;
+
+      // Fetch photocopiers to get names for procedures
+      const { data: photocopiersData, error: photocopiersError } = await supabase
+        .from('fotocopiadoras')
+        .select('id, nombre')
+        .eq('usuario_id', user.id);
+
+      if (photocopiersError) throw photocopiersError;
+
+      // Create a map of photocopier ID to name
+      const photocopierMap = new Map();
+      photocopiersData?.forEach(pc => {
+        photocopierMap.set(pc.id, pc.nombre || 'N/A');
+      });
 
       // Fetch supply sales from supply_sales table with photocopier information
       let suppliesQuery = supabase
@@ -118,7 +131,7 @@ export const useReportsData = (filters: ReportFilters) => {
         quantity: record.cantidad,
         unit_price: record.precio_unitario,
         total: record.total,
-        photocopier_name: record.fotocopiadoras?.nombre || 'N/A',
+        photocopier_name: photocopierMap.get(record.fotocopiadora_id) || 'N/A',
         errors: record.errores || 0
       }));
 
