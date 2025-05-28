@@ -4,6 +4,13 @@ export interface ServiceData {
   today: number;
 }
 
+export interface ServiceState {
+  colorCopies: ServiceData;
+  bwCopies: ServiceData;
+  colorPrints: ServiceData;
+  bwPrints: ServiceData;
+}
+
 export interface Services {
   colorCopies?: ServiceData;
   bwCopies?: ServiceData;

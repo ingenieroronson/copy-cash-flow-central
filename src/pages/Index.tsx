@@ -8,6 +8,7 @@ import { usePricing } from '../hooks/usePricing';
 import { useSupplies } from '../hooks/useSupplies';
 import { useSalesRecords } from '../hooks/useSalesRecords';
 import { usePhotocopiers } from '../hooks/usePhotocopiers';
+import { ServiceState } from '../types/sales';
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
@@ -18,7 +19,7 @@ const Index = () => {
 
   const [selectedPhotocopierId, setSelectedPhotocopierId] = React.useState<string>('');
   const [selectedDate, setSelectedDate] = React.useState<string>(new Date().toISOString().split('T')[0]);
-  const [services, setServices] = React.useState({
+  const [services, setServices] = React.useState<ServiceState>({
     colorCopies: { yesterday: 0, today: 0 },
     bwCopies: { yesterday: 0, today: 0 },
     colorPrints: { yesterday: 0, today: 0 },
@@ -48,11 +49,12 @@ const Index = () => {
           // If no existing sales, prefill "yesterday" values from latest counters
           const latestCounters = await loadLatestCounters(selectedPhotocopierId);
           if (latestCounters && Object.keys(latestCounters).length > 0 && 'colorCopies' in latestCounters) {
+            const typedCounters = latestCounters as ServiceState;
             setServices(prev => ({
-              colorCopies: { yesterday: latestCounters.colorCopies?.yesterday || 0, today: prev.colorCopies.today },
-              bwCopies: { yesterday: latestCounters.bwCopies?.yesterday || 0, today: prev.bwCopies.today },
-              colorPrints: { yesterday: latestCounters.colorPrints?.yesterday || 0, today: prev.colorPrints.today },
-              bwPrints: { yesterday: latestCounters.bwPrints?.yesterday || 0, today: prev.bwPrints.today }
+              colorCopies: { yesterday: typedCounters.colorCopies?.yesterday || 0, today: prev.colorCopies.today },
+              bwCopies: { yesterday: typedCounters.bwCopies?.yesterday || 0, today: prev.bwCopies.today },
+              colorPrints: { yesterday: typedCounters.colorPrints?.yesterday || 0, today: prev.colorPrints.today },
+              bwPrints: { yesterday: typedCounters.bwPrints?.yesterday || 0, today: prev.bwPrints.today }
             }));
           }
         }
