@@ -38,35 +38,50 @@ export const useSalesState = () => {
     }
   }, [photocopiers, selectedPhotocopierId]);
 
-  // Load existing sales data and prefill "yesterday" values for services only when photocopier or date changes
+  // Load existing sales data and prefill "yesterday" values for services when photocopier or date changes
   React.useEffect(() => {
     const loadExistingSales = async () => {
       if (user && selectedPhotocopierId) {
-        // First, load existing sales for the selected date
+        console.log('Loading sales data for photocopier:', selectedPhotocopierId, 'date:', selectedDate);
+        
+        // First, load existing sales for the selected date and photocopier
         const salesData = await loadDailySales(selectedDate, selectedPhotocopierId);
         
-        // If there are existing sales for this date, use them
+        // If there are existing sales for this date and photocopier, use them
         if (salesData.services && Object.keys(salesData.services).length > 0) {
+          console.log('Found existing sales data for photocopier:', selectedPhotocopierId, salesData.services);
           setServices(prev => ({ ...prev, ...salesData.services }));
         } else {
-          // If no existing sales, prefill "yesterday" values for services only from previous day's records
+          // If no existing sales, prefill "yesterday" values for services only from previous day's "Hoy" values
+          // This ensures continuity: previous day's "Hoy" becomes current day's "Ayer"
           const latestCounters = await loadLatestCounters(selectedPhotocopierId, selectedDate);
           if (latestCounters && Object.keys(latestCounters).length > 0 && 'colorCopies' in latestCounters) {
             const typedCounters = latestCounters as ServiceState;
+            console.log('Setting yesterday values from previous day for photocopier:', selectedPhotocopierId, typedCounters);
             setServices(prev => ({
               colorCopies: { yesterday: typedCounters.colorCopies?.yesterday || 0, today: prev.colorCopies.today },
               bwCopies: { yesterday: typedCounters.bwCopies?.yesterday || 0, today: prev.bwCopies.today },
               colorPrints: { yesterday: typedCounters.colorPrints?.yesterday || 0, today: prev.colorPrints.today },
               bwPrints: { yesterday: typedCounters.bwPrints?.yesterday || 0, today: prev.bwPrints.today }
             }));
+          } else {
+            // No previous data found, reset to zeros for this photocopier
+            console.log('No previous data found for photocopier:', selectedPhotocopierId, 'resetting to zeros');
+            setServices({
+              colorCopies: { yesterday: 0, today: 0 },
+              bwCopies: { yesterday: 0, today: 0 },
+              colorPrints: { yesterday: 0, today: 0 },
+              bwPrints: { yesterday: 0, today: 0 }
+            });
           }
         }
         
-        // For supplies, only load existing data for the selected date - never preload from previous days
+        // For supplies, only load existing data for the selected date and photocopier - never preload from previous days
         if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
+          console.log('Found existing supply data for photocopier:', selectedPhotocopierId, salesData.supplies);
           setSuppliesData(prev => ({ ...prev, ...salesData.supplies }));
         } else {
-          // Reset supplies to empty for new dates - no prefilling from previous days
+          // Reset supplies to empty for new dates/photocopiers - no prefilling from previous days
           const emptySupplies: Record<string, { startStock: number; endStock: number }> = {};
           if (dbSupplies?.length > 0) {
             dbSupplies.forEach(supply => {
@@ -75,6 +90,7 @@ export const useSalesState = () => {
               }
             });
           }
+          console.log('Resetting supplies for photocopier:', selectedPhotocopierId);
           setSuppliesData(emptySupplies);
         }
       }
