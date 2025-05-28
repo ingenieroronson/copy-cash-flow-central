@@ -95,8 +95,9 @@ export const useSaveSales = () => {
         servicePrices,
         user.id,
         targetDate,
-        photocopierId
-      ).map(record => ({ ...record, negocio_id: currentBusinessId }));
+        photocopierId,
+        currentBusinessId
+      );
 
       if (serviceRecords.length > 0) {
         const { error: serviceError } = await supabase
@@ -112,8 +113,9 @@ export const useSaveSales = () => {
         supplyPrices,
         user.id,
         targetDate,
-        photocopierId
-      ).map(record => ({ ...record, negocio_id: currentBusinessId }));
+        photocopierId,
+        currentBusinessId
+      );
 
       if (supplyRecords.length > 0) {
         const { error: supplyError } = await supabase

@@ -1,3 +1,4 @@
+
 import type { Services, Supplies, ServicePrices, SupplyPrices, ServiceRecord, SupplyRecord } from '@/types/sales';
 
 export const processServiceRecords = (
@@ -5,7 +6,8 @@ export const processServiceRecords = (
   servicePrices: ServicePrices,
   userId: string,
   targetDate: string,
-  photocopierId: string
+  photocopierId: string,
+  negocioId: string
 ): ServiceRecord[] => {
   const records: ServiceRecord[] = [];
 
@@ -35,6 +37,7 @@ export const processServiceRecords = (
         valor_anterior: serviceData.yesterday,
         valor_actual: serviceData.today,
         fotocopiadora_id: photocopierId,
+        negocio_id: negocioId,
         errores: serviceData.errors || 0
       });
     }
@@ -48,7 +51,8 @@ export const processSupplyRecords = (
   supplyPrices: SupplyPrices,
   userId: string,
   targetDate: string,
-  photocopierId: string
+  photocopierId: string,
+  negocioId: string
 ): SupplyRecord[] => {
   const records: SupplyRecord[] = [];
 
@@ -67,7 +71,8 @@ export const processSupplyRecords = (
         nombre_insumo: supplyName,
         cantidad: quantity,
         precio_unitario: unitPrice,
-        total: total
+        total: total,
+        negocio_id: negocioId
       });
     }
   });
