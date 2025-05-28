@@ -211,8 +211,8 @@ export const useInventory = (negocioId?: string) => {
     if (!user) return;
 
     try {
-      // Don't allow unit_cost updates from inventory view
-      const { unit_cost, ...allowedUpdates } = updates;
+      // Only allow updates to specific fields (no price changes)
+      const { unit_price, supply_name, ...allowedUpdates } = updates;
       
       const { error } = await supabase
         .from('inventory')
@@ -254,44 +254,6 @@ export const useInventory = (negocioId?: string) => {
     }
   };
 
-  const syncSupplyToInventory = async (supplyName: string, unitPrice: number, businessIds: string[]) => {
-    if (!user || businessIds.length === 0) return;
-
-    try {
-      // For each business, check if inventory item exists and create if not
-      for (const businessId of businessIds) {
-        const { data: existingItem, error: checkError } = await supabase
-          .from('inventory')
-          .select('id')
-          .eq('negocio_id', businessId)
-          .eq('supply_name', supplyName)
-          .maybeSingle();
-
-        if (checkError) throw checkError;
-
-        // If item doesn't exist, create it
-        if (!existingItem) {
-          const { error: insertError } = await supabase
-            .from('inventory')
-            .insert({
-              negocio_id: businessId,
-              supply_name: supplyName,
-              quantity: 0,
-              unit_cost: unitPrice,
-              threshold_quantity: 5,
-              unit_type: 'units'
-            });
-
-          if (insertError) throw insertError;
-          console.log(`Created inventory item for ${supplyName} in business ${businessId}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error syncing supply to inventory:', error);
-      // Don't throw error to avoid blocking supply creation
-    }
-  };
-
   const deductInventoryForSales = async (
     servicesData: any,
     suppliesData: any,
@@ -324,7 +286,7 @@ export const useInventory = (negocioId?: string) => {
             transaction_type: 'sale',
             quantity_change: -blocksUsed,
             reference_type: 'service_sale',
-            notes: `Automatic deduction: ${totalSheetsUsed} sheets (${blocksUsed.toFixed(2)} blocks) used for photocopying services`
+            notes: `Deducción automática: ${totalSheetsUsed} hojas (${blocksUsed.toFixed(2)} bloques) usadas en servicios de fotocopiado`
           });
         }
       }
@@ -342,7 +304,7 @@ export const useInventory = (negocioId?: string) => {
                 transaction_type: 'sale',
                 quantity_change: -sold,
                 reference_type: 'supply_sale',
-                notes: `Automatic deduction: ${sold} units sold`
+                notes: `Deducción automática: ${sold} unidades vendidas`
               });
             }
           }
@@ -374,7 +336,6 @@ export const useInventory = (negocioId?: string) => {
     updateInventoryItem,
     addInventoryTransaction,
     deductInventoryForSales,
-    syncSupplyToInventory,
     refetch: fetchInventory,
   };
 };

@@ -43,42 +43,11 @@ export const useSupplies = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchSupplies();
-    }
-  }, [user]);
-
-  const addSupply = async (name: string, price: number) => {
+  const syncSupplyToAllBusinesses = async (supplyName: string, unitPrice: number) => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('pricing')
-        .insert({
-          user_id: user.id,
-          supply_name: name,
-          unit_price: price,
-          is_active: true
-        });
-
-      if (error) throw error;
-      
-      // Auto-sync to inventory for all user's businesses
-      await syncSupplyToInventory(name, price);
-      
-      await fetchSupplies();
-    } catch (error) {
-      console.error('Error adding supply:', error);
-      throw error;
-    }
-  };
-
-  const syncSupplyToInventory = async (supplyName: string, unitPrice: number) => {
-    if (!user) return;
-
-    try {
-      // Get all businesses (for now, all businesses until proper ownership is implemented)
+      // Get all businesses that the user has access to
       const { data: businesses, error: businessError } = await supabase
         .from('negocios')
         .select('id');
@@ -112,12 +81,64 @@ export const useSupplies = () => {
 
             if (insertError) throw insertError;
             console.log(`Auto-created inventory item for ${supplyName} in business ${business.id}`);
+          } else {
+            // Update the unit cost if item exists
+            const { error: updateError } = await supabase
+              .from('inventory')
+              .update({ unit_cost: unitPrice })
+              .eq('id', existingItem.id);
+
+            if (updateError) throw updateError;
+            console.log(`Updated unit cost for ${supplyName} in business ${business.id}`);
           }
         }
       }
     } catch (error) {
       console.error('Error syncing supply to inventory:', error);
       // Don't throw error to avoid blocking supply creation
+    }
+  };
+
+  const removeSupplyFromAllBusinesses = async (supplyName: string) => {
+    if (!user) return;
+
+    try {
+      // Delete all inventory items with this supply name across all businesses
+      const { error } = await supabase
+        .from('inventory')
+        .delete()
+        .eq('supply_name', supplyName);
+
+      if (error) throw error;
+      console.log(`Removed inventory items for ${supplyName} from all businesses`);
+    } catch (error) {
+      console.error('Error removing supply from inventory:', error);
+      // Don't throw error to avoid blocking supply deletion
+    }
+  };
+
+  const addSupply = async (name: string, price: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('pricing')
+        .insert({
+          user_id: user.id,
+          supply_name: name,
+          unit_price: price,
+          is_active: true
+        });
+
+      if (error) throw error;
+      
+      // Auto-sync to inventory for all businesses
+      await syncSupplyToAllBusinesses(name, price);
+      
+      await fetchSupplies();
+    } catch (error) {
+      console.error('Error adding supply:', error);
+      throw error;
     }
   };
 
@@ -129,6 +150,17 @@ export const useSupplies = () => {
         .eq('id', id);
 
       if (error) throw error;
+      
+      // If supply name or price changed, sync to inventory
+      if (updates.supply_name || updates.unit_price !== undefined) {
+        const supply = supplies.find(s => s.id === id);
+        if (supply && supply.supply_name) {
+          await syncSupplyToAllBusinesses(
+            updates.supply_name || supply.supply_name,
+            updates.unit_price !== undefined ? updates.unit_price : supply.unit_price
+          );
+        }
+      }
       
       setSupplies(prev => prev.map(supply => 
         supply.id === id ? { ...supply, ...updates } : supply
@@ -143,6 +175,10 @@ export const useSupplies = () => {
     if (!user) return;
 
     try {
+      // First, remove from inventory
+      await removeSupplyFromAllBusinesses(supplyName);
+
+      // Then, soft delete from pricing
       const { error } = await supabase
         .from('pricing')
         .update({ is_active: false })
@@ -156,6 +192,12 @@ export const useSupplies = () => {
       throw error;
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchSupplies();
+    }
+  }, [user]);
 
   return {
     supplies,
