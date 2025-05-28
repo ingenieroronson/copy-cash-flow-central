@@ -22,6 +22,8 @@ export interface SharedUser {
   nombre: string | null;
 }
 
+type ModuleType = 'copias' | 'reportes' | 'historial' | 'configuracion';
+
 export const useSharedAccess = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
@@ -52,7 +54,7 @@ export const useSharedAccess = () => {
   const shareAccess = async (
     email: string,
     fotocopiadoraId: string,
-    modules: string[],
+    modules: ModuleType[],
     expiresAt?: string
   ) => {
     if (!user) throw new Error('User not authenticated');
@@ -71,11 +73,11 @@ export const useSharedAccess = () => {
       }
 
       // Create shared access records for each module
-      const sharedAccessRecords = modules.map(module => ({
+      const sharedAccessRecords = modules.map((module: ModuleType) => ({
         owner_id: user.id,
         shared_with_id: targetUser.id,
         fotocopiadora_id: fotocopiadoraId,
-        module_type: module,
+        module_type: module as ModuleType,
         expires_at: expiresAt || null,
       }));
 
