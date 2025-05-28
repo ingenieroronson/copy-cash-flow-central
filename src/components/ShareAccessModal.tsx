@@ -20,11 +20,13 @@ interface ShareAccessModalProps {
   fotocopiadoraNombre: string;
 }
 
+type ModuleType = 'copias' | 'reportes' | 'historial' | 'configuracion';
+
 const modules = [
-  { id: 'copias', name: 'Copias', description: 'Acceso al módulo de registro de copias' },
-  { id: 'reportes', name: 'Reportes', description: 'Acceso a reportes y gráficos' },
-  { id: 'historial', name: 'Historial', description: 'Acceso al historial de ventas' },
-  { id: 'configuracion', name: 'Configuración', description: 'Acceso a la configuración' },
+  { id: 'copias' as ModuleType, name: 'Copias', description: 'Acceso al módulo de registro de copias' },
+  { id: 'reportes' as ModuleType, name: 'Reportes', description: 'Acceso a reportes y gráficos' },
+  { id: 'historial' as ModuleType, name: 'Historial', description: 'Acceso al historial de ventas' },
+  { id: 'configuracion' as ModuleType, name: 'Configuración', description: 'Acceso a la configuración' },
 ];
 
 export const ShareAccessModal: React.FC<ShareAccessModalProps> = ({
@@ -34,13 +36,13 @@ export const ShareAccessModal: React.FC<ShareAccessModalProps> = ({
   fotocopiadoraNombre,
 }) => {
   const [email, setEmail] = useState('');
-  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [selectedModules, setSelectedModules] = useState<ModuleType[]>([]);
   const [expiresAt, setExpiresAt] = useState<Date | undefined>();
   const [calendarOpen, setCalendarOpen] = useState(false);
   
   const { shareAccess, loading } = useSharedAccess();
 
-  const handleModuleChange = (moduleId: string, checked: boolean) => {
+  const handleModuleChange = (moduleId: ModuleType, checked: boolean) => {
     if (checked) {
       setSelectedModules(prev => [...prev, moduleId]);
     } else {
