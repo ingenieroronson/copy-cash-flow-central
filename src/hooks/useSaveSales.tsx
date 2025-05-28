@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
+import { useInventory } from './useInventory';
 import type { Services, Supplies, ServicePrices, SupplyPrices } from '@/types/sales';
 
 export const useSaveSales = () => {
@@ -17,7 +18,8 @@ export const useSaveSales = () => {
     servicePrices: ServicePrices,
     supplyPrices: SupplyPrices,
     photocopierId: string,
-    selectedDate?: string
+    selectedDate?: string,
+    negocioId?: string
   ) => {
     if (!user || !photocopierId) {
       toast({
@@ -95,6 +97,13 @@ export const useSaveSales = () => {
           .insert(supplyRecords);
 
         if (supplyError) throw supplyError;
+      }
+
+      // Automatically deduct inventory if negocioId is provided
+      if (negocioId) {
+        // Create a temporary inventory hook instance for deduction
+        const { deductInventoryForSales } = useInventory(negocioId);
+        await deductInventoryForSales(services, suppliesData, photocopierId, targetDate);
       }
 
       toast({
