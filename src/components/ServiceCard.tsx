@@ -13,6 +13,7 @@ interface ServiceCardProps {
   service: {
     yesterday: number;
     today: number;
+    errors: number;
   };
   onUpdate: (field: string, value: number) => void;
   total: number;
@@ -65,6 +66,22 @@ export const ServiceCard = ({
                 value={service.today || ''}
                 onChange={(e) => onUpdate('today', parseInt(e.target.value) || 0)}
                 className="mt-1 text-sm md:text-base lg:text-lg font-medium h-8 md:h-9 lg:h-10"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 md:gap-3 lg:gap-4">
+            <div>
+              <Label htmlFor={`errors-${title}`} className="text-xs md:text-sm font-medium text-red-600">
+                Errores
+              </Label>
+              <Input
+                id={`errors-${title}`}
+                type="number"
+                value={service.errors || ''}
+                onChange={(e) => onUpdate('errors', parseInt(e.target.value) || 0)}
+                className="mt-1 text-sm md:text-base lg:text-lg font-medium h-8 md:h-9 lg:h-10 border-red-200 focus:border-red-300 focus:ring-red-300"
                 placeholder="0"
               />
             </div>

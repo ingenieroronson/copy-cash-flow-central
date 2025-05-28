@@ -1,6 +1,6 @@
 
 export const calculateServiceTotal = (service: any, price: number) => {
-  const difference = Math.max(0, service.today - service.yesterday);
+  const difference = Math.max(0, service.today - (service.errors || 0) - service.yesterday);
   return difference * price;
 };
 

@@ -4,10 +4,10 @@ import { ServiceCard } from './ServiceCard';
 
 interface ServiceSectionProps {
   services: {
-    colorCopies: { yesterday: number; today: number };
-    bwCopies: { yesterday: number; today: number };
-    colorPrints: { yesterday: number; today: number };
-    bwPrints: { yesterday: number; today: number };
+    colorCopies: { yesterday: number; today: number; errors: number };
+    bwCopies: { yesterday: number; today: number; errors: number };
+    colorPrints: { yesterday: number; today: number; errors: number };
+    bwPrints: { yesterday: number; today: number; errors: number };
   };
   onUpdateService: (serviceId: string, field: string, value: number) => void;
   getServicePrice: (serviceType: string) => number;
@@ -32,7 +32,7 @@ export const ServiceSection = ({
           service={services.colorCopies}
           onUpdate={(field, value) => onUpdateService('colorCopies', field, value)}
           total={calculateServiceTotal(services.colorCopies, getServicePrice('color_copies'))}
-          difference={Math.max(0, services.colorCopies.today - services.colorCopies.yesterday)}
+          difference={Math.max(0, services.colorCopies.today - (services.colorCopies.errors || 0) - services.colorCopies.yesterday)}
           price={getServicePrice('color_copies')}
         />
         
@@ -44,7 +44,7 @@ export const ServiceSection = ({
           service={services.bwCopies}
           onUpdate={(field, value) => onUpdateService('bwCopies', field, value)}
           total={calculateServiceTotal(services.bwCopies, getServicePrice('bw_copies'))}
-          difference={Math.max(0, services.bwCopies.today - services.bwCopies.yesterday)}
+          difference={Math.max(0, services.bwCopies.today - (services.bwCopies.errors || 0) - services.bwCopies.yesterday)}
           price={getServicePrice('bw_copies')}
         />
         
@@ -56,7 +56,7 @@ export const ServiceSection = ({
           service={services.colorPrints}
           onUpdate={(field, value) => onUpdateService('colorPrints', field, value)}
           total={calculateServiceTotal(services.colorPrints, getServicePrice('color_prints'))}
-          difference={Math.max(0, services.colorPrints.today - services.colorPrints.yesterday)}
+          difference={Math.max(0, services.colorPrints.today - (services.colorPrints.errors || 0) - services.colorPrints.yesterday)}
           price={getServicePrice('color_prints')}
         />
         
@@ -68,7 +68,7 @@ export const ServiceSection = ({
           service={services.bwPrints}
           onUpdate={(field, value) => onUpdateService('bwPrints', field, value)}
           total={calculateServiceTotal(services.bwPrints, getServicePrice('bw_prints'))}
-          difference={Math.max(0, services.bwPrints.today - services.bwPrints.yesterday)}
+          difference={Math.max(0, services.bwPrints.today - (services.bwPrints.errors || 0) - services.bwPrints.yesterday)}
           price={getServicePrice('bw_prints')}
         />
       </div>

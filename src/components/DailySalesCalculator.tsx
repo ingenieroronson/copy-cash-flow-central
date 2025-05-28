@@ -20,10 +20,10 @@ interface Supply {
 
 interface DailySalesCalculatorProps {
   services: {
-    colorCopies: { yesterday: number; today: number };
-    bwCopies: { yesterday: number; today: number };
-    colorPrints: { yesterday: number; today: number };
-    bwPrints: { yesterday: number; today: number };
+    colorCopies: { yesterday: number; today: number; errors: number };
+    bwCopies: { yesterday: number; today: number; errors: number };
+    colorPrints: { yesterday: number; today: number; errors: number };
+    bwPrints: { yesterday: number; today: number; errors: number };
   };
   suppliesData: Record<string, { startStock: number; endStock: number }>;
   dbSupplies: Supply[];
@@ -63,7 +63,7 @@ export const DailySalesCalculator = ({
   const navigate = useNavigate();
 
   const calculateServiceTotal = (service: any, price: number) => {
-    const difference = Math.max(0, service.today - service.yesterday);
+    const difference = Math.max(0, service.today - (service.errors || 0) - service.yesterday);
     return difference * price;
   };
 

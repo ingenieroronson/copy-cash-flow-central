@@ -4,10 +4,10 @@ import { ServiceState } from '../types/sales';
 
 export const useServicesState = () => {
   const [services, setServices] = React.useState<ServiceState>({
-    colorCopies: { yesterday: 0, today: 0 },
-    bwCopies: { yesterday: 0, today: 0 },
-    colorPrints: { yesterday: 0, today: 0 },
-    bwPrints: { yesterday: 0, today: 0 }
+    colorCopies: { yesterday: 0, today: 0, errors: 0 },
+    bwCopies: { yesterday: 0, today: 0, errors: 0 },
+    colorPrints: { yesterday: 0, today: 0, errors: 0 },
+    bwPrints: { yesterday: 0, today: 0, errors: 0 }
   });
 
   const updateService = (serviceId: string, field: string, value: number) => {
@@ -22,10 +22,10 @@ export const useServicesState = () => {
 
   const resetServices = () => {
     setServices({
-      colorCopies: { yesterday: 0, today: 0 },
-      bwCopies: { yesterday: 0, today: 0 },
-      colorPrints: { yesterday: 0, today: 0 },
-      bwPrints: { yesterday: 0, today: 0 }
+      colorCopies: { yesterday: 0, today: 0, errors: 0 },
+      bwCopies: { yesterday: 0, today: 0, errors: 0 },
+      colorPrints: { yesterday: 0, today: 0, errors: 0 },
+      bwPrints: { yesterday: 0, today: 0, errors: 0 }
     });
   };
 

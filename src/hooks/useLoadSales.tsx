@@ -78,12 +78,12 @@ export const useLoadSales = () => {
 
       if (!previousRecords || previousRecords.length === 0) {
         console.log('No previous service records found for photocopier:', photocopierId, 'on date:', previousDayString);
-        // Return structure with zeros for "Ayer" and empty for "Hoy"
+        // Return structure with zeros for "Ayer" and empty for "Hoy" and "errors"
         return {
-          colorCopies: { yesterday: 0, today: 0 },
-          bwCopies: { yesterday: 0, today: 0 },
-          colorPrints: { yesterday: 0, today: 0 },
-          bwPrints: { yesterday: 0, today: 0 }
+          colorCopies: { yesterday: 0, today: 0, errors: 0 },
+          bwCopies: { yesterday: 0, today: 0, errors: 0 },
+          colorPrints: { yesterday: 0, today: 0, errors: 0 },
+          bwPrints: { yesterday: 0, today: 0, errors: 0 }
         };
       }
 
@@ -100,12 +100,12 @@ export const useLoadSales = () => {
 
       // Map to the format expected by the services state
       // Previous day's "valor_actual" becomes current day's "valor_anterior" (yesterday)
-      // "Hoy" (today) starts empty (0) for new data entry
+      // "Hoy" (today) and "errors" start empty (0) for new data entry
       const prefillData = {
-        colorCopies: { yesterday: previousCounters['copias_color'] || 0, today: 0 },
-        bwCopies: { yesterday: previousCounters['copias_bn'] || 0, today: 0 },
-        colorPrints: { yesterday: previousCounters['impresion_color'] || 0, today: 0 },
-        bwPrints: { yesterday: previousCounters['impresion_bn'] || 0, today: 0 }
+        colorCopies: { yesterday: previousCounters['copias_color'] || 0, today: 0, errors: 0 },
+        bwCopies: { yesterday: previousCounters['copias_bn'] || 0, today: 0, errors: 0 },
+        colorPrints: { yesterday: previousCounters['impresion_color'] || 0, today: 0, errors: 0 },
+        bwPrints: { yesterday: previousCounters['impresion_bn'] || 0, today: 0, errors: 0 }
       };
 
       console.log('Service counter prefill data for photocopier:', photocopierId, 'on date:', selectedDate, prefillData);
@@ -114,12 +114,12 @@ export const useLoadSales = () => {
 
     } catch (error) {
       console.error('Error loading service counter preload for photocopier:', photocopierId, error);
-      // Return structure with zeros for "Ayer" and empty for "Hoy" on error
+      // Return structure with zeros for "Ayer" and empty for "Hoy" and "errors" on error
       return {
-        colorCopies: { yesterday: 0, today: 0 },
-        bwCopies: { yesterday: 0, today: 0 },
-        colorPrints: { yesterday: 0, today: 0 },
-        bwPrints: { yesterday: 0, today: 0 }
+        colorCopies: { yesterday: 0, today: 0, errors: 0 },
+        bwCopies: { yesterday: 0, today: 0, errors: 0 },
+        colorPrints: { yesterday: 0, today: 0, errors: 0 },
+        bwPrints: { yesterday: 0, today: 0, errors: 0 }
       };
     }
   };

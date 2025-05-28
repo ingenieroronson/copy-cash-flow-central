@@ -1,7 +1,7 @@
-
 export interface ServiceData {
   yesterday: number;
   today: number;
+  errors: number;
 }
 
 export interface ServiceState {
