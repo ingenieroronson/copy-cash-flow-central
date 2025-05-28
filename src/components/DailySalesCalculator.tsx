@@ -8,6 +8,7 @@ import { ServiceSection } from './ServiceSection';
 import { SupplySection } from './SupplySection';
 import { SummaryCard } from './SummaryCard';
 import { PhotocopierSelector } from './PhotocopierSelector';
+import { DateSelector } from './DateSelector';
 import { Photocopier } from '@/hooks/usePhotocopiers';
 
 interface Supply {
@@ -28,9 +29,11 @@ interface DailySalesCalculatorProps {
   dbSupplies: Supply[];
   photocopiers: Photocopier[];
   selectedPhotocopierId: string;
+  selectedDate: string;
   onUpdateService: (serviceId: string, field: string, value: number) => void;
   onUpdateSupply: (supplyId: string, field: string, value: number) => void;
   onPhotocopierChange: (photocopierId: string) => void;
+  onDateChange: (date: string) => void;
   onSaveSales: () => void;
   salesLoading: boolean;
   photocopiersLoading: boolean;
@@ -45,9 +48,11 @@ export const DailySalesCalculator = ({
   dbSupplies,
   photocopiers,
   selectedPhotocopierId,
+  selectedDate,
   onUpdateService,
   onUpdateSupply,
   onPhotocopierChange,
+  onDateChange,
   onSaveSales,
   salesLoading,
   photocopiersLoading,
@@ -105,6 +110,11 @@ export const DailySalesCalculator = ({
               selectedPhotocopierId={selectedPhotocopierId}
               onPhotocopierChange={onPhotocopierChange}
               loading={photocopiersLoading}
+            />
+
+            <DateSelector
+              selectedDate={selectedDate}
+              onDateChange={onDateChange}
             />
 
             {!selectedPhotocopierId && !photocopiersLoading && (

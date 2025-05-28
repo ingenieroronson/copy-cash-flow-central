@@ -17,6 +17,7 @@ const Index = () => {
   const { photocopiers, loading: photocopiersLoading } = usePhotocopiers();
 
   const [selectedPhotocopierId, setSelectedPhotocopierId] = React.useState<string>('');
+  const [selectedDate, setSelectedDate] = React.useState<string>(new Date().toISOString().split('T')[0]);
   const [services, setServices] = React.useState({
     colorCopies: { yesterday: 0, today: 0 },
     bwCopies: { yesterday: 0, today: 0 },
@@ -37,7 +38,7 @@ const Index = () => {
   React.useEffect(() => {
     const loadExistingSales = async () => {
       if (user && selectedPhotocopierId) {
-        const salesData = await loadDailySales(undefined, selectedPhotocopierId);
+        const salesData = await loadDailySales(selectedDate, selectedPhotocopierId);
         if (salesData.services && Object.keys(salesData.services).length > 0) {
           setServices(prev => ({ ...prev, ...salesData.services }));
         }
@@ -47,7 +48,7 @@ const Index = () => {
       }
     };
     loadExistingSales();
-  }, [user, selectedPhotocopierId]);
+  }, [user, selectedPhotocopierId, selectedDate]);
 
   // Update supplies state when dynamic supplies are loaded
   React.useEffect(() => {
@@ -129,7 +130,7 @@ const Index = () => {
       supplyPrices[supplyName] = getSupplyPrice(supplyName);
     });
 
-    await saveDailySales(services, suppliesData, servicePrices, supplyPrices, selectedPhotocopierId);
+    await saveDailySales(services, suppliesData, servicePrices, supplyPrices, selectedPhotocopierId, selectedDate);
   };
 
   return (
@@ -139,9 +140,11 @@ const Index = () => {
       dbSupplies={dbSupplies}
       photocopiers={photocopiers}
       selectedPhotocopierId={selectedPhotocopierId}
+      selectedDate={selectedDate}
       onUpdateService={updateService}
       onUpdateSupply={updateSupply}
       onPhotocopierChange={setSelectedPhotocopierId}
+      onDateChange={setSelectedDate}
       onSaveSales={handleSaveSales}
       salesLoading={salesLoading}
       photocopiersLoading={photocopiersLoading}

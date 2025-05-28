@@ -14,13 +14,14 @@ export const useSalesRecords = () => {
     suppliesData: any,
     servicePrices: any,
     supplyPrices: any,
-    photocopierId: string
+    photocopierId: string,
+    selectedDate?: string
   ) => {
     if (!user || !photocopierId) return;
 
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = selectedDate || new Date().toISOString().split('T')[0];
 
       // Ensure user exists in usuarios table
       await supabase

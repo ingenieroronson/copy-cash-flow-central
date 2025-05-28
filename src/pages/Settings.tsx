@@ -11,6 +11,7 @@ import { useSupplies } from '@/hooks/useSupplies';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Plus, Save, Settings as SettingsIcon } from 'lucide-react';
 import { AuthForm } from '@/components/AuthForm';
+import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -140,6 +141,9 @@ const Settings = () => {
           </div>
 
           <div className="space-y-8">
+            {/* Photocopier Management */}
+            <PhotocopierManagement />
+
             {/* Service Prices */}
             <Card>
               <CardHeader>
