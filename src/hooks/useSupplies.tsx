@@ -121,6 +121,67 @@ export const useSupplies = () => {
     }
   };
 
+  const cleanupOrphanedInventoryItems = async () => {
+    if (!user) return;
+
+    try {
+      console.log('Starting cleanup of orphaned inventory items...');
+
+      // Get all active supplies for this user
+      const { data: activeSupplies, error: suppliesError } = await supabase
+        .from('pricing')
+        .select('supply_name')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .is('service_type', null)
+        .not('supply_name', 'is', null);
+
+      if (suppliesError) throw suppliesError;
+
+      const activeSupplyNames = new Set(
+        activeSupplies?.map(s => s.supply_name).filter(Boolean) || []
+      );
+
+      // Add "Hojas Blancas" as a protected default item
+      activeSupplyNames.add('Hojas Blancas');
+
+      // Get all inventory items across all businesses
+      const { data: allInventoryItems, error: inventoryError } = await supabase
+        .from('inventory')
+        .select('id, supply_name, negocio_id');
+
+      if (inventoryError) throw inventoryError;
+
+      if (allInventoryItems && allInventoryItems.length > 0) {
+        // Find orphaned items (inventory items without corresponding active supplies)
+        const orphanedItems = allInventoryItems.filter(
+          item => !activeSupplyNames.has(item.supply_name)
+        );
+
+        if (orphanedItems.length > 0) {
+          console.log(`Found ${orphanedItems.length} orphaned inventory items to remove:`, 
+            orphanedItems.map(item => item.supply_name));
+
+          // Delete orphaned items
+          const orphanedIds = orphanedItems.map(item => item.id);
+          const { error: deleteError } = await supabase
+            .from('inventory')
+            .delete()
+            .in('id', orphanedIds);
+
+          if (deleteError) throw deleteError;
+          
+          console.log(`Successfully removed ${orphanedItems.length} orphaned inventory items`);
+        } else {
+          console.log('No orphaned inventory items found');
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up orphaned inventory items:', error);
+      // Don't throw to avoid blocking other operations
+    }
+  };
+
   const cleanupDuplicateSupplies = async () => {
     if (!user) return;
 
@@ -128,7 +189,7 @@ export const useSupplies = () => {
       // Get all supplies for this user
       const { data: allSupplies, error: fetchError } = await supabase
         .from('pricing')
-        .select('id, supply_name, created_at')
+        .select('id, supply_name, unit_price, created_at')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .is('service_type', null)
@@ -169,11 +230,15 @@ export const useSupplies = () => {
               console.log(`Successfully cleaned up duplicate supplies for ${supplyName}`);
             }
             
-            // Re-sync the remaining supply to inventory
-            await syncSupplyToAllBusinesses(supplyName, supplies[0].unit_price || 0);
+            // Re-sync the remaining supply to inventory with correct unit_price
+            const remainingSupply = supplies[0];
+            await syncSupplyToAllBusinesses(supplyName, remainingSupply.unit_price || 0);
           }
         }
       }
+
+      // Clean up any orphaned inventory items after duplicate cleanup
+      await cleanupOrphanedInventoryItems();
     } catch (error) {
       console.error('Error cleaning up duplicate supplies:', error);
       // Don't throw error to avoid blocking the main fetch
@@ -294,9 +359,13 @@ export const useSupplies = () => {
     }
   };
 
+  // Run cleanup operations when component mounts or user changes
   useEffect(() => {
     if (user) {
-      fetchSupplies();
+      // Run comprehensive cleanup first, then fetch supplies
+      cleanupDuplicateSupplies().then(() => {
+        fetchSupplies();
+      });
     }
   }, [user]);
 
@@ -307,5 +376,6 @@ export const useSupplies = () => {
     updateSupply,
     deleteSupply,
     refetch: fetchSupplies,
+    cleanupOrphanedInventoryItems,
   };
 };
