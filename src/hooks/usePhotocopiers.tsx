@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Photocopier {
@@ -10,18 +9,16 @@ export interface Photocopier {
   nombre: string | null;
   ubicacion: string | null;
   usuario_id: string | null;
-  negocio_id: string | null;
 }
 
 export const usePhotocopiers = () => {
   const [photocopiers, setPhotocopiers] = useState<Photocopier[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { currentBusinessId } = useBusinesses();
   const { toast } = useToast();
 
   const loadPhotocopiers = async () => {
-    if (!user || !currentBusinessId) {
+    if (!user) {
       setPhotocopiers([]);
       setLoading(false);
       return;
@@ -43,11 +40,11 @@ export const usePhotocopiers = () => {
         console.error('Error ensuring user exists:', userInsertError);
       }
 
-      // Load photocopiers for the current business
+      // Load photocopiers
       const { data, error } = await supabase
         .from('fotocopiadoras')
         .select('*')
-        .eq('negocio_id', currentBusinessId)
+        .eq('usuario_id', user.id)
         .order('nombre');
 
       if (error) throw error;
@@ -58,7 +55,6 @@ export const usePhotocopiers = () => {
           .from('fotocopiadoras')
           .insert({
             usuario_id: user.id,
-            negocio_id: currentBusinessId,
             nombre: 'Fotocopiadora Principal',
             ubicacion: 'Oficina'
           })
@@ -83,13 +79,13 @@ export const usePhotocopiers = () => {
   };
 
   useEffect(() => {
-    if (user && currentBusinessId) {
+    if (user) {
       loadPhotocopiers();
     } else {
       setPhotocopiers([]);
       setLoading(false);
     }
-  }, [user, currentBusinessId]);
+  }, [user]);
 
   return {
     photocopiers,

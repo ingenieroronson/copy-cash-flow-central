@@ -1,105 +1,69 @@
 
 import React from 'react';
-import { Header } from '@/components/Header';
-import { AuthForm } from '@/components/AuthForm';
-import { AppWrapper } from '@/components/AppWrapper';
-import { RoleGuard } from '@/components/RoleGuard';
-import { DailySalesCalculator } from '@/components/DailySalesCalculator';
-import { NoBusinessAccess } from '@/components/NoBusinessAccess';
-import { useSalesState } from '@/hooks/useSalesState';
-import { useBusinesses } from '@/hooks/useBusinesses';
-import { useAuth } from '@/hooks/useAuth';
+import { AppWrapper } from '../components/AppWrapper';
+import { DailySalesCalculator } from '../components/DailySalesCalculator';
+import { useSalesState } from '../hooks/useSalesState';
 
 const Index = () => {
-  const salesState = useSalesState();
-  const { currentBusinessId, businesses, loading: businessLoading } = useBusinesses();
-  const { user } = useAuth();
-
-  // Show loading state while businesses are being loaded
-  if (businessLoading) {
-    return (
-      <AppWrapper 
-        authLoading={salesState.authLoading}
-        pricingLoading={salesState.pricingLoading}
-        suppliesLoading={salesState.suppliesLoading}
-        user={salesState.user}
-      >
-        <div></div>
-      </AppWrapper>
-    );
-  }
-
-  // If user is authenticated but has no businesses, show no access message
-  if (user && !businessLoading && businesses.length === 0) {
-    return <NoBusinessAccess />;
-  }
-
-  // If no current business selected but businesses exist, show loading
-  if (user && businesses.length > 0 && !currentBusinessId) {
-    return (
-      <AppWrapper 
-        authLoading={salesState.authLoading}
-        pricingLoading={salesState.pricingLoading}
-        suppliesLoading={salesState.suppliesLoading}
-        user={salesState.user}
-      >
-        <div className="min-h-screen bg-gray-50">
-          <Header />
-          <main className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-8">
-            <div className="text-center py-8">
-              <p className="text-gray-500">Cargando negocio...</p>
-            </div>
-          </main>
-        </div>
-      </AppWrapper>
-    );
-  }
+  const {
+    // Loading states
+    authLoading,
+    pricingLoading,
+    suppliesLoading,
+    salesLoading,
+    photocopiersLoading,
+    
+    // User and auth
+    user,
+    
+    // Data
+    services,
+    suppliesData,
+    dbSupplies,
+    photocopiers,
+    selectedPhotocopierId,
+    selectedDate,
+    
+    // Actions
+    updateService,
+    updateSupply,
+    setSelectedPhotocopierId,
+    setSelectedDate,
+    handleSaveSales,
+    
+    // Calculations
+    calculateServiceTotal,
+    calculateSupplyTotal,
+    getTotalSales,
+    getServicePrice,
+    getSupplyPrice,
+  } = useSalesState();
 
   return (
-    <AppWrapper 
-      authLoading={salesState.authLoading}
-      pricingLoading={salesState.pricingLoading}
-      suppliesLoading={salesState.suppliesLoading}
-      user={salesState.user}
+    <AppWrapper
+      authLoading={authLoading}
+      pricingLoading={pricingLoading}
+      suppliesLoading={suppliesLoading}
+      user={user}
     >
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        
-        <main className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-8">
-          <div className="mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              Registro de Ventas Diarias
-            </h1>
-            <p className="text-sm md:text-base text-gray-600">
-              Registra las ventas diarias de tu fotocopiadora
-            </p>
-          </div>
-
-          <RoleGuard 
-            requiredRole="operador"
-            fallback={
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-                <p className="text-gray-500 mb-2">
-                  No tienes permisos para registrar ventas.
-                </p>
-                <p className="text-sm text-gray-400">
-                  Contacta al administrador para obtener permisos de operador.
-                </p>
-              </div>
-            }
-          >
-            <DailySalesCalculator 
-              {...salesState}
-              onUpdateService={salesState.updateService}
-              onUpdateSupply={salesState.updateSupply}
-              onPhotocopierChange={salesState.setSelectedPhotocopierId}
-              onDateChange={salesState.setSelectedDate}
-              onSaveSales={salesState.handleSaveSales}
-              totalSales={salesState.getTotalSales()}
-            />
-          </RoleGuard>
-        </main>
-      </div>
+      <DailySalesCalculator
+        services={services}
+        suppliesData={suppliesData}
+        dbSupplies={dbSupplies}
+        photocopiers={photocopiers}
+        selectedPhotocopierId={selectedPhotocopierId}
+        selectedDate={selectedDate}
+        onUpdateService={updateService}
+        onUpdateSupply={updateSupply}
+        onPhotocopierChange={setSelectedPhotocopierId}
+        onDateChange={setSelectedDate}
+        onSaveSales={handleSaveSales}
+        salesLoading={salesLoading}
+        photocopiersLoading={photocopiersLoading}
+        getServicePrice={getServicePrice}
+        getSupplyPrice={getSupplyPrice}
+        totalSales={getTotalSales()}
+      />
     </AppWrapper>
   );
 };

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Supply {
@@ -10,45 +9,28 @@ export interface Supply {
   supply_name: string | null;
   unit_price: number;
   is_active: boolean | null;
-  negocio_id: string | null;
 }
 
 export const useSupplies = () => {
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { currentBusinessId } = useBusinesses();
   const { toast } = useToast();
 
   const fetchSupplies = async () => {
-    if (!user || !currentBusinessId) {
-      setSupplies([]);
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('pricing')
-        .select('id, supply_name, unit_price, is_active, negocio_id')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('is_active', true)
         .is('service_type', null)
         .not('supply_name', 'is', null);
 
       if (error) throw error;
-      
-      // Transform the data to match the Supply interface
-      const transformedData: Supply[] = (data || []).map(item => ({
-        id: item.id,
-        supply_name: item.supply_name,
-        unit_price: item.unit_price,
-        is_active: item.is_active,
-        negocio_id: item.negocio_id
-      }));
-      
-      setSupplies(transformedData);
+      setSupplies(data || []);
     } catch (error) {
       console.error('Error fetching supplies:', error);
       toast({
@@ -62,20 +44,19 @@ export const useSupplies = () => {
   };
 
   useEffect(() => {
-    if (user && currentBusinessId) {
+    if (user) {
       fetchSupplies();
     }
-  }, [user, currentBusinessId]);
+  }, [user]);
 
   const addSupply = async (name: string, price: number) => {
-    if (!user || !currentBusinessId) return;
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from('pricing')
         .insert({
           user_id: user.id,
-          negocio_id: currentBusinessId,
           supply_name: name,
           unit_price: price,
           is_active: true
@@ -108,14 +89,13 @@ export const useSupplies = () => {
   };
 
   const deleteSupply = async (supplyName: string) => {
-    if (!user || !currentBusinessId) return;
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from('pricing')
         .update({ is_active: false })
         .eq('user_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('supply_name', supplyName);
 
       if (error) throw error;

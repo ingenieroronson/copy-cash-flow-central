@@ -2,62 +2,27 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
-
-// Simple type definitions to avoid deep instantiation
-type SimpleServiceData = {
-  yesterday: number;
-  today: number;
-  errors: number;
-};
-
-type SimpleServicesData = {
-  colorCopies?: SimpleServiceData;
-  bwCopies?: SimpleServiceData;
-  colorPrints?: SimpleServiceData;
-  bwPrints?: SimpleServiceData;
-};
-
-type SimpleSupplyData = {
-  startStock: number;
-  endStock: number;
-};
-
-type SimpleSuppliesData = {
-  [supplyName: string]: SimpleSupplyData;
-};
-
-type SimpleServicePrices = {
-  color_copies?: number;
-  bw_copies?: number;
-  color_prints?: number;
-  bw_prints?: number;
-};
-
-type SimpleSupplyPrices = {
-  [supplyName: string]: number;
-};
+import type { Services, Supplies, ServicePrices, SupplyPrices } from '@/types/sales';
 
 export const useSaveSales = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
-  const { currentBusinessId } = useBusinesses();
   const { toast } = useToast();
 
   const saveDailySales = async (
-    services: SimpleServicesData,
-    suppliesData: SimpleSuppliesData,
-    servicePrices: SimpleServicePrices,
-    supplyPrices: SimpleSupplyPrices,
+    services: Services,
+    suppliesData: Supplies,
+    servicePrices: ServicePrices,
+    supplyPrices: SupplyPrices,
     photocopierId: string,
     selectedDate?: string
-  ): Promise<void> => {
-    if (!user || !photocopierId || !currentBusinessId) {
+  ) => {
+    if (!user || !photocopierId) {
       toast({
         title: "Error",
-        description: "Usuario, fotocopiadora o negocio no seleccionado.",
+        description: "Usuario o fotocopiadora no seleccionada.",
         variant: "destructive",
       });
       return;
@@ -70,10 +35,10 @@ export const useSaveSales = () => {
         timeZone: 'America/Mexico_City'
       });
 
-      console.log('Saving sales for date:', targetDate, 'business:', currentBusinessId);
+      console.log('Saving sales for date:', targetDate);
 
       // Ensure user exists in usuarios table
-      const { error: userError } = await supabase
+      await supabase
         .from('usuarios')
         .upsert({ 
           id: user.id, 
@@ -83,37 +48,28 @@ export const useSaveSales = () => {
           onConflict: 'id' 
         });
 
-      if (userError) throw userError;
-
       // Delete existing records for this date, user, and photocopier to prevent duplicates
-      const { error: deleteVentasError } = await supabase
+      await supabase
         .from('ventas')
         .delete()
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate)
-        .eq('fotocopiadora_id', photocopierId)
-        .eq('negocio_id', currentBusinessId);
+        .eq('fotocopiadora_id', photocopierId);
 
-      if (deleteVentasError) throw deleteVentasError;
-
-      const { error: deleteSupplyError } = await supabase
+      await supabase
         .from('supply_sales')
         .delete()
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate)
-        .eq('fotocopiadora_id', photocopierId)
-        .eq('negocio_id', currentBusinessId);
+        .eq('fotocopiadora_id', photocopierId);
 
-      if (deleteSupplyError) throw deleteSupplyError;
-
-      // Process and save service records with business ID
+      // Process and save service records
       const serviceRecords = processServiceRecords(
         services,
         servicePrices,
         user.id,
         targetDate,
-        photocopierId,
-        currentBusinessId
+        photocopierId
       );
 
       if (serviceRecords.length > 0) {
@@ -124,14 +80,13 @@ export const useSaveSales = () => {
         if (serviceError) throw serviceError;
       }
 
-      // Process and save supply records with business ID
+      // Process and save supply records with photocopier ID
       const supplyRecords = processSupplyRecords(
         suppliesData,
         supplyPrices,
         user.id,
         targetDate,
-        photocopierId,
-        currentBusinessId
+        photocopierId
       );
 
       if (supplyRecords.length > 0) {

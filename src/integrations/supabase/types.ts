@@ -12,33 +12,23 @@ export type Database = {
       fotocopiadoras: {
         Row: {
           id: string
-          negocio_id: string | null
           nombre: string | null
           ubicacion: string | null
           usuario_id: string | null
         }
         Insert: {
           id?: string
-          negocio_id?: string | null
           nombre?: string | null
           ubicacion?: string | null
           usuario_id?: string | null
         }
         Update: {
           id?: string
-          negocio_id?: string | null
           nombre?: string | null
           ubicacion?: string | null
           usuario_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fotocopiadoras_negocio_id_fkey"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fotocopiadoras_usuario_id_fkey"
             columns: ["usuario_id"]
@@ -51,33 +41,23 @@ export type Database = {
       insumos: {
         Row: {
           id: string
-          negocio_id: string | null
           nombre: string
           precio: number
           usuario_id: string | null
         }
         Insert: {
           id?: string
-          negocio_id?: string | null
           nombre: string
           precio: number
           usuario_id?: string | null
         }
         Update: {
           id?: string
-          negocio_id?: string | null
           nombre?: string
           precio?: number
           usuario_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "insumos_negocio_id_fkey"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "insumos_usuario_id_fkey"
             columns: ["usuario_id"]
@@ -122,69 +102,26 @@ export type Database = {
           },
         ]
       }
-      negocios: {
-        Row: {
-          created_at: string
-          descripcion: string | null
-          direccion: string | null
-          email: string | null
-          id: string
-          nombre: string
-          telefono: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          descripcion?: string | null
-          direccion?: string | null
-          email?: string | null
-          id?: string
-          nombre: string
-          telefono?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          descripcion?: string | null
-          direccion?: string | null
-          email?: string | null
-          id?: string
-          nombre?: string
-          telefono?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       precios: {
         Row: {
           id: string
-          negocio_id: string | null
           precio: number | null
           tipo: string | null
           usuario_id: string | null
         }
         Insert: {
           id?: string
-          negocio_id?: string | null
           precio?: number | null
           tipo?: string | null
           usuario_id?: string | null
         }
         Update: {
           id?: string
-          negocio_id?: string | null
           precio?: number | null
           tipo?: string | null
           usuario_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "precios_negocio_id_fkey"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "precios_usuario_id_fkey"
             columns: ["usuario_id"]
@@ -201,7 +138,6 @@ export type Database = {
           id: string
           is_active: boolean | null
           machine_id: string | null
-          negocio_id: string | null
           service_type: Database["public"]["Enums"]["service_type"] | null
           supply_name: string | null
           unit_price: number
@@ -214,7 +150,6 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           machine_id?: string | null
-          negocio_id?: string | null
           service_type?: Database["public"]["Enums"]["service_type"] | null
           supply_name?: string | null
           unit_price: number
@@ -227,7 +162,6 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           machine_id?: string | null
-          negocio_id?: string | null
           service_type?: Database["public"]["Enums"]["service_type"] | null
           supply_name?: string | null
           unit_price?: number
@@ -235,13 +169,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_pricing_negocio"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "pricing_machine_id_fkey"
             columns: ["machine_id"]
@@ -315,7 +242,6 @@ export type Database = {
           fecha: string
           fotocopiadora_id: string
           id: string
-          negocio_id: string | null
           nombre_insumo: string
           precio_unitario: number
           total: number
@@ -328,7 +254,6 @@ export type Database = {
           fecha?: string
           fotocopiadora_id: string
           id?: string
-          negocio_id?: string | null
           nombre_insumo: string
           precio_unitario?: number
           total?: number
@@ -341,7 +266,6 @@ export type Database = {
           fecha?: string
           fotocopiadora_id?: string
           id?: string
-          negocio_id?: string | null
           nombre_insumo?: string
           precio_unitario?: number
           total?: number
@@ -354,13 +278,6 @@ export type Database = {
             columns: ["fotocopiadora_id"]
             isOneToOne: false
             referencedRelation: "fotocopiadoras"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_supply_sales_negocio"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
             referencedColumns: ["id"]
           },
           {
@@ -410,64 +327,19 @@ export type Database = {
         Row: {
           email: string
           id: string
-          is_super_admin: boolean
           nombre: string | null
         }
         Insert: {
           email: string
           id?: string
-          is_super_admin?: boolean
           nombre?: string | null
         }
         Update: {
           email?: string
           id?: string
-          is_super_admin?: boolean
           nombre?: string | null
         }
         Relationships: []
-      }
-      usuarios_negocios: {
-        Row: {
-          created_at: string
-          id: string
-          negocio_id: string
-          role: Database["public"]["Enums"]["business_role"]
-          updated_at: string
-          usuario_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          negocio_id: string
-          role?: Database["public"]["Enums"]["business_role"]
-          updated_at?: string
-          usuario_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          negocio_id?: string
-          role?: Database["public"]["Enums"]["business_role"]
-          updated_at?: string
-          usuario_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "usuarios_negocios_negocio_id_fkey"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usuarios_negocios_usuario_id_fkey"
-            columns: ["usuario_id"]
-            isOneToOne: false
-            referencedRelation: "usuarios"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       ventas: {
         Row: {
@@ -476,7 +348,6 @@ export type Database = {
           fecha: string
           fotocopiadora_id: string | null
           id: string
-          negocio_id: string | null
           nombre_insumo: string | null
           precio_unitario: number | null
           tipo: string | null
@@ -491,7 +362,6 @@ export type Database = {
           fecha: string
           fotocopiadora_id?: string | null
           id?: string
-          negocio_id?: string | null
           nombre_insumo?: string | null
           precio_unitario?: number | null
           tipo?: string | null
@@ -506,7 +376,6 @@ export type Database = {
           fecha?: string
           fotocopiadora_id?: string | null
           id?: string
-          negocio_id?: string | null
           nombre_insumo?: string | null
           precio_unitario?: number | null
           tipo?: string | null
@@ -516,13 +385,6 @@ export type Database = {
           valor_anterior?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_ventas_negocio"
-            columns: ["negocio_id"]
-            isOneToOne: false
-            referencedRelation: "negocios"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "ventas_fotocopiadora_id_fkey"
             columns: ["fotocopiadora_id"]
@@ -544,49 +406,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_business_role: {
-        Args: { _user_id: string; _negocio_id: string }
-        Returns: Database["public"]["Enums"]["business_role"]
-      }
-      get_user_business_role_with_super_admin: {
-        Args: { _user_id: string; _negocio_id: string }
-        Returns: Database["public"]["Enums"]["business_role"]
-      }
-      has_business_role: {
-        Args: {
-          _user_id: string
-          _negocio_id: string
-          _role: Database["public"]["Enums"]["business_role"]
-        }
-        Returns: boolean
-      }
-      has_minimum_business_role: {
-        Args: {
-          _user_id: string
-          _negocio_id: string
-          _minimum_role: Database["public"]["Enums"]["business_role"]
-        }
-        Returns: boolean
-      }
-      has_minimum_business_role_with_super_admin: {
-        Args: {
-          _user_id: string
-          _negocio_id: string
-          _minimum_role: Database["public"]["Enums"]["business_role"]
-        }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_super_admin_from_usuarios: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      business_role: "admin" | "operador" | "viewer"
       service_type: "color_copies" | "bw_copies" | "color_prints" | "bw_prints"
     }
     CompositeTypes: {
@@ -703,7 +525,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      business_role: ["admin", "operador", "viewer"],
       service_type: ["color_copies", "bw_copies", "color_prints", "bw_prints"],
     },
   },

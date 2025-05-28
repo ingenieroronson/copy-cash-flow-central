@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PricingData {
@@ -10,43 +9,26 @@ export interface PricingData {
   service_type?: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints';
   supply_name?: string;
   unit_price: number;
-  negocio_id?: string | null;
 }
 
 export const usePricing = () => {
   const [pricing, setPricing] = useState<PricingData[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { currentBusinessId } = useBusinesses();
   const { toast } = useToast();
 
   const fetchPricing = async () => {
-    if (!user || !currentBusinessId) {
-      setPricing([]);
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('pricing')
-        .select('id, service_type, supply_name, unit_price, negocio_id')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('is_active', true);
 
       if (error) throw error;
-      
-      // Transform data to match PricingData interface
-      const transformedData: PricingData[] = (data || []).map(item => ({
-        id: item.id,
-        service_type: item.service_type || undefined,
-        supply_name: item.supply_name || undefined,
-        unit_price: item.unit_price,
-        negocio_id: item.negocio_id
-      }));
-      
-      setPricing(transformedData);
+      setPricing(data || []);
     } catch (error) {
       console.error('Error fetching pricing:', error);
       toast({
@@ -60,30 +42,29 @@ export const usePricing = () => {
   };
 
   useEffect(() => {
-    if (user && currentBusinessId) {
+    if (user) {
       fetchPricing();
     }
-  }, [user, currentBusinessId]);
+  }, [user]);
 
-  const getServicePrice = (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints'): number => {
+  const getServicePrice = (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints') => {
     const priceData = pricing.find(p => p.service_type === serviceType);
     return priceData?.unit_price || 0;
   };
 
-  const getSupplyPrice = (supplyName: string): number => {
+  const getSupplyPrice = (supplyName: string) => {
     const priceData = pricing.find(p => p.supply_name === supplyName);
     return priceData?.unit_price || 0;
   };
 
-  const updateServicePrice = async (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints', price: number): Promise<void> => {
-    if (!user || !currentBusinessId) return;
+  const updateServicePrice = async (serviceType: 'color_copies' | 'bw_copies' | 'color_prints' | 'bw_prints', price: number) => {
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from('pricing')
         .update({ unit_price: price })
         .eq('user_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('service_type', serviceType);
 
       if (error) throw error;
@@ -94,15 +75,14 @@ export const usePricing = () => {
     }
   };
 
-  const updateSupplyPrice = async (supplyName: string, price: number): Promise<void> => {
-    if (!user || !currentBusinessId) return;
+  const updateSupplyPrice = async (supplyName: string, price: number) => {
+    if (!user) return;
 
     try {
       const { error } = await supabase
         .from('pricing')
         .update({ unit_price: price })
         .eq('user_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('supply_name', supplyName);
 
       if (error) throw error;

@@ -1,15 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useBusinesses } from './useBusinesses';
 import { transformLoadedData } from '@/utils/salesDataProcessor';
 
 export const useLoadSales = () => {
   const { user } = useAuth();
-  const { currentBusinessId } = useBusinesses();
 
   const loadDailySales = async (date?: string, photocopierId?: string) => {
-    if (!user || !currentBusinessId) return { services: {}, supplies: {} };
+    if (!user) return { services: {}, supplies: {} };
 
     const targetDate = date || new Date().toISOString().split('T')[0];
 
@@ -19,7 +17,6 @@ export const useLoadSales = () => {
         .from('ventas')
         .select('*')
         .eq('usuario_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('fecha', targetDate);
 
       if (photocopierId) {
@@ -35,7 +32,6 @@ export const useLoadSales = () => {
         .from('supply_sales')
         .select('*')
         .eq('usuario_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('fecha', targetDate);
 
       if (photocopierId) {
@@ -55,7 +51,7 @@ export const useLoadSales = () => {
   };
 
   const loadServiceCounterPreload = async (photocopierId: string, selectedDate: string) => {
-    if (!user || !photocopierId || !selectedDate || !currentBusinessId) return {};
+    if (!user || !photocopierId || !selectedDate) return {};
 
     try {
       // Calculate previous date in Mexico City timezone
@@ -66,14 +62,14 @@ export const useLoadSales = () => {
       // Format as YYYY-MM-DD
       const previousDayString = previousDay.toISOString().split('T')[0];
 
-      console.log('Loading service counter preload for photocopier:', photocopierId, 'from previous day:', previousDayString, 'business:', currentBusinessId);
+      console.log('Loading service counter preload for photocopier:', photocopierId, 'from previous day:', previousDayString);
 
-      // Get the "valor_actual" (Hoy) values from the previous day for this specific photocopier and business
+      // Get the "valor_actual" (Hoy) values from the previous day for this specific photocopier
+      // These will become the "valor_anterior" (Ayer) values for the current date
       const { data: previousRecords, error } = await supabase
         .from('ventas')
         .select('tipo, valor_actual')
         .eq('usuario_id', user.id)
-        .eq('negocio_id', currentBusinessId)
         .eq('fotocopiadora_id', photocopierId)
         .eq('fecha', previousDayString)
         .not('valor_actual', 'is', null);
@@ -81,7 +77,7 @@ export const useLoadSales = () => {
       if (error) throw error;
 
       if (!previousRecords || previousRecords.length === 0) {
-        console.log('No previous service records found for photocopier:', photocopierId, 'on date:', previousDayString, 'business:', currentBusinessId);
+        console.log('No previous service records found for photocopier:', photocopierId, 'on date:', previousDayString);
         // Return structure with zeros for "Ayer" and empty for "Hoy" and "errors"
         return {
           colorCopies: { yesterday: 0, today: 0, errors: 0 },
@@ -100,9 +96,11 @@ export const useLoadSales = () => {
         }
       }
 
-      console.log('Previous day service counter values found for photocopier:', photocopierId, 'business:', currentBusinessId, previousCounters);
+      console.log('Previous day service counter values found for photocopier:', photocopierId, previousCounters);
 
       // Map to the format expected by the services state
+      // Previous day's "valor_actual" becomes current day's "valor_anterior" (yesterday)
+      // "Hoy" (today) and "errors" start empty (0) for new data entry
       const prefillData = {
         colorCopies: { yesterday: previousCounters['copias_color'] || 0, today: 0, errors: 0 },
         bwCopies: { yesterday: previousCounters['copias_bn'] || 0, today: 0, errors: 0 },
@@ -110,12 +108,13 @@ export const useLoadSales = () => {
         bwPrints: { yesterday: previousCounters['impresion_bn'] || 0, today: 0, errors: 0 }
       };
 
-      console.log('Service counter prefill data for photocopier:', photocopierId, 'business:', currentBusinessId, 'on date:', selectedDate, prefillData);
+      console.log('Service counter prefill data for photocopier:', photocopierId, 'on date:', selectedDate, prefillData);
 
       return prefillData;
 
     } catch (error) {
-      console.error('Error loading service counter preload for photocopier:', photocopierId, 'business:', currentBusinessId, error);
+      console.error('Error loading service counter preload for photocopier:', photocopierId, error);
+      // Return structure with zeros for "Ayer" and empty for "Hoy" and "errors" on error
       return {
         colorCopies: { yesterday: 0, today: 0, errors: 0 },
         bwCopies: { yesterday: 0, today: 0, errors: 0 },
@@ -134,6 +133,6 @@ export const useLoadSales = () => {
   return {
     loadDailySales,
     loadServiceCounterPreload,
-    loadLatestCounters: loadServiceCounterPreload, // Kept for backward compatibility
+    loadLatestCounters, // Kept for backward compatibility
   };
 };

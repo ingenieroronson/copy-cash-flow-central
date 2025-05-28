@@ -49,7 +49,6 @@ export interface ServiceRecord {
   valor_anterior: number;
   valor_actual: number;
   fotocopiadora_id: string;
-  negocio_id: string;
   errores?: number;
 }
 
@@ -61,5 +60,4 @@ export interface SupplyRecord {
   cantidad: number;
   precio_unitario: number;
   total: number;
-  negocio_id: string;
 }

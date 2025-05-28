@@ -1,152 +1,68 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Calculator, Settings, History, LogOut, FileText } from 'lucide-react';
-import { BusinessSelector } from './BusinessSelector';
+import { Printer, LogOut, History, Settings, BarChart3 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export const Header = () => {
-  const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  if (!user) return null;
-
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-3 md:px-6">
-        <div className="flex items-center justify-between h-14 md:h-16">
-          <div className="flex items-center space-x-4 md:space-x-8">
-            <Link to="/" className="flex items-center space-x-2">
-              <Calculator className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
-              <span className="text-lg md:text-xl font-bold text-gray-900 hidden sm:block">
-                FotoVentas
-              </span>
-            </Link>
-
-            <nav className="hidden md:flex items-center space-x-1">
-              <Link
-                to="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/') 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                Ventas Diarias
-              </Link>
-              <Link
-                to="/sales-history"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/sales-history') 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <History className="w-4 h-4 inline mr-1" />
-                Historial
-              </Link>
-              <Link
-                to="/reports"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/reports') 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <BarChart3 className="w-4 h-4 inline mr-1" />
-                Reportes
-              </Link>
-              <Link
-                to="/settings"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/settings') 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <Settings className="w-4 h-4 inline mr-1" />
-                Configuración
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <BusinessSelector />
-            
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600 hidden md:block">
-                {user.email}
-              </span>
-              <Button
-                onClick={handleSignOut}
-                variant="ghost"
-                size="sm"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline ml-1">Cerrar Sesión</span>
-              </Button>
-            </div>
-          </div>
+    <header className="bg-white shadow-sm border-b border-gray-200 px-3 md:px-4 py-3">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Printer className="w-5 h-5 md:w-6 md:h-6 text-orange-500 flex-shrink-0" />
+          <h1 className="text-lg md:text-xl font-bold text-gray-800 cursor-pointer truncate" onClick={() => navigate('/')}>
+            Integracopias
+          </h1>
         </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden border-t border-gray-200 py-2">
-          <nav className="flex items-center justify-around">
-            <Link
-              to="/"
-              className={`flex flex-col items-center py-1 px-2 text-xs ${
-                isActive('/') 
-                  ? 'text-blue-700' 
-                  : 'text-gray-600'
-              }`}
-            >
-              <Calculator className="w-5 h-5 mb-1" />
-              Ventas
-            </Link>
-            <Link
-              to="/sales-history"
-              className={`flex flex-col items-center py-1 px-2 text-xs ${
-                isActive('/sales-history') 
-                  ? 'text-blue-700' 
-                  : 'text-gray-600'
-              }`}
-            >
-              <History className="w-5 h-5 mb-1" />
-              Historial
-            </Link>
-            <Link
-              to="/reports"
-              className={`flex flex-col items-center py-1 px-2 text-xs ${
-                isActive('/reports') 
-                  ? 'text-blue-700' 
-                  : 'text-gray-600'
-              }`}
-            >
-              <BarChart3 className="w-5 h-5 mb-1" />
-              Reportes
-            </Link>
-            <Link
-              to="/settings"
-              className={`flex flex-col items-center py-1 px-2 text-xs ${
-                isActive('/settings') 
-                  ? 'text-blue-700' 
-                  : 'text-gray-600'
-              }`}
-            >
-              <Settings className="w-5 h-5 mb-1" />
-              Config
-            </Link>
-          </nav>
+        
+        <div className="flex items-center gap-1 md:gap-2 lg:gap-4">
+          <Button
+            onClick={() => navigate('/reports')}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3"
+          >
+            <BarChart3 className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden md:inline">Reportes</span>
+          </Button>
+          <Button
+            onClick={() => navigate('/sales-history')}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3"
+          >
+            <History className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden md:inline">Historial</span>
+          </Button>
+          <Button
+            onClick={() => navigate('/settings')}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3"
+          >
+            <Settings className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden md:inline">Config</span>
+          </Button>
+          <span className="text-xs md:text-sm text-gray-600 hidden lg:block truncate max-w-32">
+            {user?.email}
+          </span>
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3"
+          >
+            <LogOut className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden lg:inline">Cerrar</span>
+          </Button>
         </div>
       </div>
     </header>
