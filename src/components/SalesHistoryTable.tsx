@@ -12,9 +12,10 @@ import type { DailySales, SalesRecord } from '@/pages/SalesHistory';
 interface SalesHistoryTableProps {
   salesData: DailySales[];
   onDeleteRecord: (record: SalesRecord) => void;
+  onDeleteAllForDate: (date: string) => void;
 }
 
-export const SalesHistoryTable = ({ salesData, onDeleteRecord }: SalesHistoryTableProps) => {
+export const SalesHistoryTable = ({ salesData, onDeleteRecord, onDeleteAllForDate }: SalesHistoryTableProps) => {
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
   const toggleDateExpansion = (date: string) => {
@@ -80,13 +81,48 @@ export const SalesHistoryTable = ({ salesData, onDeleteRecord }: SalesHistoryTab
                   {format(new Date(dailySale.date), 'EEE, d MMM yyyy', { locale: es })}
                 </CardTitle>
               </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-lg md:text-xl lg:text-2xl font-bold text-green-600">
-                  {formatCurrency(dailySale.totalAmount)}
-                </p>
-                <p className="text-xs md:text-sm text-gray-500">
-                  {dailySale.records.length} registro{dailySale.records.length !== 1 ? 's' : ''}
-                </p>
+              <div className="flex items-center gap-2">
+                <div className="text-right flex-shrink-0">
+                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-green-600">
+                    {formatCurrency(dailySale.totalAmount)}
+                  </p>
+                  <p className="text-xs md:text-sm text-gray-500">
+                    {dailySale.records.length} registro{dailySale.records.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Eliminar todos los registros del día"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="mx-2 max-w-md">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-base md:text-lg">
+                        ¿Eliminar todos los registros?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-sm md:text-base">
+                        Esta acción eliminará permanentemente todos los registros de ventas del día{' '}
+                        {format(new Date(dailySale.date), 'd MMM yyyy', { locale: es })}.
+                        Esta acción no se puede deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex-col md:flex-row gap-2">
+                      <AlertDialogCancel className="text-sm">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDeleteAllForDate(dailySale.date)}
+                        className="bg-red-600 hover:bg-red-700 text-sm"
+                      >
+                        Eliminar Todo
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </CardHeader>

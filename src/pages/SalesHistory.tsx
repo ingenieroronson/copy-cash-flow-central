@@ -74,12 +74,18 @@ const SalesHistory = () => {
 
       if (serviceError) throw serviceError;
 
-      // Load supply sales from supply_sales table using correct column names
-      const { data: supplyRecords, error: supplyError } = await supabase
+      // Load supply sales from supply_sales table
+      let supplyQuery = supabase
         .from('supply_sales')
         .select('*')
         .eq('usuario_id', user.id)
         .order('fecha', { ascending: false });
+
+      if (selectedPhotocopierId) {
+        supplyQuery = supplyQuery.eq('fotocopiadora_id', selectedPhotocopierId);
+      }
+
+      const { data: supplyRecords, error: supplyError } = await supplyQuery;
 
       if (supplyError) throw supplyError;
 
@@ -103,7 +109,8 @@ const SalesHistory = () => {
           precio_unitario: record.precio_unitario || 0,
           total: record.total || 0,
           source: 'supply' as const,
-          supply_name: record.nombre_insumo
+          supply_name: record.nombre_insumo,
+          fotocopiadora_id: record.fotocopiadora_id
         })) || [])
       ];
 
@@ -166,6 +173,54 @@ const SalesHistory = () => {
     }
   };
 
+  const handleDeleteAllRecordsForDate = async (date: string) => {
+    if (!user || !selectedPhotocopierId) {
+      toast({
+        title: "Error",
+        description: "Usuario o fotocopiadora no seleccionada.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Delete all service records for this date, user, and photocopier
+      const { error: serviceError } = await supabase
+        .from('ventas')
+        .delete()
+        .eq('usuario_id', user.id)
+        .eq('fecha', date)
+        .eq('fotocopiadora_id', selectedPhotocopierId);
+
+      if (serviceError) throw serviceError;
+
+      // Delete all supply records for this date, user, and photocopier
+      const { error: supplyError } = await supabase
+        .from('supply_sales')
+        .delete()
+        .eq('usuario_id', user.id)
+        .eq('fecha', date)
+        .eq('fotocopiadora_id', selectedPhotocopierId);
+
+      if (supplyError) throw supplyError;
+
+      toast({
+        title: "Registros eliminados",
+        description: "Todos los registros del día se han eliminado correctamente.",
+      });
+
+      // Reload data
+      loadSalesData();
+    } catch (error) {
+      console.error('Error deleting all records for date:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron eliminar todos los registros del día.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (user && selectedPhotocopierId) {
       loadSalesData();
@@ -205,6 +260,7 @@ const SalesHistory = () => {
         <SalesHistoryTable 
           salesData={salesData} 
           onDeleteRecord={handleDeleteRecord}
+          onDeleteAllForDate={handleDeleteAllRecordsForDate}
         />
       </main>
     </div>
