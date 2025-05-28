@@ -18,13 +18,16 @@ export const useSuperAdminCheck = () => {
 
       try {
         const { data, error } = await supabase
-          .rpc('is_super_admin', { user_id: user.id });
+          .rpc('is_super_admin', { _user_id: user.id });
 
         if (error) {
           console.error('Error checking super admin status:', error);
           setIsSuperAdmin(false);
+        } else if (typeof data === 'boolean') {
+          setIsSuperAdmin(data);
         } else {
-          setIsSuperAdmin(data || false);
+          console.error('Invalid super admin check result:', data);
+          setIsSuperAdmin(false);
         }
       } catch (error) {
         console.error('Error checking super admin status:', error);
