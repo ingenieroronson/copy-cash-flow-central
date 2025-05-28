@@ -48,10 +48,24 @@ export const useInventory = (negocioId?: string) => {
 
       if (error) throw error;
       
-      setInventory(data || []);
+      // If no inventory exists, auto-populate with user's supplies and default items
+      if (!data || data.length === 0) {
+        await initializeInventoryFromSupplies(negocioId);
+        // Refetch after initialization
+        const { data: newData, error: refetchError } = await supabase
+          .from('inventory')
+          .select('*')
+          .eq('negocio_id', negocioId)
+          .order('supply_name');
+
+        if (refetchError) throw refetchError;
+        setInventory(newData || []);
+      } else {
+        setInventory(data);
+      }
       
       // Check for low stock items
-      const lowStock = (data || []).filter(item => item.quantity < item.threshold_quantity);
+      const lowStock = (inventory).filter(item => item.quantity < item.threshold_quantity);
       setLowStockItems(lowStock);
       
     } catch (error) {
@@ -63,6 +77,62 @@ export const useInventory = (negocioId?: string) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const initializeInventoryFromSupplies = async (negocioId: string) => {
+    if (!user) return;
+
+    try {
+      // Get user's existing supplies from insumos table
+      const { data: userSupplies, error: suppliesError } = await supabase
+        .from('insumos')
+        .select('nombre, precio')
+        .eq('usuario_id', user.id);
+
+      if (suppliesError) throw suppliesError;
+
+      // Prepare inventory items from user supplies
+      const inventoryItems = [];
+
+      // Add user's existing supplies
+      if (userSupplies && userSupplies.length > 0) {
+        userSupplies.forEach(supply => {
+          inventoryItems.push({
+            negocio_id: negocioId,
+            supply_name: supply.nombre,
+            quantity: 0,
+            unit_cost: supply.precio || 0,
+            threshold_quantity: 5,
+            unit_type: 'units'
+          });
+        });
+      }
+
+      // Add default "Bloques de hojas" item
+      inventoryItems.push({
+        negocio_id: negocioId,
+        supply_name: 'white_paper',
+        quantity: 0,
+        unit_cost: 0,
+        threshold_quantity: 2,
+        unit_type: 'blocks',
+        sheets_per_block: 500
+      });
+
+      // Insert all items at once
+      if (inventoryItems.length > 0) {
+        const { error: insertError } = await supabase
+          .from('inventory')
+          .insert(inventoryItems);
+
+        if (insertError) throw insertError;
+        
+        console.log(`Initialized inventory with ${inventoryItems.length} items`);
+      }
+    } catch (error) {
+      console.error('Error initializing inventory from supplies:', error);
+      // Don't throw error to avoid blocking the main inventory fetch
     }
   };
 

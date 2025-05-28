@@ -51,9 +51,12 @@ export const useUserBusinesses = () => {
 
         const hasPhotocopiers = userPhotocopiers && userPhotocopiers.length > 0;
         const hasNoBusinesses = !existingBusinesses || existingBusinesses.length === 0;
+        
+        // Check if "Negocio Principal" already exists
+        const principalBusinessExists = existingBusinesses && existingBusinesses.some(b => b.nombre === 'Negocio Principal');
 
-        // Auto-create business if user has photocopiers but no businesses
-        if (hasPhotocopiers && hasNoBusinesses) {
+        // Auto-create business if user has photocopiers but no "Negocio Principal" exists
+        if (hasPhotocopiers && !principalBusinessExists) {
           console.log('Auto-creating default business for user with photocopiers');
           
           const { data: newBusiness, error: createError } = await supabase
@@ -71,12 +74,16 @@ export const useUserBusinesses = () => {
           const { error: linkError } = await supabase
             .from('fotocopiadoras')
             .update({ negocio_id: newBusiness.id })
-            .eq('usuario_id', user.id);
+            .eq('usuario_id', user.id)
+            .is('negocio_id', null);
 
           if (linkError) throw linkError;
 
           console.log('Successfully created business and linked photocopiers');
-          setBusinesses([newBusiness]);
+          
+          // Update the businesses list to include the new one
+          const updatedBusinesses = existingBusinesses ? [...existingBusinesses, newBusiness] : [newBusiness];
+          setBusinesses(updatedBusinesses);
         } else if (existingBusinesses && existingBusinesses.length > 0) {
           // For now, let users access all businesses until we implement proper ownership
           // In a production app, you'd want to filter by actual ownership
