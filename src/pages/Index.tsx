@@ -17,7 +17,16 @@ const Index = () => {
 
   // Show loading state while businesses are being loaded
   if (businessLoading) {
-    return <AppWrapper {...salesState} />;
+    return (
+      <AppWrapper 
+        authLoading={salesState.authLoading}
+        pricingLoading={salesState.pricingLoading}
+        suppliesLoading={salesState.suppliesLoading}
+        user={salesState.user}
+      >
+        <div></div>
+      </AppWrapper>
+    );
   }
 
   // If user is authenticated but has no businesses, show no access message
@@ -28,7 +37,12 @@ const Index = () => {
   // If no current business selected but businesses exist, show loading
   if (user && businesses.length > 0 && !currentBusinessId) {
     return (
-      <AppWrapper {...salesState}>
+      <AppWrapper 
+        authLoading={salesState.authLoading}
+        pricingLoading={salesState.pricingLoading}
+        suppliesLoading={salesState.suppliesLoading}
+        user={salesState.user}
+      >
         <div className="min-h-screen bg-gray-50">
           <Header />
           <main className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-8">
@@ -42,7 +56,12 @@ const Index = () => {
   }
 
   return (
-    <AppWrapper {...salesState}>
+    <AppWrapper 
+      authLoading={salesState.authLoading}
+      pricingLoading={salesState.pricingLoading}
+      suppliesLoading={salesState.suppliesLoading}
+      user={salesState.user}
+    >
       <div className="min-h-screen bg-gray-50">
         <Header />
         
