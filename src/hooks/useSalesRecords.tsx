@@ -118,7 +118,7 @@ export const useSalesRecords = () => {
         if (serviceError) throw serviceError;
       }
 
-      // Save supply records to supply_sales table with correct column names
+      // Save supply records to supply_sales table with fotocopiadora_id
       const supplyRecords = [];
       Object.entries(suppliesData).forEach(([supplyName, supplyData]: [string, any]) => {
         if (supplyData.startStock > 0 || supplyData.endStock > 0) {
@@ -127,6 +127,7 @@ export const useSalesRecords = () => {
             supplyRecords.push({
               usuario_id: user.id,
               fecha: today,
+              fotocopiadora_id: photocopierId,
               nombre_insumo: supplyName,
               cantidad: cantidad,
               precio_unitario: supplyPrices[supplyName] || 0,
@@ -183,12 +184,18 @@ export const useSalesRecords = () => {
 
       if (serviceError) throw serviceError;
 
-      // Load supply records from supply_sales table using correct column names
-      const { data: supplyRecords, error: supplyError } = await supabase
+      // Load supply records from supply_sales table
+      let supplyQuery = supabase
         .from('supply_sales')
         .select('*')
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate);
+
+      if (photocopierId) {
+        supplyQuery = supplyQuery.eq('fotocopiadora_id', photocopierId);
+      }
+
+      const { data: supplyRecords, error: supplyError } = await supplyQuery;
 
       if (supplyError) throw supplyError;
 

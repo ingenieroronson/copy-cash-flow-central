@@ -49,14 +49,22 @@ export const useReportsData = (filters: ReportFilters) => {
       const { data: servicesData, error: servicesError } = await servicesQuery;
       if (servicesError) throw servicesError;
 
-      // Fetch supply sales from supply_sales table
-      const { data: suppliesData, error: suppliesError } = await supabase
+      // Fetch supply sales from supply_sales table with photocopier information
+      let suppliesQuery = supabase
         .from('supply_sales')
-        .select('*')
+        .select(`
+          *,
+          fotocopiadoras!supply_sales_fotocopiadora_id_fkey(nombre)
+        `)
         .eq('usuario_id', user.id)
         .gte('fecha', filters.dateRange.startDate)
         .lte('fecha', filters.dateRange.endDate);
 
+      if (filters.photocopierId) {
+        suppliesQuery = suppliesQuery.eq('fotocopiadora_id', filters.photocopierId);
+      }
+
+      const { data: suppliesData, error: suppliesError } = await suppliesQuery;
       if (suppliesError) throw suppliesError;
 
       // Process services data
@@ -78,7 +86,7 @@ export const useReportsData = (filters: ReportFilters) => {
         quantity: record.cantidad,
         unit_price: record.precio_unitario,
         total: record.total,
-        photocopier_name: 'N/A'
+        photocopier_name: record.fotocopiadoras?.nombre || 'N/A'
       }));
 
       // Combine all data
