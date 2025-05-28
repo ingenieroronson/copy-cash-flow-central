@@ -10,6 +10,7 @@ const Index = () => {
     authLoading,
     pricingLoading,
     suppliesLoading,
+    proceduresLoading,
     salesLoading,
     photocopiersLoading,
     
@@ -18,14 +19,17 @@ const Index = () => {
     
     // Data
     services,
+    procedures,
     suppliesData,
     dbSupplies,
+    dbProcedures,
     photocopiers,
     selectedPhotocopierId,
     selectedDate,
     
     // Actions
     updateService,
+    updateProcedure,
     updateSupply,
     setSelectedPhotocopierId,
     setSelectedDate,
@@ -33,27 +37,32 @@ const Index = () => {
     
     // Calculations
     calculateServiceTotal,
+    calculateProcedureTotal,
     calculateSupplyTotal,
     getTotalSales,
     getServicePrice,
+    getProcedurePrice,
     getSupplyPrice,
   } = useSalesState();
 
   return (
     <AppWrapper
       authLoading={authLoading}
-      pricingLoading={pricingLoading}
+      pricingLoading={pricingLoading || proceduresLoading}
       suppliesLoading={suppliesLoading}
       user={user}
     >
       <DailySalesCalculator
         services={services}
+        procedures={procedures}
         suppliesData={suppliesData}
         dbSupplies={dbSupplies}
+        dbProcedures={dbProcedures}
         photocopiers={photocopiers}
         selectedPhotocopierId={selectedPhotocopierId}
         selectedDate={selectedDate}
         onUpdateService={updateService}
+        onUpdateProcedure={updateProcedure}
         onUpdateSupply={updateSupply}
         onPhotocopierChange={setSelectedPhotocopierId}
         onDateChange={setSelectedDate}
@@ -61,6 +70,7 @@ const Index = () => {
         salesLoading={salesLoading}
         photocopiersLoading={photocopiersLoading}
         getServicePrice={getServicePrice}
+        getProcedurePrice={getProcedurePrice}
         getSupplyPrice={getSupplyPrice}
         totalSales={getTotalSales()}
       />

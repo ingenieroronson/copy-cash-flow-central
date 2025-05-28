@@ -3,10 +3,12 @@ import React from 'react';
 import { useAuth } from './useAuth';
 import { usePricing } from './usePricing';
 import { useSupplies } from './useSupplies';
+import { useProcedures } from './useProcedures';
 import { useSalesRecords } from './useSalesRecords';
 import { usePhotocopierDateState } from './usePhotocopierDateState';
 import { useServicesState } from './useServicesState';
 import { useSuppliesState } from './useSuppliesState';
+import { useProceduresState } from './useProceduresState';
 import { calculateServiceTotal, calculateSupplyTotal } from '@/utils/salesCalculations';
 import { ServiceState } from '../types/sales';
 
@@ -14,6 +16,7 @@ export const useSalesState = () => {
   const { user, loading: authLoading } = useAuth();
   const { getServicePrice, getSupplyPrice, loading: pricingLoading } = usePricing();
   const { supplies: dbSupplies, loading: suppliesLoading } = useSupplies();
+  const { procedures: dbProcedures, getProcedurePrice, loading: proceduresLoading } = useProcedures();
   const { saveDailySales, loadDailySales, loadServiceCounterPreload, loading: salesLoading } = useSalesRecords();
   
   const {
@@ -33,6 +36,14 @@ export const useSalesState = () => {
   } = useServicesState();
 
   const {
+    procedures,
+    updateProcedure,
+    resetProcedures,
+    setProceduresData,
+    updateProceduresFromDb,
+  } = useProceduresState();
+
+  const {
     suppliesData,
     updateSupply,
     resetSupplies,
@@ -46,21 +57,16 @@ export const useSalesState = () => {
       if (user && selectedPhotocopierId) {
         console.log('Loading sales data and preload for photocopier:', selectedPhotocopierId, 'date:', selectedDate);
         
-        // First, load existing sales for the selected date and photocopier
         const salesData = await loadDailySales(selectedDate, selectedPhotocopierId);
         
-        // If there are existing sales for this date and photocopier, use them
         if (salesData.services && Object.keys(salesData.services).length > 0) {
           console.log('Found existing sales data for photocopier:', selectedPhotocopierId, salesData.services);
           setServicesData({ ...services, ...salesData.services });
         } else {
-          // If no existing sales, preload service counters from previous day's "Hoy" values
-          // This loads ONLY the "Ayer" field, leaving "Hoy" and "errors" empty for new data entry
           const servicePreload = await loadServiceCounterPreload(selectedPhotocopierId, selectedDate);
           if (servicePreload && Object.keys(servicePreload).length > 0 && 'colorCopies' in servicePreload) {
             const typedPreload = servicePreload as ServiceState;
             console.log('Setting service counter preload from previous day for photocopier:', selectedPhotocopierId, typedPreload);
-            // Ensure "Hoy" (today) and "errors" values are always 0 for new entries
             setServicesData({
               colorCopies: { yesterday: typedPreload.colorCopies?.yesterday || 0, today: 0, errors: 0 },
               bwCopies: { yesterday: typedPreload.bwCopies?.yesterday || 0, today: 0, errors: 0 },
@@ -68,30 +74,44 @@ export const useSalesState = () => {
               bwPrints: { yesterday: typedPreload.bwPrints?.yesterday || 0, today: 0, errors: 0 }
             });
           } else {
-            // No previous data found, set "Ayer", "Hoy", and "errors" to 0 for this photocopier
             console.log('No previous service data found for photocopier:', selectedPhotocopierId, 'setting all values to 0');
             resetServices();
           }
         }
         
-        // For supplies, only load existing data for the selected date and photocopier - NEVER preload from previous days
+        // Handle procedures data
+        if (salesData.procedures && Object.keys(salesData.procedures).length > 0) {
+          console.log('Found existing procedure data for photocopier:', selectedPhotocopierId, salesData.procedures);
+          setProceduresData({ ...procedures, ...salesData.procedures });
+        } else {
+          console.log('Resetting procedures for photocopier:', selectedPhotocopierId);
+          resetProcedures(dbProcedures);
+        }
+        
         if (salesData.supplies && Object.keys(salesData.supplies).length > 0) {
           console.log('Found existing supply data for photocopier:', selectedPhotocopierId, salesData.supplies);
           setSuppliesDataDirect({ ...suppliesData, ...salesData.supplies });
         } else {
-          // Reset supplies to empty for new dates/photocopiers - NO PREFILLING from previous days
           console.log('Resetting supplies to empty for photocopier:', selectedPhotocopierId);
           resetSupplies(dbSupplies);
         }
       }
     };
     loadExistingSalesAndPreload();
-  }, [user, selectedPhotocopierId, selectedDate, dbSupplies]);
+  }, [user, selectedPhotocopierId, selectedDate, dbSupplies, dbProcedures]);
 
-  // Update supplies state when dynamic supplies are loaded (only if not already set)
   React.useEffect(() => {
     updateSuppliesFromDb(dbSupplies);
   }, [dbSupplies]);
+
+  React.useEffect(() => {
+    updateProceduresFromDb(dbProcedures);
+  }, [dbProcedures]);
+
+  const calculateProcedureTotal = (procedure: any, price: number) => {
+    const difference = Math.max(0, procedure.today - (procedure.errors || 0) - procedure.yesterday);
+    return difference * price;
+  };
 
   const getTotalSales = () => {
     const serviceTotal = 
@@ -100,11 +120,15 @@ export const useSalesState = () => {
       calculateServiceTotal(services.colorPrints, getServicePrice('color_prints')) +
       calculateServiceTotal(services.bwPrints, getServicePrice('bw_prints'));
     
+    const procedureTotal = Object.entries(procedures).reduce((total, [procedureName, procedureData]) => {
+      return total + calculateProcedureTotal(procedureData, getProcedurePrice(procedureName));
+    }, 0);
+    
     const supplyTotal = Object.entries(suppliesData).reduce((total, [supplyName, supplyData]) => {
       return total + calculateSupplyTotal(supplyData, getSupplyPrice(supplyName));
     }, 0);
     
-    return serviceTotal + supplyTotal;
+    return serviceTotal + procedureTotal + supplyTotal;
   };
 
   const handleSaveSales = async () => {
@@ -117,12 +141,17 @@ export const useSalesState = () => {
       bw_prints: getServicePrice('bw_prints')
     };
 
+    const procedurePrices: Record<string, number> = {};
+    Object.keys(procedures).forEach(procedureName => {
+      procedurePrices[procedureName] = getProcedurePrice(procedureName);
+    });
+
     const supplyPrices: Record<string, number> = {};
     Object.keys(suppliesData).forEach(supplyName => {
       supplyPrices[supplyName] = getSupplyPrice(supplyName);
     });
 
-    await saveDailySales(services, suppliesData, servicePrices, supplyPrices, selectedPhotocopierId, selectedDate);
+    await saveDailySales(services, procedures, suppliesData, servicePrices, procedurePrices, supplyPrices, selectedPhotocopierId, selectedDate);
   };
 
   return {
@@ -130,6 +159,7 @@ export const useSalesState = () => {
     authLoading,
     pricingLoading,
     suppliesLoading,
+    proceduresLoading,
     salesLoading,
     photocopiersLoading,
     
@@ -138,14 +168,17 @@ export const useSalesState = () => {
     
     // Data
     services,
+    procedures,
     suppliesData,
     dbSupplies,
+    dbProcedures,
     photocopiers,
     selectedPhotocopierId,
     selectedDate,
     
     // Actions
     updateService,
+    updateProcedure,
     updateSupply,
     setSelectedPhotocopierId,
     setSelectedDate,
@@ -153,9 +186,11 @@ export const useSalesState = () => {
     
     // Calculations
     calculateServiceTotal,
+    calculateProcedureTotal,
     calculateSupplyTotal,
     getTotalSales,
     getServicePrice,
+    getProcedurePrice,
     getSupplyPrice,
   };
 };

@@ -7,7 +7,7 @@ import type { ItemSalesFilters } from '@/components/ItemSalesSummary';
 
 interface ItemSalesRecord {
   name: string;
-  type: 'service' | 'supply';
+  type: 'service' | 'supply' | 'procedure';
   quantity: number;
   total: number;
 }
@@ -41,6 +41,21 @@ export const useItemSalesData = (filters: ItemSalesFilters) => {
       const { data: servicesData, error: servicesError } = await servicesQuery;
       if (servicesError) throw servicesError;
 
+      // Fetch procedure sales from procedure_sales table
+      let proceduresQuery = supabase
+        .from('procedure_sales')
+        .select('procedure_name, cantidad, total')
+        .eq('usuario_id', user.id)
+        .gte('fecha', filters.dateRange.startDate)
+        .lte('fecha', filters.dateRange.endDate);
+
+      if (filters.photocopierId) {
+        proceduresQuery = proceduresQuery.eq('fotocopiadora_id', filters.photocopierId);
+      }
+
+      const { data: proceduresData, error: proceduresError } = await proceduresQuery;
+      if (proceduresError) throw proceduresError;
+
       // Fetch supply sales from supply_sales table
       let suppliesQuery = supabase
         .from('supply_sales')
@@ -67,6 +82,17 @@ export const useItemSalesData = (filters: ItemSalesFilters) => {
         return acc;
       }, {} as Record<string, { quantity: number; total: number }>);
 
+      // Process and aggregate procedures data
+      const proceduresAggregated = (proceduresData || []).reduce((acc, record) => {
+        const procedureName = record.procedure_name || 'Unknown Procedure';
+        if (!acc[procedureName]) {
+          acc[procedureName] = { quantity: 0, total: 0 };
+        }
+        acc[procedureName].quantity += record.cantidad || 0;
+        acc[procedureName].total += record.total || 0;
+        return acc;
+      }, {} as Record<string, { quantity: number; total: number }>);
+
       // Process and aggregate supplies data
       const suppliesAggregated = (suppliesData || []).reduce((acc, record) => {
         const supplyName = record.nombre_insumo || 'Unknown Supply';
@@ -83,6 +109,12 @@ export const useItemSalesData = (filters: ItemSalesFilters) => {
         ...Object.entries(servicesAggregated).map(([name, data]) => ({
           name,
           type: 'service' as const,
+          quantity: data.quantity,
+          total: data.total
+        })),
+        ...Object.entries(proceduresAggregated).map(([name, data]) => ({
+          name,
+          type: 'procedure' as const,
           quantity: data.quantity,
           total: data.total
         })),

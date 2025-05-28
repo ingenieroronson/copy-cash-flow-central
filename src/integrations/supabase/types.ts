@@ -349,6 +349,84 @@ export type Database = {
           },
         ]
       }
+      procedure_sales: {
+        Row: {
+          cantidad: number
+          created_at: string | null
+          errores: number | null
+          fecha: string
+          fotocopiadora_id: string
+          id: string
+          precio_unitario: number
+          procedure_name: string
+          total: number
+          updated_at: string | null
+          usuario_id: string
+          valor_actual: number | null
+          valor_anterior: number | null
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string | null
+          errores?: number | null
+          fecha?: string
+          fotocopiadora_id: string
+          id?: string
+          precio_unitario?: number
+          procedure_name: string
+          total?: number
+          updated_at?: string | null
+          usuario_id: string
+          valor_actual?: number | null
+          valor_anterior?: number | null
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string | null
+          errores?: number | null
+          fecha?: string
+          fotocopiadora_id?: string
+          id?: string
+          precio_unitario?: number
+          procedure_name?: string
+          total?: number
+          updated_at?: string | null
+          usuario_id?: string
+          valor_actual?: number | null
+          valor_anterior?: number | null
+        }
+        Relationships: []
+      }
+      procedures: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          unit_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          unit_price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          unit_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sales_records: {
         Row: {
           created_at: string | null

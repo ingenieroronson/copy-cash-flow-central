@@ -4,7 +4,40 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
-import type { Services, Supplies, ServicePrices, SupplyPrices } from '@/types/sales';
+import type { Services, Procedures, Supplies, ServicePrices, ProcedurePrices, SupplyPrices } from '@/types/sales';
+
+const processProcedureRecords = (
+  procedures: Procedures,
+  procedurePrices: ProcedurePrices,
+  userId: string,
+  targetDate: string,
+  photocopierId: string
+) => {
+  const records: any[] = [];
+
+  Object.entries(procedures).forEach(([procedureName, procedureData]) => {
+    if (procedureData.today || procedureData.yesterday || procedureData.errors) {
+      const quantity = Math.max(0, procedureData.today - (procedureData.errors || 0) - procedureData.yesterday);
+      const unitPrice = procedurePrices[procedureName] || 0;
+      const total = quantity * unitPrice;
+
+      records.push({
+        usuario_id: userId,
+        fecha: targetDate,
+        fotocopiadora_id: photocopierId,
+        procedure_name: procedureName,
+        cantidad: quantity,
+        precio_unitario: unitPrice,
+        total: total,
+        valor_anterior: procedureData.yesterday,
+        valor_actual: procedureData.today,
+        errores: procedureData.errors || 0
+      });
+    }
+  });
+
+  return records;
+};
 
 export const useSaveSales = () => {
   const [loading, setLoading] = useState(false);
@@ -13,8 +46,10 @@ export const useSaveSales = () => {
 
   const saveDailySales = async (
     services: Services,
+    procedures: Procedures,
     suppliesData: Supplies,
     servicePrices: ServicePrices,
+    procedurePrices: ProcedurePrices,
     supplyPrices: SupplyPrices,
     photocopierId: string,
     selectedDate?: string
@@ -30,14 +65,12 @@ export const useSaveSales = () => {
 
     setLoading(true);
     try {
-      // Use the exact selected date, or today's date in Mexico City timezone if none provided
       const targetDate = selectedDate || new Date().toLocaleDateString('en-CA', {
         timeZone: 'America/Mexico_City'
       });
 
       console.log('Saving sales for date:', targetDate);
 
-      // Ensure user exists in usuarios table
       await supabase
         .from('usuarios')
         .upsert({ 
@@ -48,7 +81,7 @@ export const useSaveSales = () => {
           onConflict: 'id' 
         });
 
-      // Delete existing records for this date, user, and photocopier to prevent duplicates
+      // Delete existing records for this date, user, and photocopier
       await supabase
         .from('ventas')
         .delete()
@@ -58,6 +91,13 @@ export const useSaveSales = () => {
 
       await supabase
         .from('supply_sales')
+        .delete()
+        .eq('usuario_id', user.id)
+        .eq('fecha', targetDate)
+        .eq('fotocopiadora_id', photocopierId);
+
+      await supabase
+        .from('procedure_sales')
         .delete()
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate)
@@ -80,7 +120,24 @@ export const useSaveSales = () => {
         if (serviceError) throw serviceError;
       }
 
-      // Process and save supply records with photocopier ID
+      // Process and save procedure records
+      const procedureRecords = processProcedureRecords(
+        procedures,
+        procedurePrices,
+        user.id,
+        targetDate,
+        photocopierId
+      );
+
+      if (procedureRecords.length > 0) {
+        const { error: procedureError } = await supabase
+          .from('procedure_sales')
+          .insert(procedureRecords);
+
+        if (procedureError) throw procedureError;
+      }
+
+      // Process and save supply records
       const supplyRecords = processSupplyRecords(
         suppliesData,
         supplyPrices,

@@ -5,6 +5,7 @@ import { Save, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { ServiceSection } from './ServiceSection';
+import { ProceduresSection } from './ProceduresSection';
 import { SupplySection } from './SupplySection';
 import { SummaryCard } from './SummaryCard';
 import { PhotocopierSelector } from './PhotocopierSelector';
@@ -18,6 +19,13 @@ interface Supply {
   is_active: boolean | null;
 }
 
+interface Procedure {
+  id: string;
+  name: string;
+  unit_price: number;
+  is_active: boolean;
+}
+
 interface DailySalesCalculatorProps {
   services: {
     colorCopies: { yesterday: number; today: number; errors: number };
@@ -25,12 +33,15 @@ interface DailySalesCalculatorProps {
     colorPrints: { yesterday: number; today: number; errors: number };
     bwPrints: { yesterday: number; today: number; errors: number };
   };
+  procedures: Record<string, { yesterday: number; today: number; errors: number }>;
   suppliesData: Record<string, { startStock: number; endStock: number }>;
   dbSupplies: Supply[];
+  dbProcedures: Procedure[];
   photocopiers: Photocopier[];
   selectedPhotocopierId: string;
   selectedDate: string;
   onUpdateService: (serviceId: string, field: string, value: number) => void;
+  onUpdateProcedure: (procedureName: string, field: string, value: number) => void;
   onUpdateSupply: (supplyId: string, field: string, value: number) => void;
   onPhotocopierChange: (photocopierId: string) => void;
   onDateChange: (date: string) => void;
@@ -38,18 +49,22 @@ interface DailySalesCalculatorProps {
   salesLoading: boolean;
   photocopiersLoading: boolean;
   getServicePrice: (serviceType: string) => number;
+  getProcedurePrice: (procedureName: string) => number;
   getSupplyPrice: (supplyName: string) => number;
   totalSales: number;
 }
 
 export const DailySalesCalculator = ({
   services,
+  procedures,
   suppliesData,
   dbSupplies,
+  dbProcedures,
   photocopiers,
   selectedPhotocopierId,
   selectedDate,
   onUpdateService,
+  onUpdateProcedure,
   onUpdateSupply,
   onPhotocopierChange,
   onDateChange,
@@ -57,6 +72,7 @@ export const DailySalesCalculator = ({
   salesLoading,
   photocopiersLoading,
   getServicePrice,
+  getProcedurePrice,
   getSupplyPrice,
   totalSales
 }: DailySalesCalculatorProps) => {
@@ -64,6 +80,11 @@ export const DailySalesCalculator = ({
 
   const calculateServiceTotal = (service: any, price: number) => {
     const difference = Math.max(0, service.today - (service.errors || 0) - service.yesterday);
+    return difference * price;
+  };
+
+  const calculateProcedureTotal = (procedure: any, price: number) => {
+    const difference = Math.max(0, procedure.today - (procedure.errors || 0) - procedure.yesterday);
     return difference * price;
   };
 
@@ -134,6 +155,14 @@ export const DailySalesCalculator = ({
               onUpdateService={onUpdateService}
               getServicePrice={getServicePrice}
               calculateServiceTotal={calculateServiceTotal}
+            />
+
+            <ProceduresSection
+              procedures={procedures}
+              dbProcedures={dbProcedures}
+              onUpdateProcedure={onUpdateProcedure}
+              getProcedurePrice={getProcedurePrice}
+              calculateProcedureTotal={calculateProcedureTotal}
             />
 
             <SupplySection

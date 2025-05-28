@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Printer } from 'lucide-react';
+import { Printer, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ interface ServiceCardProps {
 
 export const ServiceCard = ({ 
   title, 
+  icon,
   iconColor, 
   backgroundColor, 
   service, 
@@ -31,12 +32,14 @@ export const ServiceCard = ({
   difference,
   price
 }: ServiceCardProps) => {
+  const IconComponent = icon === 'file-text' ? FileText : Printer;
+
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border-0 h-full">
       <CardContent className="p-3 md:p-4 lg:p-6">
         <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4 lg:mb-6">
           <div className={`p-2 md:p-3 rounded-lg ${backgroundColor} flex-shrink-0`}>
-            <Printer className={`w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 ${iconColor}`} />
+            <IconComponent className={`w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 ${iconColor}`} />
           </div>
           <h3 className="text-xs md:text-sm lg:text-lg font-semibold text-gray-800 leading-tight">{title}</h3>
         </div>
