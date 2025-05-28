@@ -45,8 +45,8 @@ export const SalesSummaryCards = ({ data }: SalesSummaryCardsProps) => {
       bgColor: 'bg-purple-50'
     },
     {
-      title: 'Transacciones',
-      value: data.totalTransactions.toString(),
+      title: 'Días con ventas',
+      value: data.totalTransactions === 1 ? '1 día registrado' : `${data.totalTransactions} días registrados`,
       icon: TrendingUp,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50'

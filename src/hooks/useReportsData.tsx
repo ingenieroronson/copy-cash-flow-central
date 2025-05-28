@@ -102,13 +102,16 @@ export const useReportsData = (filters: ReportFilters) => {
       const servicesSales = processedServicesData.reduce((sum, record) => sum + record.total, 0);
       const suppliesSales = processedSuppliesData.reduce((sum, record) => sum + record.total, 0);
       const totalSales = servicesSales + suppliesSales;
-      const totalTransactions = allDetailedData.length;
+      
+      // Count distinct days with sales instead of total transactions
+      const uniqueDates = new Set(allDetailedData.map(record => record.date));
+      const daysWithSales = uniqueDates.size;
 
       setSummaryData({
         totalSales,
         servicesSales,
         suppliesSales,
-        totalTransactions
+        totalTransactions: daysWithSales
       });
 
     } catch (error) {
