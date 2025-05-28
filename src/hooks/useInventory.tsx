@@ -84,11 +84,13 @@ export const useInventory = (negocioId?: string) => {
     if (!user) return;
 
     try {
-      // Get user's existing supplies from insumos table
+      // Get user's existing supplies from pricing table (active supplies)
       const { data: userSupplies, error: suppliesError } = await supabase
-        .from('insumos')
-        .select('nombre, precio')
-        .eq('usuario_id', user.id);
+        .from('pricing')
+        .select('supply_name, unit_price')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .not('supply_name', 'is', null);
 
       if (suppliesError) throw suppliesError;
 
@@ -98,27 +100,32 @@ export const useInventory = (negocioId?: string) => {
       // Add user's existing supplies
       if (userSupplies && userSupplies.length > 0) {
         userSupplies.forEach(supply => {
-          inventoryItems.push({
-            negocio_id: negocioId,
-            supply_name: supply.nombre,
-            quantity: 0,
-            unit_cost: supply.precio || 0,
-            threshold_quantity: 5,
-            unit_type: 'units'
-          });
+          if (supply.supply_name) {
+            inventoryItems.push({
+              negocio_id: negocioId,
+              supply_name: supply.supply_name,
+              quantity: 0,
+              unit_cost: supply.unit_price || 0,
+              threshold_quantity: 5,
+              unit_type: 'units'
+            });
+          }
         });
       }
 
-      // Add default "Bloques de hojas" item
-      inventoryItems.push({
-        negocio_id: negocioId,
-        supply_name: 'white_paper',
-        quantity: 0,
-        unit_cost: 0,
-        threshold_quantity: 2,
-        unit_type: 'blocks',
-        sheets_per_block: 500
-      });
+      // Add default "Hojas Blancas" item only if it doesn't exist
+      const hasWhitePaper = userSupplies?.some(s => s.supply_name === 'Hojas Blancas');
+      if (!hasWhitePaper) {
+        inventoryItems.push({
+          negocio_id: negocioId,
+          supply_name: 'Hojas Blancas',
+          quantity: 0,
+          unit_cost: 0,
+          threshold_quantity: 2,
+          unit_type: 'blocks',
+          sheets_per_block: 500
+        });
+      }
 
       // Insert all items at once
       if (inventoryItems.length > 0) {
@@ -209,6 +216,44 @@ export const useInventory = (negocioId?: string) => {
     }
   };
 
+  const syncSupplyToInventory = async (supplyName: string, unitPrice: number, businessIds: string[]) => {
+    if (!user || businessIds.length === 0) return;
+
+    try {
+      // For each business, check if inventory item exists and create if not
+      for (const businessId of businessIds) {
+        const { data: existingItem, error: checkError } = await supabase
+          .from('inventory')
+          .select('id')
+          .eq('negocio_id', businessId)
+          .eq('supply_name', supplyName)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        // If item doesn't exist, create it
+        if (!existingItem) {
+          const { error: insertError } = await supabase
+            .from('inventory')
+            .insert({
+              negocio_id: businessId,
+              supply_name: supplyName,
+              quantity: 0,
+              unit_cost: unitPrice,
+              threshold_quantity: 5,
+              unit_type: 'units'
+            });
+
+          if (insertError) throw insertError;
+          console.log(`Created inventory item for ${supplyName} in business ${businessId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing supply to inventory:', error);
+      // Don't throw error to avoid blocking supply creation
+    }
+  };
+
   const deductInventoryForSales = async (
     servicesData: any,
     suppliesData: any,
@@ -230,9 +275,9 @@ export const useInventory = (negocioId?: string) => {
         }
       });
 
-      // Deduct white paper if sheets were used
+      // Deduct white paper if sheets were used (look for "Hojas Blancas")
       if (totalSheetsUsed > 0) {
-        const whitePaperItem = inventory.find(item => item.supply_name === 'white_paper');
+        const whitePaperItem = inventory.find(item => item.supply_name === 'Hojas Blancas');
         if (whitePaperItem && whitePaperItem.sheets_per_block) {
           const blocksUsed = totalSheetsUsed / whitePaperItem.sheets_per_block;
           
@@ -291,6 +336,7 @@ export const useInventory = (negocioId?: string) => {
     updateInventoryItem,
     addInventoryTransaction,
     deductInventoryForSales,
+    syncSupplyToInventory,
     refetch: fetchInventory,
   };
 };

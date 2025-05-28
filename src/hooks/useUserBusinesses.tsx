@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -41,6 +40,17 @@ export const useUserBusinesses = () => {
 
         if (fetchError) throw fetchError;
 
+        // Clean up duplicate "Negocio Principal" entries first
+        await cleanupDuplicatePrincipalBusinesses();
+
+        // Re-fetch after cleanup
+        const { data: cleanedBusinesses, error: refetchError } = await supabase
+          .from('negocios')
+          .select('id, nombre')
+          .order('nombre');
+
+        if (refetchError) throw refetchError;
+
         // Check if user has photocopiers
         const { data: userPhotocopiers, error: photocopiersError } = await supabase
           .from('fotocopiadoras')
@@ -50,10 +60,9 @@ export const useUserBusinesses = () => {
         if (photocopiersError) throw photocopiersError;
 
         const hasPhotocopiers = userPhotocopiers && userPhotocopiers.length > 0;
-        const hasNoBusinesses = !existingBusinesses || existingBusinesses.length === 0;
         
         // Check if "Negocio Principal" already exists
-        const principalBusinessExists = existingBusinesses && existingBusinesses.some(b => b.nombre === 'Negocio Principal');
+        const principalBusinessExists = cleanedBusinesses && cleanedBusinesses.some(b => b.nombre === 'Negocio Principal');
 
         // Auto-create business if user has photocopiers but no "Negocio Principal" exists
         if (hasPhotocopiers && !principalBusinessExists) {
@@ -82,12 +91,12 @@ export const useUserBusinesses = () => {
           console.log('Successfully created business and linked photocopiers');
           
           // Update the businesses list to include the new one
-          const updatedBusinesses = existingBusinesses ? [...existingBusinesses, newBusiness] : [newBusiness];
+          const updatedBusinesses = cleanedBusinesses ? [...cleanedBusinesses, newBusiness] : [newBusiness];
           setBusinesses(updatedBusinesses);
-        } else if (existingBusinesses && existingBusinesses.length > 0) {
+        } else if (cleanedBusinesses && cleanedBusinesses.length > 0) {
           // For now, let users access all businesses until we implement proper ownership
           // In a production app, you'd want to filter by actual ownership
-          setBusinesses(existingBusinesses);
+          setBusinesses(cleanedBusinesses);
         } else {
           // No businesses and no photocopiers - empty state
           setBusinesses([]);
@@ -97,6 +106,51 @@ export const useUserBusinesses = () => {
         setBusinesses([]);
       } finally {
         setLoading(false);
+      }
+    };
+
+    const cleanupDuplicatePrincipalBusinesses = async () => {
+      try {
+        // Find all "Negocio Principal" entries
+        const { data: principalBusinesses, error: findError } = await supabase
+          .from('negocios')
+          .select('id, created_at')
+          .eq('nombre', 'Negocio Principal')
+          .order('created_at', { ascending: true });
+
+        if (findError) throw findError;
+
+        // If there are duplicates, keep only the first one and delete the rest
+        if (principalBusinesses && principalBusinesses.length > 1) {
+          const businessesToDelete = principalBusinesses.slice(1).map(b => b.id);
+          
+          console.log(`Found ${principalBusinesses.length} duplicate "Negocio Principal" entries, cleaning up...`);
+          
+          // Update any photocopiers linked to duplicate businesses to use the first one
+          if (businessesToDelete.length > 0) {
+            await supabase
+              .from('fotocopiadoras')
+              .update({ negocio_id: principalBusinesses[0].id })
+              .in('negocio_id', businessesToDelete);
+
+            // Update any inventory linked to duplicate businesses
+            await supabase
+              .from('inventory')
+              .update({ negocio_id: principalBusinesses[0].id })
+              .in('negocio_id', businessesToDelete);
+
+            // Delete duplicate businesses
+            await supabase
+              .from('negocios')
+              .delete()
+              .in('id', businessesToDelete);
+              
+            console.log('Successfully cleaned up duplicate businesses');
+          }
+        }
+      } catch (error) {
+        console.error('Error cleaning up duplicate businesses:', error);
+        // Don't throw error to avoid blocking the main fetch
       }
     };
 
