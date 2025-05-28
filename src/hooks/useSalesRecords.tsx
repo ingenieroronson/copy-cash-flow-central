@@ -13,13 +13,25 @@ export const useSalesRecords = () => {
     services: any,
     suppliesData: any,
     servicePrices: any,
-    supplyPrices: any
+    supplyPrices: any,
+    photocopierId: string
   ) => {
-    if (!user) return;
+    if (!user || !photocopierId) return;
 
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
+
+      // Ensure user exists in usuarios table
+      await supabase
+        .from('usuarios')
+        .upsert({ 
+          id: user.id, 
+          email: user.email || '', 
+          nombre: user.user_metadata?.name || user.email || 'Usuario' 
+        }, { 
+          onConflict: 'id' 
+        });
 
       // Save service records to ventas table
       const serviceRecords = [];
@@ -36,7 +48,8 @@ export const useSalesRecords = () => {
             precio_unitario: servicePrices.color_copies || 0,
             total: cantidad * (servicePrices.color_copies || 0),
             valor_anterior: services.colorCopies.yesterday,
-            valor_actual: services.colorCopies.today
+            valor_actual: services.colorCopies.today,
+            fotocopiadora_id: photocopierId
           });
         }
       }
@@ -53,7 +66,8 @@ export const useSalesRecords = () => {
             precio_unitario: servicePrices.bw_copies || 0,
             total: cantidad * (servicePrices.bw_copies || 0),
             valor_anterior: services.bwCopies.yesterday,
-            valor_actual: services.bwCopies.today
+            valor_actual: services.bwCopies.today,
+            fotocopiadora_id: photocopierId
           });
         }
       }
@@ -70,7 +84,8 @@ export const useSalesRecords = () => {
             precio_unitario: servicePrices.color_prints || 0,
             total: cantidad * (servicePrices.color_prints || 0),
             valor_anterior: services.colorPrints.yesterday,
-            valor_actual: services.colorPrints.today
+            valor_actual: services.colorPrints.today,
+            fotocopiadora_id: photocopierId
           });
         }
       }
@@ -87,7 +102,8 @@ export const useSalesRecords = () => {
             precio_unitario: servicePrices.bw_prints || 0,
             total: cantidad * (servicePrices.bw_prints || 0),
             valor_anterior: services.bwPrints.yesterday,
-            valor_actual: services.bwPrints.today
+            valor_actual: services.bwPrints.today,
+            fotocopiadora_id: photocopierId
           });
         }
       }
@@ -147,18 +163,24 @@ export const useSalesRecords = () => {
     }
   };
 
-  const loadDailySales = async (date?: string) => {
+  const loadDailySales = async (date?: string, photocopierId?: string) => {
     if (!user) return { services: {}, supplies: {} };
 
     const targetDate = date || new Date().toISOString().split('T')[0];
 
     try {
       // Load service records from ventas table
-      const { data: serviceRecords, error: serviceError } = await supabase
+      let serviceQuery = supabase
         .from('ventas')
         .select('*')
         .eq('usuario_id', user.id)
         .eq('fecha', targetDate);
+
+      if (photocopierId) {
+        serviceQuery = serviceQuery.eq('fotocopiadora_id', photocopierId);
+      }
+
+      const { data: serviceRecords, error: serviceError } = await serviceQuery;
 
       if (serviceError) throw serviceError;
 

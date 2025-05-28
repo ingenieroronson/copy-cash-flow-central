@@ -7,6 +7,8 @@ import { Header } from './Header';
 import { ServiceSection } from './ServiceSection';
 import { SupplySection } from './SupplySection';
 import { SummaryCard } from './SummaryCard';
+import { PhotocopierSelector } from './PhotocopierSelector';
+import { Photocopier } from '@/hooks/usePhotocopiers';
 
 interface Supply {
   id: string;
@@ -24,10 +26,14 @@ interface DailySalesCalculatorProps {
   };
   suppliesData: Record<string, { startStock: number; endStock: number }>;
   dbSupplies: Supply[];
+  photocopiers: Photocopier[];
+  selectedPhotocopierId: string;
   onUpdateService: (serviceId: string, field: string, value: number) => void;
   onUpdateSupply: (supplyId: string, field: string, value: number) => void;
+  onPhotocopierChange: (photocopierId: string) => void;
   onSaveSales: () => void;
   salesLoading: boolean;
+  photocopiersLoading: boolean;
   getServicePrice: (serviceType: string) => number;
   getSupplyPrice: (supplyName: string) => number;
   totalSales: number;
@@ -37,10 +43,14 @@ export const DailySalesCalculator = ({
   services,
   suppliesData,
   dbSupplies,
+  photocopiers,
+  selectedPhotocopierId,
   onUpdateService,
   onUpdateSupply,
+  onPhotocopierChange,
   onSaveSales,
   salesLoading,
+  photocopiersLoading,
   getServicePrice,
   getSupplyPrice,
   totalSales
@@ -56,6 +66,8 @@ export const DailySalesCalculator = ({
     const sold = Math.max(0, supply.startStock - supply.endStock);
     return sold * price;
   };
+
+  const canSaveSales = selectedPhotocopierId && !salesLoading;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -78,7 +90,7 @@ export const DailySalesCalculator = ({
               </Button>
               <Button
                 onClick={onSaveSales}
-                disabled={salesLoading}
+                disabled={!canSaveSales}
                 className="flex-1 sm:flex-none"
               >
                 <Save className="w-4 h-4 mr-2" />
@@ -88,6 +100,21 @@ export const DailySalesCalculator = ({
           </div>
 
           <div className="space-y-8">
+            <PhotocopierSelector
+              photocopiers={photocopiers}
+              selectedPhotocopierId={selectedPhotocopierId}
+              onPhotocopierChange={onPhotocopierChange}
+              loading={photocopiersLoading}
+            />
+
+            {!selectedPhotocopierId && !photocopiersLoading && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-yellow-800">
+                  Por favor, selecciona una fotocopiadora antes de registrar ventas.
+                </p>
+              </div>
+            )}
+
             <ServiceSection
               services={services}
               onUpdateService={onUpdateService}

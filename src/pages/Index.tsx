@@ -7,13 +7,16 @@ import { useAuth } from '../hooks/useAuth';
 import { usePricing } from '../hooks/usePricing';
 import { useSupplies } from '../hooks/useSupplies';
 import { useSalesRecords } from '../hooks/useSalesRecords';
+import { usePhotocopiers } from '../hooks/usePhotocopiers';
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { getServicePrice, getSupplyPrice, loading: pricingLoading } = usePricing();
   const { supplies: dbSupplies, loading: suppliesLoading } = useSupplies();
   const { saveDailySales, loadDailySales, loading: salesLoading } = useSalesRecords();
+  const { photocopiers, loading: photocopiersLoading } = usePhotocopiers();
 
+  const [selectedPhotocopierId, setSelectedPhotocopierId] = React.useState<string>('');
   const [services, setServices] = React.useState({
     colorCopies: { yesterday: 0, today: 0 },
     bwCopies: { yesterday: 0, today: 0 },
@@ -23,11 +26,18 @@ const Index = () => {
 
   const [suppliesData, setSuppliesData] = React.useState<Record<string, { startStock: number; endStock: number }>>({});
 
-  // Load existing sales data when component mounts
+  // Set default photocopier when photocopiers are loaded
+  React.useEffect(() => {
+    if (photocopiers.length > 0 && !selectedPhotocopierId) {
+      setSelectedPhotocopierId(photocopiers[0].id);
+    }
+  }, [photocopiers, selectedPhotocopierId]);
+
+  // Load existing sales data when component mounts and photocopier changes
   React.useEffect(() => {
     const loadExistingSales = async () => {
-      if (user) {
-        const salesData = await loadDailySales();
+      if (user && selectedPhotocopierId) {
+        const salesData = await loadDailySales(undefined, selectedPhotocopierId);
         if (salesData.services && Object.keys(salesData.services).length > 0) {
           setServices(prev => ({ ...prev, ...salesData.services }));
         }
@@ -37,7 +47,7 @@ const Index = () => {
       }
     };
     loadExistingSales();
-  }, [user]);
+  }, [user, selectedPhotocopierId]);
 
   // Update supplies state when dynamic supplies are loaded
   React.useEffect(() => {
@@ -105,6 +115,8 @@ const Index = () => {
   };
 
   const handleSaveSales = async () => {
+    if (!selectedPhotocopierId) return;
+
     const servicePrices = {
       color_copies: getServicePrice('color_copies'),
       bw_copies: getServicePrice('bw_copies'),
@@ -117,7 +129,7 @@ const Index = () => {
       supplyPrices[supplyName] = getSupplyPrice(supplyName);
     });
 
-    await saveDailySales(services, suppliesData, servicePrices, supplyPrices);
+    await saveDailySales(services, suppliesData, servicePrices, supplyPrices, selectedPhotocopierId);
   };
 
   return (
@@ -125,10 +137,14 @@ const Index = () => {
       services={services}
       suppliesData={suppliesData}
       dbSupplies={dbSupplies}
+      photocopiers={photocopiers}
+      selectedPhotocopierId={selectedPhotocopierId}
       onUpdateService={updateService}
       onUpdateSupply={updateSupply}
+      onPhotocopierChange={setSelectedPhotocopierId}
       onSaveSales={handleSaveSales}
       salesLoading={salesLoading}
+      photocopiersLoading={photocopiersLoading}
       getServicePrice={getServicePrice}
       getSupplyPrice={getSupplyPrice}
       totalSales={getTotalSales()}
