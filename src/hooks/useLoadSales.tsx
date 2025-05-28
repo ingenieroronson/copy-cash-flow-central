@@ -78,7 +78,13 @@ export const useLoadSales = () => {
 
       if (!previousRecords || previousRecords.length === 0) {
         console.log('No previous service records found for photocopier:', photocopierId, 'on date:', previousDayString);
-        return {};
+        // Return structure with zeros for "Ayer" and empty for "Hoy"
+        return {
+          colorCopies: { yesterday: 0, today: 0 },
+          bwCopies: { yesterday: 0, today: 0 },
+          colorPrints: { yesterday: 0, today: 0 },
+          bwPrints: { yesterday: 0, today: 0 }
+        };
       }
 
       // Map the previous day's "valor_actual" values to become today's "valor_anterior" values
@@ -94,6 +100,7 @@ export const useLoadSales = () => {
 
       // Map to the format expected by the services state
       // Previous day's "valor_actual" becomes current day's "valor_anterior" (yesterday)
+      // "Hoy" (today) starts empty (0) for new data entry
       const prefillData = {
         colorCopies: { yesterday: previousCounters['copias_color'] || 0, today: 0 },
         bwCopies: { yesterday: previousCounters['copias_bn'] || 0, today: 0 },
@@ -107,7 +114,13 @@ export const useLoadSales = () => {
 
     } catch (error) {
       console.error('Error loading service counter preload for photocopier:', photocopierId, error);
-      return {};
+      // Return structure with zeros for "Ayer" and empty for "Hoy" on error
+      return {
+        colorCopies: { yesterday: 0, today: 0 },
+        bwCopies: { yesterday: 0, today: 0 },
+        colorPrints: { yesterday: 0, today: 0 },
+        bwPrints: { yesterday: 0, today: 0 }
+      };
     }
   };
 

@@ -55,10 +55,12 @@ export const useSalesState = () => {
           setServicesData({ ...services, ...salesData.services });
         } else {
           // If no existing sales, preload service counters from previous day's "Hoy" values
+          // This loads ONLY the "Ayer" field, leaving "Hoy" empty for new data entry
           const servicePreload = await loadServiceCounterPreload(selectedPhotocopierId, selectedDate);
           if (servicePreload && Object.keys(servicePreload).length > 0 && 'colorCopies' in servicePreload) {
             const typedPreload = servicePreload as ServiceState;
             console.log('Setting service counter preload from previous day for photocopier:', selectedPhotocopierId, typedPreload);
+            // Ensure "Hoy" (today) values are always 0 for new entries
             setServicesData({
               colorCopies: { yesterday: typedPreload.colorCopies?.yesterday || 0, today: 0 },
               bwCopies: { yesterday: typedPreload.bwCopies?.yesterday || 0, today: 0 },
@@ -66,8 +68,8 @@ export const useSalesState = () => {
               bwPrints: { yesterday: typedPreload.bwPrints?.yesterday || 0, today: 0 }
             });
           } else {
-            // No previous data found, reset to zeros for this photocopier
-            console.log('No previous service data found for photocopier:', selectedPhotocopierId, 'resetting to zeros');
+            // No previous data found, set "Ayer" to 0 and "Hoy" to 0 for this photocopier
+            console.log('No previous service data found for photocopier:', selectedPhotocopierId, 'setting all values to 0');
             resetServices();
           }
         }
