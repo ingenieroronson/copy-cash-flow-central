@@ -1,20 +1,38 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>copy-cash-flow-central</title>
-    <meta name="description" content="Lovable Generated Project" />
+    <title>IntegraCopias</title>
+    <meta name="description" content="Sistema de gestión para fotocopiadoras y suministros" />
     <meta name="author" content="Lovable" />
 
-    <meta property="og:title" content="copy-cash-flow-central" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#f97316" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="IntegraCopias" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Favicon and Apple Touch Icons -->
+    <link rel="icon" href="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" type="image/png">
+    <link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
 
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="IntegraCopias" />
+    <meta property="og:description" content="Sistema de gestión para fotocopiadoras y suministros" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
+
+    <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:image" content="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
   </head>
 
   <body>
@@ -22,5 +40,19 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('SW registered: ', registration);
+            }, function(registrationError) {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
