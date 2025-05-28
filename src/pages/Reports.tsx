@@ -7,8 +7,11 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ReportsFilters } from '@/components/ReportsFilters';
 import { SalesSummaryCards } from '@/components/SalesSummaryCards';
 import { DetailedReportsTable } from '@/components/DetailedReportsTable';
+import { SalesChartSection } from '@/components/SalesChartSection';
 import { ExportCSVButton } from '@/components/ExportCSVButton';
 import { useReportsData } from '@/hooks/useReportsData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart3, FileText } from 'lucide-react';
 
 export interface DateRange {
   startDate: string;
@@ -30,6 +33,8 @@ const Reports = () => {
     },
     period: 'month'
   });
+
+  const [activeTab, setActiveTab] = useState<string>('table');
 
   const { 
     summaryData, 
@@ -55,36 +60,53 @@ const Reports = () => {
           </p>
         </div>
 
-        <div className="space-y-4 md:space-y-6 lg:space-y-8">
-          <ReportsFilters 
-            filters={filters} 
-            onFiltersChange={setFilters}
-            loading={reportsLoading}
-          />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6 lg:space-y-8">
+          <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex">
+            <TabsTrigger value="table" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span>Datos Detallados</span>
+            </TabsTrigger>
+            <TabsTrigger value="chart" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              <span>Gráficos</span>
+            </TabsTrigger>
+          </TabsList>
 
-          {reportsLoading ? (
-            <LoadingSpinner />
-          ) : (
-            <>
-              <SalesSummaryCards data={summaryData} />
-              
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
-                  <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-                    Detalle de Ventas
-                  </h2>
-                  <ExportCSVButton 
-                    data={detailedData} 
-                    filters={filters}
-                    disabled={detailedData.length === 0}
-                  />
-                </div>
+          <TabsContent value="table" className="space-y-4 md:space-y-6 lg:space-y-8">
+            <ReportsFilters 
+              filters={filters} 
+              onFiltersChange={setFilters}
+              loading={reportsLoading}
+            />
+
+            {reportsLoading ? (
+              <LoadingSpinner />
+            ) : (
+              <>
+                <SalesSummaryCards data={summaryData} />
                 
-                <DetailedReportsTable data={detailedData} />
-              </div>
-            </>
-          )}
-        </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
+                    <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                      Detalle de Ventas
+                    </h2>
+                    <ExportCSVButton 
+                      data={detailedData} 
+                      filters={filters}
+                      disabled={detailedData.length === 0}
+                    />
+                  </div>
+                  
+                  <DetailedReportsTable data={detailedData} />
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="chart">
+            <SalesChartSection />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
