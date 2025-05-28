@@ -477,6 +477,64 @@ export type Database = {
           },
         ]
       }
+      shared_access: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          fotocopiadora_id: string
+          id: string
+          is_active: boolean
+          module_type: Database["public"]["Enums"]["shared_module_type"]
+          owner_id: string
+          shared_with_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          fotocopiadora_id: string
+          id?: string
+          is_active?: boolean
+          module_type: Database["public"]["Enums"]["shared_module_type"]
+          owner_id: string
+          shared_with_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          fotocopiadora_id?: string
+          id?: string
+          is_active?: boolean
+          module_type?: Database["public"]["Enums"]["shared_module_type"]
+          owner_id?: string
+          shared_with_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_access_fotocopiadora_id_fkey"
+            columns: ["fotocopiadora_id"]
+            isOneToOne: false
+            referencedRelation: "fotocopiadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_access_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_access_shared_with_id_fkey"
+            columns: ["shared_with_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supply_sales: {
         Row: {
           cantidad: number
@@ -745,6 +803,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_module_access: {
+        Args: {
+          _user_id: string
+          _fotocopiadora_id: string
+          _module_type: Database["public"]["Enums"]["shared_module_type"]
+        }
+        Returns: boolean
+      }
       is_super_admin: {
         Args: { _user_id: string }
         Returns: boolean
@@ -757,6 +823,7 @@ export type Database = {
     Enums: {
       business_role: "admin" | "operador" | "viewer"
       service_type: "color_copies" | "bw_copies" | "color_prints" | "bw_prints"
+      shared_module_type: "copias" | "reportes" | "historial" | "configuracion"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -874,6 +941,7 @@ export const Constants = {
     Enums: {
       business_role: ["admin", "operador", "viewer"],
       service_type: ["color_copies", "bw_copies", "color_prints", "bw_prints"],
+      shared_module_type: ["copias", "reportes", "historial", "configuracion"],
     },
   },
 } as const
