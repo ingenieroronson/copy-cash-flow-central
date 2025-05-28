@@ -8,10 +8,11 @@ import { ReportsFilters } from '@/components/ReportsFilters';
 import { SalesSummaryCards } from '@/components/SalesSummaryCards';
 import { DetailedReportsTable } from '@/components/DetailedReportsTable';
 import { SalesChartSection } from '@/components/SalesChartSection';
+import { ItemSalesSummary } from '@/components/ItemSalesSummary';
 import { ExportCSVButton } from '@/components/ExportCSVButton';
 import { useReportsData } from '@/hooks/useReportsData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, FileText } from 'lucide-react';
+import { BarChart3, FileText, Package } from 'lucide-react';
 
 export interface DateRange {
   startDate: string;
@@ -61,14 +62,21 @@ const Reports = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6 lg:space-y-8">
-          <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex">
+          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex">
             <TabsTrigger value="table" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
-              <span>Datos Detallados</span>
+              <span className="hidden sm:inline">Datos Detallados</span>
+              <span className="sm:hidden">Datos</span>
+            </TabsTrigger>
+            <TabsTrigger value="items" className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              <span className="hidden sm:inline">Resumen por Artículo</span>
+              <span className="sm:hidden">Artículos</span>
             </TabsTrigger>
             <TabsTrigger value="chart" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              <span>Gráficos</span>
+              <span className="hidden sm:inline">Gráficos</span>
+              <span className="sm:hidden">Gráficos</span>
             </TabsTrigger>
           </TabsList>
 
@@ -101,6 +109,18 @@ const Reports = () => {
                 </div>
               </>
             )}
+          </TabsContent>
+
+          <TabsContent value="items" className="space-y-4 md:space-y-6 lg:space-y-8">
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+                Resumen por Artículo
+              </h2>
+              <p className="text-sm md:text-base text-gray-600">
+                Análisis de ventas agrupado por productos y servicios
+              </p>
+            </div>
+            <ItemSalesSummary />
           </TabsContent>
 
           <TabsContent value="chart">
