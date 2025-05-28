@@ -127,7 +127,7 @@ export const useSalesRecords = () => {
             supplyRecords.push({
               usuario_id: user.id,
               fecha: today,
-              fotocopiadora_id: photocopierId,
+              fotocopiadora_id: photocopierId, // Always include the photocopierId
               nombre_insumo: supplyName,
               cantidad: cantidad,
               precio_unitario: supplyPrices[supplyName] || 0,
