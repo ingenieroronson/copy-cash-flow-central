@@ -13,7 +13,7 @@ import { AuthForm } from '@/components/AuthForm';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 import { useSuperAdminCheck } from '@/hooks/useSuperAdminCheck';
 import { SuperAdminInventoryManagement } from '@/components/SuperAdminInventoryManagement';
-import { InventoryManagement } from '@/components/InventoryManagement';
+import { UserInventoryManagement } from '@/components/UserInventoryManagement';
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -198,19 +198,7 @@ const Settings = () => {
                 {isSuperAdmin ? (
                   <SuperAdminInventoryManagement />
                 ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl text-gray-800">Gestión de Inventario</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 mb-4">
-                        El inventario se maneja por negocio. Selecciona un negocio desde la página principal para gestionar su inventario.
-                      </p>
-                      <Button onClick={() => window.location.href = '/'} variant="outline">
-                        Ir a Página Principal
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <UserInventoryManagement />
                 )}
               </>
             )}
