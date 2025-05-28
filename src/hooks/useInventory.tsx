@@ -113,8 +113,9 @@ export const useInventory = (negocioId?: string) => {
         });
       }
 
-      // Check if "Hojas Blancas" already exists in supplies
-      const hasHojasBlancas = userSupplies?.some(s => s.supply_name === 'Hojas Blancas');
+      // Check if "Hojas Blancas" already exists in supplies or inventory
+      const hasHojasBlancas = userSupplies?.some(s => s.supply_name === 'Hojas Blancas') ||
+                             inventory.some(i => i.supply_name === 'Hojas Blancas');
       
       // Add default "Hojas Blancas" item only if it doesn't exist
       if (!hasHojasBlancas) {
@@ -124,7 +125,7 @@ export const useInventory = (negocioId?: string) => {
           quantity: 0,
           unit_cost: 0,
           threshold_quantity: 2,
-          unit_type: 'blocks',
+          unit_type: 'bloques',
           sheets_per_block: 500
         });
       }
@@ -211,7 +212,7 @@ export const useInventory = (negocioId?: string) => {
     if (!user) return;
 
     try {
-      // Only allow updates to specific fields (no price changes)
+      // Remove any price-related fields that shouldn't be updated from inventory
       const { unit_price, supply_name, ...allowedUpdates } = updates;
       
       const { error } = await supabase
@@ -275,7 +276,7 @@ export const useInventory = (negocioId?: string) => {
         }
       });
 
-      // Deduct white paper if sheets were used (look for "Hojas Blancas")
+      // Deduct "Hojas Blancas" if sheets were used
       if (totalSheetsUsed > 0) {
         const whitePaperItem = inventory.find(item => item.supply_name === 'Hojas Blancas');
         if (whitePaperItem && whitePaperItem.sheets_per_block) {

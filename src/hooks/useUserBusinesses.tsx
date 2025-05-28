@@ -32,24 +32,16 @@ export const useUserBusinesses = () => {
             onConflict: 'id' 
           });
 
-        // Check for existing businesses
+        // Clean up any duplicate "Negocio Principal" entries first
+        await cleanupDuplicatePrincipalBusinesses();
+
+        // Check for existing businesses after cleanup
         const { data: existingBusinesses, error: fetchError } = await supabase
           .from('negocios')
           .select('id, nombre')
           .order('nombre');
 
         if (fetchError) throw fetchError;
-
-        // Clean up duplicate "Negocio Principal" entries first
-        await cleanupDuplicatePrincipalBusinesses();
-
-        // Re-fetch after cleanup
-        const { data: cleanedBusinesses, error: refetchError } = await supabase
-          .from('negocios')
-          .select('id, nombre')
-          .order('nombre');
-
-        if (refetchError) throw refetchError;
 
         // Check if user has photocopiers
         const { data: userPhotocopiers, error: photocopiersError } = await supabase
@@ -62,10 +54,10 @@ export const useUserBusinesses = () => {
         const hasPhotocopiers = userPhotocopiers && userPhotocopiers.length > 0;
         
         // Check if "Negocio Principal" already exists
-        const principalBusinessExists = cleanedBusinesses && cleanedBusinesses.some(b => b.nombre === 'Negocio Principal');
+        const principalBusiness = existingBusinesses?.find(b => b.nombre === 'Negocio Principal');
 
         // Auto-create business if user has photocopiers but no "Negocio Principal" exists
-        if (hasPhotocopiers && !principalBusinessExists) {
+        if (hasPhotocopiers && !principalBusiness) {
           console.log('Auto-creating default business for user with photocopiers');
           
           const { data: newBusiness, error: createError } = await supabase
@@ -91,12 +83,12 @@ export const useUserBusinesses = () => {
           console.log('Successfully created business and linked photocopiers');
           
           // Update the businesses list to include the new one
-          const updatedBusinesses = cleanedBusinesses ? [...cleanedBusinesses, newBusiness] : [newBusiness];
+          const updatedBusinesses = existingBusinesses ? [...existingBusinesses, newBusiness] : [newBusiness];
           setBusinesses(updatedBusinesses);
-        } else if (cleanedBusinesses && cleanedBusinesses.length > 0) {
+        } else if (existingBusinesses && existingBusinesses.length > 0) {
           // For now, let users access all businesses until we implement proper ownership
           // In a production app, you'd want to filter by actual ownership
-          setBusinesses(cleanedBusinesses);
+          setBusinesses(existingBusinesses);
         } else {
           // No businesses and no photocopiers - empty state
           setBusinesses([]);

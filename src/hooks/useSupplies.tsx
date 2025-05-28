@@ -121,6 +121,26 @@ export const useSupplies = () => {
     if (!user) return;
 
     try {
+      // Check for duplicates before adding
+      const { data: existingSupply, error: checkError } = await supabase
+        .from('pricing')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('supply_name', name)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingSupply) {
+        toast({
+          title: "Error",
+          description: "Ya existe un suministro con ese nombre",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('pricing')
         .insert({
@@ -175,7 +195,7 @@ export const useSupplies = () => {
     if (!user) return;
 
     try {
-      // First, remove from inventory
+      // First, remove from all business inventories
       await removeSupplyFromAllBusinesses(supplyName);
 
       // Then, soft delete from pricing
@@ -187,6 +207,11 @@ export const useSupplies = () => {
 
       if (error) throw error;
       await fetchSupplies();
+      
+      toast({
+        title: "Suministro eliminado",
+        description: "El suministro y sus registros de inventario han sido eliminados",
+      });
     } catch (error) {
       console.error('Error deleting supply:', error);
       throw error;
