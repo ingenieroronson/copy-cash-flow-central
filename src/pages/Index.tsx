@@ -5,21 +5,35 @@ import { AuthForm } from '@/components/AuthForm';
 import { AppWrapper } from '@/components/AppWrapper';
 import { RoleGuard } from '@/components/RoleGuard';
 import { DailySalesCalculator } from '@/components/DailySalesCalculator';
+import { NoBusinessAccess } from '@/components/NoBusinessAccess';
 import { useSalesState } from '@/hooks/useSalesState';
 import { useBusinesses } from '@/hooks/useBusinesses';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const salesState = useSalesState();
-  const { currentBusinessId } = useBusinesses();
+  const { currentBusinessId, businesses, loading: businessLoading } = useBusinesses();
+  const { user } = useAuth();
 
-  if (!currentBusinessId) {
+  // Show loading state while businesses are being loaded
+  if (businessLoading) {
+    return <AppWrapper {...salesState} />;
+  }
+
+  // If user is authenticated but has no businesses, show no access message
+  if (user && !businessLoading && businesses.length === 0) {
+    return <NoBusinessAccess />;
+  }
+
+  // If no current business selected but businesses exist, show loading
+  if (user && businesses.length > 0 && !currentBusinessId) {
     return (
       <AppWrapper {...salesState}>
         <div className="min-h-screen bg-gray-50">
           <Header />
           <main className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-8">
             <div className="text-center py-8">
-              <p className="text-gray-500">No hay negocios disponibles.</p>
+              <p className="text-gray-500">Cargando negocio...</p>
             </div>
           </main>
         </div>

@@ -4,6 +4,7 @@ import { Header } from '@/components/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthForm } from '@/components/AuthForm';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { NoBusinessAccess } from '@/components/NoBusinessAccess';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 import { RoleGuard } from '@/components/RoleGuard';
 import { useBusinesses } from '@/hooks/useBusinesses';
@@ -17,13 +18,19 @@ const Settings = () => {
   if (authLoading || businessLoading) return <LoadingSpinner />;
   if (!user) return <AuthForm />;
 
+  // If user has no businesses, show no access component
+  if (businesses.length === 0) {
+    return <NoBusinessAccess />;
+  }
+
+  // If no current business selected but businesses exist, show loading
   if (!currentBusinessId) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-8">
           <div className="text-center py-8">
-            <p className="text-gray-500">No hay negocios disponibles.</p>
+            <p className="text-gray-500">Cargando configuración...</p>
           </div>
         </main>
       </div>

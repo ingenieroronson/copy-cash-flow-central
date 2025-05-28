@@ -11,8 +11,8 @@ export const useBusinesses = () => {
   const [currentUserRole, setCurrentUserRole] = useState<BusinessRole | null>(null);
   const { user } = useAuth();
 
-  const { businesses, userRoles, loading, loadBusinesses } = useBusinessData(user);
-  const { createDefaultBusiness, createBusiness } = useBusinessOperations(user);
+  const { businesses, userRoles, loading, loadBusinesses, isOwner } = useBusinessData(user);
+  const { createDefaultBusiness, createBusiness, createOwnerDefaultBusiness } = useBusinessOperations(user);
   const { hasPermission } = useRoleManagement(currentUserRole);
 
   const switchBusiness = (businessId: string) => {
@@ -45,6 +45,14 @@ export const useBusinesses = () => {
     return newBusiness;
   };
 
+  const handleCreateOwnerDefaultBusiness = async () => {
+    const newBusiness = await createOwnerDefaultBusiness();
+    if (newBusiness) {
+      await loadBusinesses();
+    }
+    return newBusiness;
+  };
+
   return {
     businesses,
     userRoles,
@@ -54,8 +62,10 @@ export const useBusinesses = () => {
     switchBusiness,
     createBusiness: handleCreateBusiness,
     createDefaultBusiness: handleCreateDefaultBusiness,
+    createOwnerDefaultBusiness: handleCreateOwnerDefaultBusiness,
     hasPermission,
     refetch: loadBusinesses,
+    isOwner: (email?: string) => isOwner(email),
   };
 };
 
