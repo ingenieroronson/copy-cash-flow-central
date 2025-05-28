@@ -53,7 +53,12 @@ export const useReportsData = (filters: ReportFilters) => {
       let suppliesQuery = supabase
         .from('supply_sales')
         .select(`
-          *,
+          fecha,
+          nombre_insumo,
+          cantidad,
+          precio_unitario,
+          total,
+          fotocopiadora_id,
           fotocopiadoras!supply_sales_fotocopiadora_id_fkey(nombre)
         `)
         .eq('usuario_id', user.id)

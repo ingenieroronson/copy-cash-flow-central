@@ -200,8 +200,8 @@ export const useSalesRecords = () => {
       if (supplyError) throw supplyError;
 
       // Transform data to match component state format
-      const services = {};
-      const supplies = {};
+      const services: Record<string, any> = {};
+      const supplies: Record<string, any> = {};
 
       serviceRecords?.forEach(record => {
         let serviceKey = '';
