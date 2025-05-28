@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -80,10 +79,59 @@ export const useInventory = (negocioId?: string) => {
     }
   };
 
+  const cleanupDuplicateInventoryItems = async (negocioId: string) => {
+    try {
+      // Get all inventory items for this business
+      const { data: inventoryItems, error: fetchError } = await supabase
+        .from('inventory')
+        .select('id, supply_name, created_at')
+        .eq('negocio_id', negocioId)
+        .order('supply_name, created_at');
+
+      if (fetchError) throw fetchError;
+
+      if (inventoryItems && inventoryItems.length > 0) {
+        // Group by supply_name to find duplicates
+        const groupedItems = inventoryItems.reduce((acc, item) => {
+          if (!acc[item.supply_name]) {
+            acc[item.supply_name] = [];
+          }
+          acc[item.supply_name].push(item);
+          return acc;
+        }, {} as Record<string, typeof inventoryItems>);
+
+        // For each supply with duplicates, keep only the oldest one
+        for (const [supplyName, items] of Object.entries(groupedItems)) {
+          if (items.length > 1) {
+            const itemsToDelete = items.slice(1).map(item => item.id);
+            
+            console.log(`Found ${items.length} duplicate "${supplyName}" items, keeping oldest and removing ${itemsToDelete.length}`);
+            
+            // Delete duplicate items
+            if (itemsToDelete.length > 0) {
+              await supabase
+                .from('inventory')
+                .delete()
+                .in('id', itemsToDelete);
+                
+              console.log(`Successfully cleaned up duplicate inventory items for ${supplyName}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up duplicate inventory items:', error);
+      // Don't throw error to avoid blocking the main fetch
+    }
+  };
+
   const initializeInventoryFromSupplies = async (negocioId: string) => {
     if (!user) return;
 
     try {
+      // Clean up any duplicate inventory items first
+      await cleanupDuplicateInventoryItems(negocioId);
+
       // Get user's existing supplies from pricing table (active supplies)
       const { data: userSupplies, error: suppliesError } = await supabase
         .from('pricing')
@@ -94,13 +142,23 @@ export const useInventory = (negocioId?: string) => {
 
       if (suppliesError) throw suppliesError;
 
+      // Get current inventory to avoid duplicates
+      const { data: currentInventory, error: inventoryError } = await supabase
+        .from('inventory')
+        .select('supply_name')
+        .eq('negocio_id', negocioId);
+
+      if (inventoryError) throw inventoryError;
+
+      const existingSupplyNames = new Set(currentInventory?.map(item => item.supply_name) || []);
+
       // Prepare inventory items from user supplies
       const inventoryItems = [];
 
-      // Add user's existing supplies
+      // Add user's existing supplies that don't already exist in inventory
       if (userSupplies && userSupplies.length > 0) {
         userSupplies.forEach(supply => {
-          if (supply.supply_name) {
+          if (supply.supply_name && !existingSupplyNames.has(supply.supply_name)) {
             inventoryItems.push({
               negocio_id: negocioId,
               supply_name: supply.supply_name,
@@ -113,12 +171,8 @@ export const useInventory = (negocioId?: string) => {
         });
       }
 
-      // Check if "Hojas Blancas" already exists in supplies or inventory
-      const hasHojasBlancas = userSupplies?.some(s => s.supply_name === 'Hojas Blancas') ||
-                             inventory.some(i => i.supply_name === 'Hojas Blancas');
-      
       // Add default "Hojas Blancas" item only if it doesn't exist
-      if (!hasHojasBlancas) {
+      if (!existingSupplyNames.has('Hojas Blancas')) {
         inventoryItems.push({
           negocio_id: negocioId,
           supply_name: 'Hojas Blancas',
@@ -130,29 +184,15 @@ export const useInventory = (negocioId?: string) => {
         });
       }
 
-      // Insert all items at once, but check for duplicates first
+      // Insert all new items
       if (inventoryItems.length > 0) {
-        for (const item of inventoryItems) {
-          const { data: existingItem, error: checkError } = await supabase
-            .from('inventory')
-            .select('id')
-            .eq('negocio_id', negocioId)
-            .eq('supply_name', item.supply_name)
-            .maybeSingle();
+        const { error: insertError } = await supabase
+          .from('inventory')
+          .insert(inventoryItems);
 
-          if (checkError) throw checkError;
-
-          // Only insert if item doesn't exist
-          if (!existingItem) {
-            const { error: insertError } = await supabase
-              .from('inventory')
-              .insert(item);
-
-            if (insertError) throw insertError;
-          }
-        }
+        if (insertError) throw insertError;
         
-        console.log(`Initialized inventory with supplies for business ${negocioId}`);
+        console.log(`Initialized inventory with ${inventoryItems.length} supplies for business ${negocioId}`);
       }
     } catch (error) {
       console.error('Error initializing inventory from supplies:', error);
@@ -208,16 +248,13 @@ export const useInventory = (negocioId?: string) => {
     }
   };
 
-  const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
+  const updateInventoryItem = async (id: string, updates: Partial<Pick<InventoryItem, 'quantity' | 'unit_cost' | 'threshold_quantity' | 'unit_type' | 'sheets_per_block'>>) => {
     if (!user) return;
 
     try {
-      // Remove any price-related fields that shouldn't be updated from inventory
-      const { unit_price, supply_name, ...allowedUpdates } = updates;
-      
       const { error } = await supabase
         .from('inventory')
-        .update(allowedUpdates)
+        .update(updates)
         .eq('id', id);
 
       if (error) throw error;

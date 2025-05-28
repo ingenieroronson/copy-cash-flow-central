@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -47,7 +46,7 @@ export const useSupplies = () => {
     if (!user) return;
 
     try {
-      // Get all businesses that the user has access to
+      // Get all businesses
       const { data: businesses, error: businessError } = await supabase
         .from('negocios')
         .select('id');
@@ -117,11 +116,67 @@ export const useSupplies = () => {
     }
   };
 
+  const cleanupDuplicateSupplies = async () => {
+    if (!user) return;
+
+    try {
+      // Get all supplies for this user
+      const { data: allSupplies, error: fetchError } = await supabase
+        .from('pricing')
+        .select('id, supply_name, created_at')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .is('service_type', null)
+        .not('supply_name', 'is', null)
+        .order('supply_name, created_at');
+
+      if (fetchError) throw fetchError;
+
+      if (allSupplies && allSupplies.length > 0) {
+        // Group by supply_name to find duplicates
+        const groupedSupplies = allSupplies.reduce((acc, supply) => {
+          if (supply.supply_name) {
+            if (!acc[supply.supply_name]) {
+              acc[supply.supply_name] = [];
+            }
+            acc[supply.supply_name].push(supply);
+          }
+          return acc;
+        }, {} as Record<string, typeof allSupplies>);
+
+        // For each supply with duplicates, keep only the oldest one
+        for (const [supplyName, supplies] of Object.entries(groupedSupplies)) {
+          if (supplies.length > 1) {
+            const suppliesToDelete = supplies.slice(1).map(supply => supply.id);
+            
+            console.log(`Found ${supplies.length} duplicate "${supplyName}" supplies, keeping oldest and removing ${suppliesToDelete.length}`);
+            
+            // Soft delete duplicate supplies
+            if (suppliesToDelete.length > 0) {
+              await supabase
+                .from('pricing')
+                .update({ is_active: false })
+                .in('id', suppliesToDelete);
+                
+              console.log(`Successfully cleaned up duplicate supplies for ${supplyName}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up duplicate supplies:', error);
+      // Don't throw error to avoid blocking the main fetch
+    }
+  };
+
   const addSupply = async (name: string, price: number) => {
     if (!user) return;
 
     try {
-      // Check for duplicates before adding
+      // Clean up duplicates first
+      await cleanupDuplicateSupplies();
+
+      // Check for duplicates after cleanup
       const { data: existingSupply, error: checkError } = await supabase
         .from('pricing')
         .select('id')

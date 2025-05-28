@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -87,7 +88,6 @@ export const useUserBusinesses = () => {
           setBusinesses(updatedBusinesses);
         } else if (existingBusinesses && existingBusinesses.length > 0) {
           // For now, let users access all businesses until we implement proper ownership
-          // In a production app, you'd want to filter by actual ownership
           setBusinesses(existingBusinesses);
         } else {
           // No businesses and no photocopiers - empty state
