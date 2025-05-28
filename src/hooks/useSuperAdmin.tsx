@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 
-const SUPER_ADMIN_EMAIL = 'ingenieroeduardoochoa@gmail.com';
+const SUPER_ADMIN_EMAIL = 'ingeieroeduardoochoa@gmail.com';
 
 export const useSuperAdmin = () => {
   const { user } = useAuth();

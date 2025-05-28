@@ -5,7 +5,7 @@ import { Business } from '@/types/business';
 import { useSuperAdmin } from './useSuperAdmin';
 import type { User } from '@supabase/supabase-js';
 
-const OWNER_EMAIL = 'ingenieroeduardoochoa@gmail.com';
+const OWNER_EMAIL = 'ingeieroeduardoochoa@gmail.com';
 
 export const useBusinessOperations = (user: User | null) => {
   const { toast } = useToast();
@@ -26,7 +26,7 @@ export const useBusinessOperations = (user: User | null) => {
       const { data: businessData, error: businessError } = await supabase
         .from('negocios')
         .insert({
-          nombre: 'Fotocopiadora Issste',
+          nombre: 'Copias ISSSTE',
           descripcion: 'Negocio principal del propietario'
         })
         .select()
