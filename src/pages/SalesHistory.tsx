@@ -178,15 +178,25 @@ const SalesHistory = () => {
 
   const handleDeleteRecord = async (record: SalesRecord) => {
     try {
-      let tableName = 'ventas';
-      if (record.source === 'supply') tableName = 'supply_sales';
-      else if (record.source === 'procedure') tableName = 'procedure_sales';
+      let deleteQuery;
+      if (record.source === 'supply') {
+        deleteQuery = supabase
+          .from('supply_sales')
+          .delete()
+          .eq('id', record.id);
+      } else if (record.source === 'procedure') {
+        deleteQuery = supabase
+          .from('procedure_sales')
+          .delete()
+          .eq('id', record.id);
+      } else {
+        deleteQuery = supabase
+          .from('ventas')
+          .delete()
+          .eq('id', record.id);
+      }
 
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', record.id);
-
+      const { error } = await deleteQuery;
       if (error) throw error;
 
       toast({

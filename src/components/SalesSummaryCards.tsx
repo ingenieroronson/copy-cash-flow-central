@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingUp, FileText, Package } from 'lucide-react';
+import { DollarSign, TrendingUp, FileText, Package, ClipboardList } from 'lucide-react';
 
 export interface SummaryData {
   totalSales: number;
   servicesSales: number;
   suppliesSales: number;
+  proceduresSales: number;
   totalTransactions: number;
 }
 
@@ -38,23 +39,30 @@ export const SalesSummaryCards = ({ data }: SalesSummaryCardsProps) => {
       bgColor: 'bg-blue-50'
     },
     {
+      title: 'Procedimientos',
+      value: formatCurrency(data.proceduresSales),
+      icon: ClipboardList,
+      color: 'bg-purple-500',
+      bgColor: 'bg-purple-50'
+    },
+    {
       title: 'Suministros',
       value: formatCurrency(data.suppliesSales),
       icon: Package,
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50'
+      color: 'bg-orange-500',
+      bgColor: 'bg-orange-50'
     },
     {
       title: 'Días con ventas',
       value: data.totalTransactions === 1 ? '1 día registrado' : `${data.totalTransactions} días registrados`,
       icon: TrendingUp,
-      color: 'bg-orange-500',
-      bgColor: 'bg-orange-50'
+      color: 'bg-gray-500',
+      bgColor: 'bg-gray-50'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
       {summaryCards.map((card, index) => {
         const Icon = card.icon;
         return (

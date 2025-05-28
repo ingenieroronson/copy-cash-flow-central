@@ -7,6 +7,7 @@ import { formatDateInMexicoTimezone } from '@/utils/dateUtils';
 export interface ChartDataPoint {
   date: string;
   services: number;
+  procedures: number;
   supplies: number;
   total: number;
 }
@@ -21,13 +22,17 @@ const chartConfig = {
     label: "Servicios",
     color: "#3B82F6"
   },
+  procedures: {
+    label: "Procedimientos",
+    color: "#8B5CF6"
+  },
   supplies: {
     label: "Suministros", 
     color: "#10B981"
   },
   total: {
     label: "Total",
-    color: "#8B5CF6"
+    color: "#F59E0B"
   }
 };
 
@@ -73,6 +78,18 @@ export const SalesChart = ({ data, selectedDataTypes }: SalesChartProps) => {
                 strokeWidth={2}
                 name={chartConfig.services.label}
                 dot={{ fill: chartConfig.services.color, strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            )}
+            
+            {selectedDataTypes.includes('procedures') && (
+              <Line 
+                type="monotone" 
+                dataKey="procedures" 
+                stroke={chartConfig.procedures.color}
+                strokeWidth={2}
+                name={chartConfig.procedures.label}
+                dot={{ fill: chartConfig.procedures.color, strokeWidth: 2, r: 4 }}
                 activeDot={{ r: 6 }}
               />
             )}

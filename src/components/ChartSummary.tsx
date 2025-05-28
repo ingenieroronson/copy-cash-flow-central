@@ -6,6 +6,7 @@ import { Download, TrendingUp } from 'lucide-react';
 
 export interface SummaryData {
   services: number;
+  procedures: number;
   supplies: number;
   total: number;
   dateRange: {
@@ -57,13 +58,22 @@ export const ChartSummary = ({ data, onExportCSV }: ChartSummaryProps) => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-blue-50 rounded-lg p-4 text-center">
             <div className="text-2xl md:text-3xl font-bold text-blue-600">
               {formatCurrency(data.services)}
             </div>
             <div className="text-sm text-blue-700 font-medium mt-1">
               Servicios
+            </div>
+          </div>
+          
+          <div className="bg-purple-50 rounded-lg p-4 text-center">
+            <div className="text-2xl md:text-3xl font-bold text-purple-600">
+              {formatCurrency(data.procedures)}
+            </div>
+            <div className="text-sm text-purple-700 font-medium mt-1">
+              Procedimientos
             </div>
           </div>
           
@@ -76,11 +86,11 @@ export const ChartSummary = ({ data, onExportCSV }: ChartSummaryProps) => {
             </div>
           </div>
           
-          <div className="bg-purple-50 rounded-lg p-4 text-center">
-            <div className="text-2xl md:text-3xl font-bold text-purple-600">
+          <div className="bg-orange-50 rounded-lg p-4 text-center">
+            <div className="text-2xl md:text-3xl font-bold text-orange-600">
               {formatCurrency(data.total)}
             </div>
-            <div className="text-sm text-purple-700 font-medium mt-1">
+            <div className="text-sm text-orange-700 font-medium mt-1">
               Total
             </div>
           </div>

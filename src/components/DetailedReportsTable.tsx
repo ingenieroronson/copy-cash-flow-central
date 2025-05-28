@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -6,9 +7,10 @@ import { formatDisplayDate, formatDateInMexicoTimezone } from '@/utils/dateUtils
 
 export interface DetailedSalesRecord {
   date: string;
-  type: 'service' | 'supply';
+  type: 'service' | 'supply' | 'procedure';
   service_type?: string;
   supply_name?: string;
+  procedure_name?: string;
   quantity: number;
   unit_price: number;
   total: number;
@@ -132,11 +134,14 @@ export const DetailedReportsTable = ({ data }: DetailedReportsTableProps) => {
                           <p className="font-medium text-xs md:text-sm">
                             {record.type === 'service' 
                               ? formatServiceType(record.service_type!) 
+                              : record.type === 'procedure'
+                              ? record.procedure_name
                               : record.supply_name
                             }
                           </p>
                           <p className="text-xs text-gray-500 capitalize">
-                            {record.type === 'service' ? 'Servicio' : 'Suministro'}
+                            {record.type === 'service' ? 'Servicio' : 
+                             record.type === 'procedure' ? 'Procedimiento' : 'Suministro'}
                           </p>
                         </div>
                       </TableCell>
@@ -144,7 +149,7 @@ export const DetailedReportsTable = ({ data }: DetailedReportsTableProps) => {
                         {record.quantity}
                       </TableCell>
                       <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden sm:table-cell">
-                        {record.type === 'service' && record.errors !== undefined ? record.errors : '-'}
+                        {(record.type === 'service' || record.type === 'procedure') && record.errors !== undefined ? record.errors : '-'}
                       </TableCell>
                       <TableCell className="text-right text-xs md:text-sm py-2 md:py-4 hidden md:table-cell">
                         {formatCurrency(record.unit_price)}
