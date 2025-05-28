@@ -1,15 +1,70 @@
 
-import type { Services, Supplies, ServicePrices, SupplyPrices, ServiceRecord, SupplyRecord } from '@/types/sales';
+// Simplified type definitions to avoid deep instantiation issues
+type SimpleServiceData = {
+  yesterday: number;
+  today: number;
+  errors: number;
+};
+
+type SimpleServices = {
+  colorCopies?: SimpleServiceData;
+  bwCopies?: SimpleServiceData;
+  colorPrints?: SimpleServiceData;
+  bwPrints?: SimpleServiceData;
+};
+
+type SimpleSupplies = {
+  [supplyName: string]: {
+    startStock: number;
+    endStock: number;
+  };
+};
+
+type SimpleServicePrices = {
+  color_copies?: number;
+  bw_copies?: number;
+  color_prints?: number;
+  bw_prints?: number;
+};
+
+type SimpleSupplyPrices = {
+  [supplyName: string]: number;
+};
+
+type SimpleServiceRecord = {
+  usuario_id: string;
+  fecha: string;
+  tipo: string;
+  cantidad: number;
+  precio_unitario: number;
+  total: number;
+  valor_anterior: number;
+  valor_actual: number;
+  fotocopiadora_id: string;
+  negocio_id: string;
+  errores: number;
+};
+
+type SimpleSupplyRecord = {
+  usuario_id: string;
+  fecha: string;
+  fotocopiadora_id: string;
+  nombre_insumo: string;
+  cantidad: number;
+  precio_unitario: number;
+  total: number;
+  negocio_id: string;
+};
 
 export const processServiceRecords = (
-  services: Services,
-  servicePrices: ServicePrices,
+  services: SimpleServices,
+  servicePrices: SimpleServicePrices,
   userId: string,
   targetDate: string,
   photocopierId: string,
   negocioId: string
-): ServiceRecord[] => {
-  const records: ServiceRecord[] = [];
+): SimpleServiceRecord[] => {
+  const records: SimpleServiceRecord[] = [];
 
   Object.entries(services).forEach(([serviceKey, serviceData]) => {
     if (!serviceData) return;
@@ -21,7 +76,7 @@ export const processServiceRecords = (
       'bwPrints': 'impresion_bn'
     };
 
-    const priceKey = serviceKey.replace(/([A-Z])/g, '_$1').toLowerCase() as keyof ServicePrices;
+    const priceKey = serviceKey.replace(/([A-Z])/g, '_$1').toLowerCase() as keyof SimpleServicePrices;
     const unitPrice = servicePrices[priceKey] || 0;
     const quantity = Math.max(0, serviceData.today - (serviceData.errors || 0) - serviceData.yesterday);
     const total = quantity * unitPrice;
@@ -47,14 +102,14 @@ export const processServiceRecords = (
 };
 
 export const processSupplyRecords = (
-  suppliesData: Supplies,
-  supplyPrices: SupplyPrices,
+  suppliesData: SimpleSupplies,
+  supplyPrices: SimpleSupplyPrices,
   userId: string,
   targetDate: string,
   photocopierId: string,
   negocioId: string
-): SupplyRecord[] => {
-  const records: SupplyRecord[] = [];
+): SimpleSupplyRecord[] => {
+  const records: SimpleSupplyRecord[] = [];
 
   Object.entries(suppliesData).forEach(([supplyName, supplyData]) => {
     if (!supplyData) return;
@@ -83,13 +138,13 @@ export const processSupplyRecords = (
 export const transformLoadedData = (
   serviceRecords: any[],
   supplyRecords: any[]
-): { services: Services; supplies: Supplies } => {
-  const services: Services = {};
-  const supplies: Supplies = {};
+): { services: SimpleServices; supplies: SimpleSupplies } => {
+  const services: SimpleServices = {};
+  const supplies: SimpleSupplies = {};
 
   // Transform service records back to Services format
   serviceRecords.forEach(record => {
-    const serviceKeyMap: Record<string, keyof Services> = {
+    const serviceKeyMap: Record<string, keyof SimpleServices> = {
       'copias_color': 'colorCopies',
       'copias_bn': 'bwCopies',
       'impresion_color': 'colorPrints',

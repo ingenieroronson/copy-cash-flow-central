@@ -201,6 +201,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           machine_id: string | null
+          negocio_id: string | null
           service_type: Database["public"]["Enums"]["service_type"] | null
           supply_name: string | null
           unit_price: number
@@ -213,6 +214,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           machine_id?: string | null
+          negocio_id?: string | null
           service_type?: Database["public"]["Enums"]["service_type"] | null
           supply_name?: string | null
           unit_price: number
@@ -225,6 +227,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           machine_id?: string | null
+          negocio_id?: string | null
           service_type?: Database["public"]["Enums"]["service_type"] | null
           supply_name?: string | null
           unit_price?: number
@@ -232,6 +235,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_pricing_negocio"
+            columns: ["negocio_id"]
+            isOneToOne: false
+            referencedRelation: "negocios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pricing_machine_id_fkey"
             columns: ["machine_id"]
@@ -305,6 +315,7 @@ export type Database = {
           fecha: string
           fotocopiadora_id: string
           id: string
+          negocio_id: string | null
           nombre_insumo: string
           precio_unitario: number
           total: number
@@ -317,6 +328,7 @@ export type Database = {
           fecha?: string
           fotocopiadora_id: string
           id?: string
+          negocio_id?: string | null
           nombre_insumo: string
           precio_unitario?: number
           total?: number
@@ -329,6 +341,7 @@ export type Database = {
           fecha?: string
           fotocopiadora_id?: string
           id?: string
+          negocio_id?: string | null
           nombre_insumo?: string
           precio_unitario?: number
           total?: number
@@ -341,6 +354,13 @@ export type Database = {
             columns: ["fotocopiadora_id"]
             isOneToOne: false
             referencedRelation: "fotocopiadoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_supply_sales_negocio"
+            columns: ["negocio_id"]
+            isOneToOne: false
+            referencedRelation: "negocios"
             referencedColumns: ["id"]
           },
           {
@@ -453,6 +473,7 @@ export type Database = {
           fecha: string
           fotocopiadora_id: string | null
           id: string
+          negocio_id: string | null
           nombre_insumo: string | null
           precio_unitario: number | null
           tipo: string | null
@@ -467,6 +488,7 @@ export type Database = {
           fecha: string
           fotocopiadora_id?: string | null
           id?: string
+          negocio_id?: string | null
           nombre_insumo?: string | null
           precio_unitario?: number | null
           tipo?: string | null
@@ -481,6 +503,7 @@ export type Database = {
           fecha?: string
           fotocopiadora_id?: string | null
           id?: string
+          negocio_id?: string | null
           nombre_insumo?: string | null
           precio_unitario?: number | null
           tipo?: string | null
@@ -490,6 +513,13 @@ export type Database = {
           valor_anterior?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_ventas_negocio"
+            columns: ["negocio_id"]
+            isOneToOne: false
+            referencedRelation: "negocios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ventas_fotocopiadora_id_fkey"
             columns: ["fotocopiadora_id"]

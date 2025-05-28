@@ -6,39 +6,39 @@ import { useBusinesses } from './useBusinesses';
 import { useToast } from '@/hooks/use-toast';
 import { processServiceRecords, processSupplyRecords } from '@/utils/salesDataProcessor';
 
-// Define simplified types to avoid deep type instantiation
-interface ServiceData {
+// Simple type definitions to avoid deep instantiation
+type SimpleServiceData = {
   yesterday: number;
   today: number;
   errors: number;
-}
+};
 
-interface ServicesData {
-  colorCopies?: ServiceData;
-  bwCopies?: ServiceData;
-  colorPrints?: ServiceData;
-  bwPrints?: ServiceData;
-}
+type SimpleServicesData = {
+  colorCopies?: SimpleServiceData;
+  bwCopies?: SimpleServiceData;
+  colorPrints?: SimpleServiceData;
+  bwPrints?: SimpleServiceData;
+};
 
-interface SupplyData {
+type SimpleSupplyData = {
   startStock: number;
   endStock: number;
-}
+};
 
-interface SuppliesData {
-  [supplyName: string]: SupplyData;
-}
+type SimpleSuppliesData = {
+  [supplyName: string]: SimpleSupplyData;
+};
 
-interface ServicePricesData {
+type SimpleServicePrices = {
   color_copies?: number;
   bw_copies?: number;
   color_prints?: number;
   bw_prints?: number;
-}
+};
 
-interface SupplyPricesData {
+type SimpleSupplyPrices = {
   [supplyName: string]: number;
-}
+};
 
 export const useSaveSales = () => {
   const [loading, setLoading] = useState(false);
@@ -47,10 +47,10 @@ export const useSaveSales = () => {
   const { toast } = useToast();
 
   const saveDailySales = async (
-    services: ServicesData,
-    suppliesData: SuppliesData,
-    servicePrices: ServicePricesData,
-    supplyPrices: SupplyPricesData,
+    services: SimpleServicesData,
+    suppliesData: SimpleSuppliesData,
+    servicePrices: SimpleServicePrices,
+    supplyPrices: SimpleSupplyPrices,
     photocopierId: string,
     selectedDate?: string
   ): Promise<void> => {
