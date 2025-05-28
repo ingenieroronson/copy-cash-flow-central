@@ -78,6 +78,14 @@ export const ChartFilters = ({ filters, onFiltersChange, loading = false }: Char
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
+                  id="procedures"
+                  checked={filters.dataTypes.includes('procedures')}
+                  onCheckedChange={(checked) => handleDataTypeChange('procedures', checked as boolean)}
+                />
+                <Label htmlFor="procedures" className="text-sm">Procedimientos</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
                   id="supplies"
                   checked={filters.dataTypes.includes('supplies')}
                   onCheckedChange={(checked) => handleDataTypeChange('supplies', checked as boolean)}
