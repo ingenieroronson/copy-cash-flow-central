@@ -9,6 +9,7 @@ export interface Photocopier {
   nombre: string | null;
   ubicacion: string | null;
   usuario_id: string | null;
+  negocio_id: string | null;
 }
 
 export const usePhotocopiers = () => {
@@ -49,15 +50,26 @@ export const usePhotocopiers = () => {
 
       if (error) throw error;
 
-      // If no photocopiers exist, create a default one
+      // If no photocopiers exist, create a default one and link to business if available
       if (!data || data.length === 0) {
+        // Check if user has any businesses
+        const { data: businesses, error: businessError } = await supabase
+          .from('negocios')
+          .select('id')
+          .limit(1);
+
+        if (businessError) throw businessError;
+
+        const defaultPhotocopier = {
+          usuario_id: user.id,
+          nombre: 'Fotocopiadora Principal',
+          ubicacion: 'Oficina',
+          negocio_id: businesses && businesses.length > 0 ? businesses[0].id : null
+        };
+
         const { data: newPhotocopier, error: createError } = await supabase
           .from('fotocopiadoras')
-          .insert({
-            usuario_id: user.id,
-            nombre: 'Fotocopiadora Principal',
-            ubicacion: 'Oficina'
-          })
+          .insert(defaultPhotocopier)
           .select()
           .single();
 

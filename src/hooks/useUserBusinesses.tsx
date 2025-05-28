@@ -33,8 +33,7 @@ export const useUserBusinesses = () => {
             onConflict: 'id' 
           });
 
-        // Get businesses the user has created directly (where they don't have a negocio_id yet)
-        // For now, we'll create a default business for each user if none exists
+        // Check for existing businesses
         const { data: existingBusinesses, error: fetchError } = await supabase
           .from('negocios')
           .select('id, nombre')
@@ -42,23 +41,49 @@ export const useUserBusinesses = () => {
 
         if (fetchError) throw fetchError;
 
-        // If no businesses exist at all, create a default one for this user
-        if (!existingBusinesses || existingBusinesses.length === 0) {
+        // Check if user has photocopiers
+        const { data: userPhotocopiers, error: photocopiersError } = await supabase
+          .from('fotocopiadoras')
+          .select('id')
+          .eq('usuario_id', user.id);
+
+        if (photocopiersError) throw photocopiersError;
+
+        const hasPhotocopiers = userPhotocopiers && userPhotocopiers.length > 0;
+        const hasNoBusinesses = !existingBusinesses || existingBusinesses.length === 0;
+
+        // Auto-create business if user has photocopiers but no businesses
+        if (hasPhotocopiers && hasNoBusinesses) {
+          console.log('Auto-creating default business for user with photocopiers');
+          
           const { data: newBusiness, error: createError } = await supabase
             .from('negocios')
             .insert({
-              nombre: `Negocio de ${user.user_metadata?.name || user.email || 'Usuario'}`,
-              descripcion: 'Negocio principal'
+              nombre: 'Negocio Principal',
+              descripcion: 'Negocio principal creado automáticamente'
             })
             .select('id, nombre')
             .single();
 
           if (createError) throw createError;
+
+          // Link all user's photocopiers to the new business
+          const { error: linkError } = await supabase
+            .from('fotocopiadoras')
+            .update({ negocio_id: newBusiness.id })
+            .eq('usuario_id', user.id);
+
+          if (linkError) throw linkError;
+
+          console.log('Successfully created business and linked photocopiers');
           setBusinesses([newBusiness]);
-        } else {
+        } else if (existingBusinesses && existingBusinesses.length > 0) {
           // For now, let users access all businesses until we implement proper ownership
           // In a production app, you'd want to filter by actual ownership
           setBusinesses(existingBusinesses);
+        } else {
+          // No businesses and no photocopiers - empty state
+          setBusinesses([]);
         }
       } catch (error) {
         console.error('Error fetching user businesses:', error);
