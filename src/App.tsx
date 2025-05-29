@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthForm } from "@/components/AuthForm";
 import { SettingsLoadingState } from "@/components/SettingsLoadingState";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
@@ -23,23 +22,26 @@ const AppContent = () => {
     return <SettingsLoadingState />;
   }
 
-  // Si no hay usuario autenticado, SIEMPRE mostrar login
-  if (!user) {
-    return <AuthForm />;
-  }
-
-  // Solo si hay usuario autenticado, mostrar las rutas protegidas
   return (
     <BrowserRouter>
       <Routes>
-        {/* Redirect root to home for authenticated users */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<Index />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/sales-history" element={<SalesHistory />} />
-        <Route path="/reports" element={<Reports />} />
-        {/* Catch-all route for authenticated users */}
-        <Route path="*" element={<Navigate to="/home" replace />} />
+        {user ? (
+          // Usuario autenticado - rutas normales
+          <>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/sales-history" element={<SalesHistory />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </>
+        ) : (
+          // Usuario NO autenticado - todas las rutas van a settings (login)
+          <>
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/settings" replace />} />
+          </>
+        )}
       </Routes>
     </BrowserRouter>
   );
