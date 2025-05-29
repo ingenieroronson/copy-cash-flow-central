@@ -7,6 +7,8 @@ export interface SharedUser {
   nombre: string | null;
 }
 
+type ModuleType = 'copias' | 'reportes' | 'historial' | 'configuracion';
+
 export const findUserByEmail = async (email: string): Promise<SharedUser | null> => {
   try {
     const { data, error } = await supabase
@@ -33,10 +35,10 @@ export const createSharedAccessRecords = async (
   ownerId: string,
   targetUserId: string,
   fotocopiadoraId: string,
-  modules: string[],
+  modules: ModuleType[],
   expiresAt?: string
 ) => {
-  const sharedAccessRecords = modules.map((module: string) => ({
+  const sharedAccessRecords = modules.map((module: ModuleType) => ({
     owner_id: ownerId,
     shared_with_id: targetUserId,
     fotocopiadora_id: fotocopiadoraId,
