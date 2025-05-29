@@ -33,18 +33,26 @@ npm start
 ### Technical Details
 - Uses Vite for building (outputs to `/dist`)
 - Serves static files using the `serve` package with SPA fallback
-- Configured for production environment with relative base path
+- Configured for production environment with relative base path (`base: "./"`)
 - Port is dynamically set via environment variable
 - Uses legacy peer deps for better package compatibility
-- Handles React Router with proper fallback configuration
+- Handles React Router with proper fallback configuration (`--single` flag)
 - Base path set to "./" for subdomain/non-root URL compatibility
+- Service worker temporarily disabled to prevent asset loading conflicts
 
 ### Troubleshooting
 If you see a blank page:
 1. Check browser console for JavaScript errors
-2. Verify the build completed successfully
+2. Verify the build completed successfully with `npm run build`
 3. Ensure all environment variables are set correctly
 4. Check that the serve command includes SPA fallback (`--single`)
 5. Verify base path is set to "./" in vite.config.ts for proper asset loading
+6. Clear browser cache and disable service worker if issues persist
+7. Check network tab for failed asset requests (404 errors)
 
-The project is ready for deployment - no additional configuration needed!
+### Important Notes
+- The service worker is temporarily disabled to prevent caching conflicts during deployment
+- No server.js file is needed - uses serve package directly
+- Ensure the start script in package.json is: `serve -s dist -l ${PORT:-3000} --single`
+
+The project is ready for deployment - rebuild with `npm run build` and redeploy!
