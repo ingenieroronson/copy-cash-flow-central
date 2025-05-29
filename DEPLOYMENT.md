@@ -33,10 +33,11 @@ npm start
 ### Technical Details
 - Uses Vite for building (outputs to `/dist`)
 - Serves static files using the `serve` package with SPA fallback
-- Configured for production environment
+- Configured for production environment with relative base path
 - Port is dynamically set via environment variable
 - Uses legacy peer deps for better package compatibility
 - Handles React Router with proper fallback configuration
+- Base path set to "./" for subdomain/non-root URL compatibility
 
 ### Troubleshooting
 If you see a blank page:
@@ -44,5 +45,6 @@ If you see a blank page:
 2. Verify the build completed successfully
 3. Ensure all environment variables are set correctly
 4. Check that the serve command includes SPA fallback (`--single`)
+5. Verify base path is set to "./" in vite.config.ts for proper asset loading
 
 The project is ready for deployment - no additional configuration needed!
