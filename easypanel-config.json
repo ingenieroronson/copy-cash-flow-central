@@ -3,7 +3,7 @@
   "name": "Easypanel Deployment Configuration",
   "description": "Configuration settings needed for Easypanel deployment",
   "requiredPackageJsonScripts": {
-    "start": "serve -s dist -l ${PORT:-3000}",
+    "start": "serve -s dist -l ${PORT:-3000} --single",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
@@ -20,6 +20,7 @@
     "Port is configurable via PORT environment variable",
     "Build outputs to dist/ directory as expected by Easypanel",
     "Uses --legacy-peer-deps for better package compatibility",
-    "date-fns is pinned to ^3.6.0 for react-day-picker compatibility"
+    "date-fns is pinned to ^3.6.0 for react-day-picker compatibility",
+    "Added --single flag to serve for SPA routing support"
   ]
 }
