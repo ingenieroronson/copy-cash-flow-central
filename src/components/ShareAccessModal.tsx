@@ -4,14 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useSharedAccess } from '@/hooks/useSharedAccess';
 import { LoadingSpinner } from './LoadingSpinner';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { ModuleSelector } from './ModuleSelector';
+import { ExpirationDatePicker } from './ExpirationDatePicker';
 
 interface ShareAccessModalProps {
   isOpen: boolean;
@@ -21,13 +17,6 @@ interface ShareAccessModalProps {
 }
 
 type ModuleType = 'copias' | 'reportes' | 'historial' | 'configuracion';
-
-const modules = [
-  { id: 'copias' as ModuleType, name: 'Copias', description: 'Acceso al módulo de registro de copias' },
-  { id: 'reportes' as ModuleType, name: 'Reportes', description: 'Acceso a reportes y gráficos' },
-  { id: 'historial' as ModuleType, name: 'Historial', description: 'Acceso al historial de ventas' },
-  { id: 'configuracion' as ModuleType, name: 'Configuración', description: 'Acceso a la configuración' },
-];
 
 export const ShareAccessModal: React.FC<ShareAccessModalProps> = ({
   isOpen,
@@ -110,76 +99,17 @@ export const ShareAccessModal: React.FC<ShareAccessModalProps> = ({
             />
           </div>
 
-          <div>
-            <Label className="text-sm font-medium">Módulos a compartir</Label>
-            <div className="space-y-3 mt-2">
-              {modules.map((module) => (
-                <div key={module.id} className="flex items-start space-x-3">
-                  <Checkbox
-                    id={module.id}
-                    checked={selectedModules.includes(module.id)}
-                    onCheckedChange={(checked) => 
-                      handleModuleChange(module.id, checked as boolean)
-                    }
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <Label
-                      htmlFor={module.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {module.name}
-                    </Label>
-                    <p className="text-xs text-gray-500">
-                      {module.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ModuleSelector
+            selectedModules={selectedModules}
+            onModuleChange={handleModuleChange}
+          />
 
-          <div>
-            <Label>Fecha de expiración (opcional)</Label>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                  type="button"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {expiresAt ? (
-                    format(expiresAt, "PPP", { locale: es })
-                  ) : (
-                    <span className="text-gray-500">Sin fecha de expiración</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={expiresAt}
-                  onSelect={(date) => {
-                    setExpiresAt(date);
-                    setCalendarOpen(false);
-                  }}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            {expiresAt && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setExpiresAt(undefined)}
-                className="mt-1 text-xs"
-              >
-                Remover fecha de expiración
-              </Button>
-            )}
-          </div>
+          <ExpirationDatePicker
+            expiresAt={expiresAt}
+            onDateChange={setExpiresAt}
+            calendarOpen={calendarOpen}
+            onCalendarOpenChange={setCalendarOpen}
+          />
 
           <div className="flex gap-2 pt-4">
             <Button
