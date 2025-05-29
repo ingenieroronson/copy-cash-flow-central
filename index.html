@@ -16,37 +16,37 @@
     <meta name="mobile-web-app-capable" content="yes" />
     
     <!-- Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     
-    <!-- Favicon and Apple Touch Icons -->
-    <link rel="icon" href="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" type="image/png">
-    <link rel="apple-touch-icon" href="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
-    <link rel="apple-touch-icon" sizes="180x180" href="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
+    <!-- Favicon and Apple Touch Icons - Using local files -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="./placeholder.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./placeholder.svg" />
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="IntegraCopias" />
     <meta property="og:description" content="Sistema de gestión para fotocopiadoras y suministros" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
+    <meta property="og:image" content="./placeholder.svg" />
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://drive.google.com/uc?export=view&id=1jYRWlnKYW2xYFZ3ydRU4zxOucwEgGrP7" />
+    <meta name="twitter:image" content="./placeholder.svg" />
   </head>
 
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/main.tsx"></script>
     
-    <!-- Service Worker Registration - Temporarily disabled to fix asset loading issues -->
+    <!-- Service Worker Registration - Completely disabled until issues are resolved -->
     <!--
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('./sw.js')
             .then(function(registration) {
               console.log('SW registered: ', registration);
             }, function(registrationError) {
