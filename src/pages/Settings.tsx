@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +13,7 @@ import { Trash2, Plus, Save, Settings as SettingsIcon } from 'lucide-react';
 import { AuthForm } from '@/components/AuthForm';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 import { SharedModulesView } from '@/components/SharedModulesView';
+import { SharedAccessSummary } from '@/components/SharedAccessSummary';
 
 const Settings = () => {
   const { user, loading: authLoading } = useAuth();
@@ -205,6 +205,9 @@ const Settings = () => {
           <div className="space-y-8">
             {/* Photocopier Management */}
             <PhotocopierManagement />
+
+            {/* Shared Access Management */}
+            <SharedAccessSummary />
 
             {/* Shared Modules View */}
             <SharedModulesView />
