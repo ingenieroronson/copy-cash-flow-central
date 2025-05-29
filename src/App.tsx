@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import SalesHistory from "./pages/SalesHistory";
@@ -19,14 +20,33 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Redirect root to settings to avoid loading issues */}
+          {/* Redirect root to settings for login/auth handling */}
           <Route path="/" element={<Navigate to="/settings" replace />} />
-          <Route path="/home" element={<Index />} />
+          
+          {/* Settings page handles auth state (login form or settings) */}
           <Route path="/settings" element={<Settings />} />
-          <Route path="/sales-history" element={<SalesHistory />} />
-          <Route path="/reports" element={<Reports />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          
+          {/* All other routes require authentication */}
+          <Route path="/home" element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/sales-history" element={
+            <ProtectedRoute>
+              <SalesHistory />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/reports" element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          } />
+          
+          {/* Catch-all route redirects to settings for auth handling */}
+          <Route path="*" element={<Navigate to="/settings" replace />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
