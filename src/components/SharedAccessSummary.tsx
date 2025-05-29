@@ -1,13 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, User, Trash2, Users, Printer } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useSharedAccess } from '@/hooks/useSharedAccess';
 import { usePhotocopiers } from '@/hooks/usePhotocopiers';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { SharedAccessTable } from './shared-access/SharedAccessTable';
+import { EmptySharedAccessState } from './shared-access/EmptySharedAccessState';
 
 interface SharedAccessRecord {
   id: string;
@@ -54,12 +52,10 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
     setLoading(true);
     try {
       if (fotocopiadoraId) {
-        // Load for specific photocopier
         const data = await getSharedAccess(fotocopiadoraId);
         console.log('Loaded shared access data for photocopier:', fotocopiadoraId, data);
         setSharedAccess(data as SharedAccessRecord[]);
       } else {
-        // Load for all owned photocopiers
         const allSharedAccess: SharedAccessRecord[] = [];
         for (const photocopier of photocopiers) {
           const data = await getSharedAccess(photocopier.id);
@@ -84,21 +80,10 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
   const handleRevokeAccess = async (sharedAccessId: string) => {
     try {
       await revokeAccess(sharedAccessId);
-      // Reload data after successful revocation
       loadSharedAccess();
     } catch (error) {
       console.error('Error revoking access:', error);
     }
-  };
-
-  const getModuleDisplayName = (moduleType: string) => {
-    const moduleNames: Record<string, string> = {
-      copias: 'Copias',
-      reportes: 'Reportes',
-      historial: 'Historial',
-      configuracion: 'Configuración',
-    };
-    return moduleNames[moduleType] || moduleType;
   };
 
   const getPhotocopierName = (fotocopiadoraId: string) => {
@@ -153,11 +138,7 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No has compartido acceso con ningún usuario</p>
-            <p className="text-gray-400 text-sm">Los accesos compartidos aparecerán aquí</p>
-          </div>
+          <EmptySharedAccessState />
         </CardContent>
       </Card>
     );
@@ -174,88 +155,11 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
       <CardContent>
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Resumen de Accesos Activos</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200 rounded-lg">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    Usuario
-                  </th>
-                  {!fotocopiadoraId && (
-                    <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Fotocopiadora
-                    </th>
-                  )}
-                  <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    Módulos Compartidos
-                  </th>
-                  <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    Expiración
-                  </th>
-                  <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.values(groupedSharedAccess).map((group, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="border border-gray-200 px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <div>
-                          <p className="font-medium text-sm">{group.user.nombre || group.user.email}</p>
-                          <p className="text-xs text-gray-500">{group.user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    {!fotocopiadoraId && (
-                      <td className="border border-gray-200 px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <Printer className="w-4 h-4 text-gray-500" />
-                          <p className="font-medium text-sm">{group.photocopier.nombre}</p>
-                        </div>
-                      </td>
-                    )}
-                    <td className="border border-gray-200 px-4 py-2">
-                      <div className="flex flex-wrap gap-1">
-                        {group.modules.map((access) => (
-                          <Badge key={access.id} variant="secondary" className="text-xs">
-                            {getModuleDisplayName(access.module_type)}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2">
-                      {group.modules.some(m => m.expires_at) ? (
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Calendar className="w-3 h-3" />
-                          {format(new Date(group.modules.find(m => m.expires_at)!.expires_at!), 'dd/MM/yyyy', { locale: es })}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-500">Sin expiración</span>
-                      )}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-2">
-                      <div className="flex gap-1">
-                        {group.modules.map((access) => (
-                          <Button
-                            key={access.id}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRevokeAccess(access.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SharedAccessTable 
+            groupedSharedAccess={groupedSharedAccess}
+            fotocopiadoraId={fotocopiadoraId}
+            onRevokeAccess={handleRevokeAccess}
+          />
         </div>
       </CardContent>
     </Card>

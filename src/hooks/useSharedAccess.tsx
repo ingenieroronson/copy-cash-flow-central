@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { findUserByEmail, createSharedAccessRecords, SharedUser } from './useSharedAccessHelpers';
 
 export interface SharedAccess {
   id: string;
@@ -16,40 +17,12 @@ export interface SharedAccess {
   updated_at: string;
 }
 
-export interface SharedUser {
-  id: string;
-  email: string;
-  nombre: string | null;
-}
-
 type ModuleType = 'copias' | 'reportes' | 'historial' | 'configuracion';
 
 export const useSharedAccess = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  const findUserByEmail = async (email: string): Promise<SharedUser | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('id, email, nombre')
-        .eq('email', email.toLowerCase().trim())
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // User not found
-        }
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error finding user by email:', error);
-      throw error;
-    }
-  };
 
   const shareAccess = async (
     email: string,
@@ -73,25 +46,13 @@ export const useSharedAccess = () => {
       }
 
       // Create shared access records for each module
-      const sharedAccessRecords = modules.map((module: ModuleType) => ({
-        owner_id: user.id,
-        shared_with_id: targetUser.id,
-        fotocopiadora_id: fotocopiadoraId,
-        module_type: module as ModuleType,
-        expires_at: expiresAt || null,
-        is_active: true,
-      }));
-
-      const { error } = await supabase
-        .from('shared_access')
-        .upsert(sharedAccessRecords, {
-          onConflict: 'owner_id,shared_with_id,fotocopiadora_id,module_type'
-        });
-
-      if (error) {
-        console.error('Supabase error sharing access:', error);
-        throw error;
-      }
+      await createSharedAccessRecords(
+        user.id,
+        targetUser.id,
+        fotocopiadoraId,
+        modules,
+        expiresAt
+      );
 
       toast({
         title: "Acceso compartido",

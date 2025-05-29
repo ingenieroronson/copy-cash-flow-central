@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,9 @@ import { SalesHistoryTable } from '@/components/SalesHistoryTable';
 import { useToast } from '@/hooks/use-toast';
 import { AuthForm } from '@/components/AuthForm';
 import { usePhotocopiers } from '@/hooks/usePhotocopiers';
-import { PhotocopierSelector } from '@/components/PhotocopierSelector';
+import { SalesHistoryHeader } from '@/components/sales-history/SalesHistoryHeader';
+import { SalesHistoryFilters } from '@/components/sales-history/SalesHistoryFilters';
+import { AccessRestrictedView } from '@/components/sales-history/AccessRestrictedView';
 
 export interface SalesRecord {
   id: string;
@@ -318,21 +319,7 @@ const SalesHistory = () => {
   }
 
   if (!hasHistorialAccess && selectedPhotocopierId) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="max-w-6xl mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
-              <h2 className="text-lg font-semibold text-yellow-800 mb-2">Acceso Restringido</h2>
-              <p className="text-yellow-700">
-                No tienes acceso al módulo de Historial para esta fotocopiadora.
-              </p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
+    return <AccessRestrictedView />;
   }
 
   if (loading) {
@@ -343,19 +330,14 @@ const SalesHistory = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Historial de Ventas</h1>
-          <p className="text-gray-600">Revisa todas tus ventas organizadas por fecha</p>
-        </div>
-
-        <div className="mb-6">
-          <PhotocopierSelector
-            photocopiers={allPhotocopiers}
-            selectedPhotocopierId={selectedPhotocopierId}
-            onPhotocopierChange={setSelectedPhotocopierId}
-            loading={photocopiersLoading}
-          />
-        </div>
+        <SalesHistoryHeader />
+        
+        <SalesHistoryFilters
+          allPhotocopiers={allPhotocopiers}
+          selectedPhotocopierId={selectedPhotocopierId}
+          onPhotocopierChange={setSelectedPhotocopierId}
+          loading={photocopiersLoading}
+        />
 
         <SalesHistoryTable 
           salesData={salesData} 
