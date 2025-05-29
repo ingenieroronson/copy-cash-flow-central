@@ -32,7 +32,7 @@ export interface DailySales {
 
 const SalesHistory = () => {
   const { user, loading: authLoading } = useAuth();
-  const { photocopiers, loading: photocopiersLoading } = usePhotocopiers();
+  const { allPhotocopiers, loading: photocopiersLoading, hasModuleAccess } = usePhotocopiers();
   const [selectedPhotocopierId, setSelectedPhotocopierId] = useState<string>('');
   const [salesData, setSalesData] = useState<DailySales[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,13 +40,16 @@ const SalesHistory = () => {
 
   // Set default photocopier when photocopiers are loaded
   useEffect(() => {
-    if (photocopiers.length > 0 && !selectedPhotocopierId) {
-      setSelectedPhotocopierId(photocopiers[0].id);
+    if (allPhotocopiers.length > 0 && !selectedPhotocopierId) {
+      setSelectedPhotocopierId(allPhotocopiers[0].id);
     }
-  }, [photocopiers, selectedPhotocopierId]);
+  }, [allPhotocopiers, selectedPhotocopierId]);
+
+  // Check if user has access to historial module for selected photocopier
+  const hasHistorialAccess = selectedPhotocopierId ? hasModuleAccess(selectedPhotocopierId, 'historial') : false;
 
   const loadSalesData = async () => {
-    if (!user) return;
+    if (!user || !selectedPhotocopierId || !hasHistorialAccess) return;
 
     setLoading(true);
     try {
@@ -61,15 +64,20 @@ const SalesHistory = () => {
           onConflict: 'id' 
         });
 
+      // Check if this is a shared photocopier
+      const selectedPhotocopier = allPhotocopiers.find(p => p.id === selectedPhotocopierId);
+      const isSharedPhotocopier = selectedPhotocopier?.isShared || false;
+
       // Load service sales from ventas table with error information
       let serviceQuery = supabase
         .from('ventas')
         .select('*')
-        .eq('usuario_id', user.id)
+        .eq('fotocopiadora_id', selectedPhotocopierId)
         .order('fecha', { ascending: false });
 
-      if (selectedPhotocopierId) {
-        serviceQuery = serviceQuery.eq('fotocopiadora_id', selectedPhotocopierId);
+      // If it's not a shared photocopier, filter by user_id
+      if (!isSharedPhotocopier) {
+        serviceQuery = serviceQuery.eq('usuario_id', user.id);
       }
 
       const { data: serviceRecords, error: serviceError } = await serviceQuery;
@@ -80,11 +88,11 @@ const SalesHistory = () => {
       let procedureQuery = supabase
         .from('procedure_sales')
         .select('*')
-        .eq('usuario_id', user.id)
+        .eq('fotocopiadora_id', selectedPhotocopierId)
         .order('fecha', { ascending: false });
 
-      if (selectedPhotocopierId) {
-        procedureQuery = procedureQuery.eq('fotocopiadora_id', selectedPhotocopierId);
+      if (!isSharedPhotocopier) {
+        procedureQuery = procedureQuery.eq('usuario_id', user.id);
       }
 
       const { data: procedureRecords, error: procedureError } = await procedureQuery;
@@ -95,11 +103,11 @@ const SalesHistory = () => {
       let supplyQuery = supabase
         .from('supply_sales')
         .select('*')
-        .eq('usuario_id', user.id)
+        .eq('fotocopiadora_id', selectedPhotocopierId)
         .order('fecha', { ascending: false });
 
-      if (selectedPhotocopierId) {
-        supplyQuery = supplyQuery.eq('fotocopiadora_id', selectedPhotocopierId);
+      if (!isSharedPhotocopier) {
+        supplyQuery = supplyQuery.eq('usuario_id', user.id);
       }
 
       const { data: supplyRecords, error: supplyError } = await supplyQuery;
@@ -177,6 +185,17 @@ const SalesHistory = () => {
   };
 
   const handleDeleteRecord = async (record: SalesRecord) => {
+    // Only allow deletion if user owns the photocopier
+    const selectedPhotocopier = allPhotocopiers.find(p => p.id === selectedPhotocopierId);
+    if (selectedPhotocopier?.isShared) {
+      toast({
+        title: "Error",
+        description: "No puedes eliminar registros de fotocopiadoras compartidas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       let deleteQuery;
       if (record.source === 'supply') {
@@ -217,6 +236,16 @@ const SalesHistory = () => {
   };
 
   const handleDeleteAllRecordsForDate = async (date: string) => {
+    const selectedPhotocopier = allPhotocopiers.find(p => p.id === selectedPhotocopierId);
+    if (selectedPhotocopier?.isShared) {
+      toast({
+        title: "Error",
+        description: "No puedes eliminar registros de fotocopiadoras compartidas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!user || !selectedPhotocopierId) {
       toast({
         title: "Error",
@@ -275,10 +304,10 @@ const SalesHistory = () => {
   };
 
   useEffect(() => {
-    if (user && selectedPhotocopierId) {
+    if (user && selectedPhotocopierId && hasHistorialAccess) {
       loadSalesData();
     }
-  }, [user, selectedPhotocopierId]);
+  }, [user, selectedPhotocopierId, hasHistorialAccess]);
 
   if (authLoading || photocopiersLoading) {
     return <LoadingSpinner />;
@@ -286,6 +315,24 @@ const SalesHistory = () => {
 
   if (!user) {
     return <AuthForm />;
+  }
+
+  if (!hasHistorialAccess && selectedPhotocopierId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-6xl mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
+              <h2 className="text-lg font-semibold text-yellow-800 mb-2">Acceso Restringido</h2>
+              <p className="text-yellow-700">
+                No tienes acceso al módulo de Historial para esta fotocopiadora.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (loading) {
@@ -303,7 +350,7 @@ const SalesHistory = () => {
 
         <div className="mb-6">
           <PhotocopierSelector
-            photocopiers={photocopiers}
+            photocopiers={allPhotocopiers}
             selectedPhotocopierId={selectedPhotocopierId}
             onPhotocopierChange={setSelectedPhotocopierId}
             loading={photocopiersLoading}

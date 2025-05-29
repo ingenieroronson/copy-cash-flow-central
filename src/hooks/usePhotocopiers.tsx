@@ -72,7 +72,7 @@ export const usePhotocopiers = () => {
         ownedPhotocopiers = [newPhotocopier];
       }
 
-      // Load shared photocopiers
+      // Load shared photocopiers with full details
       const { data: sharedData, error: sharedError } = await supabase
         .from('shared_access')
         .select(`
@@ -87,7 +87,7 @@ export const usePhotocopiers = () => {
 
       if (sharedError) throw sharedError;
 
-      // Group shared photocopiers by fotocopiadora_id
+      // Group shared photocopiers by fotocopiadora_id and include all available modules
       const sharedPhotocopiersMap = (sharedData || []).reduce((acc, item) => {
         const id = item.fotocopiadora_id;
         if (!acc[id]) {
@@ -109,6 +109,12 @@ export const usePhotocopiers = () => {
         ...ownedPhotocopiers.map(p => ({ ...p, isShared: false })),
         ...sharedPhotocopiers,
       ];
+
+      console.log('Loaded photocopiers:', {
+        owned: ownedPhotocopiers.length,
+        shared: sharedPhotocopiers.length,
+        total: allPhotocopyMachines.length
+      });
 
       setPhotocopiers(ownedPhotocopiers);
       setAllPhotocopiers(allPhotocopyMachines);
@@ -134,10 +140,23 @@ export const usePhotocopiers = () => {
     }
   }, [user]);
 
+  // Check if user has access to a specific module for a photocopier
+  const hasModuleAccess = (photocopierId: string, moduleType: string) => {
+    const photocopier = allPhotocopiers.find(p => p.id === photocopierId);
+    if (!photocopier) return false;
+    
+    // If it's their own photocopier, they have access to all modules
+    if (!photocopier.isShared) return true;
+    
+    // If it's shared, check if they have access to the specific module
+    return photocopier.sharedModules?.includes(moduleType) || false;
+  };
+
   return {
     photocopiers, // Only owned photocopiers
     allPhotocopiers, // Owned + shared photocopiers
     loading,
     refetch: loadPhotocopiers,
+    hasModuleAccess, // Helper function to check module access
   };
 };
