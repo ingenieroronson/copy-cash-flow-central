@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import SalesHistory from "./pages/SalesHistory";
 import NotFound from "./pages/NotFound";
 import Reports from "./pages/Reports";
+import { AuthForm } from "@/components/AuthForm";
 
 const queryClient = new QueryClient();
 
@@ -36,10 +37,11 @@ const AppContent = () => {
             <Route path="*" element={<Navigate to="/home" replace />} />
           </>
         ) : (
-          // Usuario NO autenticado - todas las rutas van a settings (login)
+          // Usuario NO autenticado - mostrar login en todas las rutas
           <>
+            <Route path="/" element={<AuthForm />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<Navigate to="/settings" replace />} />
+            <Route path="*" element={<AuthForm />} />
           </>
         )}
       </Routes>
