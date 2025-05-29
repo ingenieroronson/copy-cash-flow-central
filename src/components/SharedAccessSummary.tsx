@@ -3,45 +3,61 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Share2, Trash2, Calendar, User, Printer } from 'lucide-react';
+import { Share2, Trash2, Calendar, User, Printer, Plus } from 'lucide-react';
 import { useSharedAccess } from '@/hooks/useSharedAccess';
 import { usePhotocopiers } from '@/hooks/usePhotocopiers';
 import { ShareAccessModal } from './ShareAccessModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+interface GroupedAccess {
+  user: any;
+  photocopier: any;
+  modules: any[];
+}
+
 export const SharedAccessSummary = () => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [selectedPhotocopier, setSelectedPhotocopier] = useState<any>(null);
   const [allSharedAccess, setAllSharedAccess] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { getSharedAccess, revokeAccess } = useSharedAccess();
   const { photocopiers } = usePhotocopiers();
 
   const loadAllSharedAccess = async () => {
-    const allAccess = [];
-    for (const photocopier of photocopiers) {
-      const data = await getSharedAccess(photocopier.id);
-      const accessWithPhotocopier = data.map((access: any) => ({
-        ...access,
-        photocopier: photocopier
-      }));
-      allAccess.push(...accessWithPhotocopier);
+    setLoading(true);
+    try {
+      const allAccess = [];
+      for (const photocopier of photocopiers) {
+        const data = await getSharedAccess(photocopier.id);
+        const accessWithPhotocopier = data.map((access: any) => ({
+          ...access,
+          photocopier: photocopier
+        }));
+        allAccess.push(...accessWithPhotocopier);
+      }
+      setAllSharedAccess(allAccess);
+    } catch (error) {
+      console.error('Error loading shared access:', error);
+    } finally {
+      setLoading(false);
     }
-    setAllSharedAccess(allAccess);
   };
 
   useEffect(() => {
     if (photocopiers.length > 0) {
       loadAllSharedAccess();
+    } else {
+      setLoading(false);
     }
   }, [photocopiers]);
 
   const handleRevokeAccess = async (sharedAccessId: string) => {
     try {
       await revokeAccess(sharedAccessId);
-      loadAllSharedAccess(); // Reload the list
+      await loadAllSharedAccess(); // Reload the list immediately
     } catch (error) {
-      // Error is handled in the hook
+      console.error('Error revoking access:', error);
     }
   };
 
@@ -72,121 +88,180 @@ export const SharedAccessSummary = () => {
     }
     acc[key].modules.push(access);
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, GroupedAccess>);
 
-  return (
-    <div className="space-y-6">
+  if (loading) {
+    return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Share2 className="w-5 h-5" />
-              Gestión de Acceso Compartido
-            </CardTitle>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Share2 className="w-5 h-5" />
+            Gestión de Acceso Compartido
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Share Access Section */}
-          <div className="border-b pb-4 mb-4">
-            <h3 className="text-lg font-semibold mb-3">Compartir Acceso</h3>
-            {photocopiers.length === 0 ? (
-              <p className="text-gray-500">No hay fotocopiadoras disponibles para compartir.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {photocopiers.map((photocopier) => (
-                  <Button
-                    key={photocopier.id}
-                    onClick={() => handleShareAccess(photocopier)}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Printer className="w-4 h-4" />
-                    {photocopier.nombre}
-                  </Button>
-                ))}
-              </div>
-            )}
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando accesos compartidos...</p>
           </div>
-
-          {/* Current Shared Access Summary */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Accesos Compartidos Actuales</h3>
-            {Object.keys(groupedSharedAccess).length === 0 ? (
-              <p className="text-gray-500 text-center py-4">
-                No has compartido acceso con ningún usuario aún.
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {Object.values(groupedSharedAccess).map((group: any, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="w-4 h-4" />
-                          <h4 className="font-medium">{group.user.nombre || group.user.email}</h4>
-                        </div>
-                        <p className="text-sm text-gray-500 mb-1">{group.user.email}</p>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Printer className="w-3 h-3" />
-                          <span>{group.photocopier.nombre}</span>
-                          {group.photocopier.ubicacion && (
-                            <span>• {group.photocopier.ubicacion}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {group.modules.map((access: any) => (
-                        <div key={access.id} className="flex items-center gap-2">
-                          <Badge variant="secondary">
-                            {getModuleDisplayName(access.module_type)}
-                          </Badge>
-                          {access.expires_at && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Calendar className="w-3 h-3" />
-                              {format(new Date(access.expires_at), 'dd/MM/yyyy', { locale: es })}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2">
-                      {group.modules.map((access: any) => (
-                        <Button
-                          key={access.id}
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRevokeAccess(access.id)}
-                          className="text-red-500 hover:text-red-700 hover:border-red-300"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Revocar {getModuleDisplayName(access.module_type)}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {selectedPhotocopier && (
-            <ShareAccessModal
-              isOpen={isShareModalOpen}
-              onClose={() => {
-                setIsShareModalOpen(false);
-                setSelectedPhotocopier(null);
-                loadAllSharedAccess(); // Refresh the list when modal closes
-              }}
-              fotocopiadoraId={selectedPhotocopier.id}
-              fotocopiadoraNombre={selectedPhotocopier.nombre}
-            />
-          )}
         </CardContent>
       </Card>
-    </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Share2 className="w-5 h-5" />
+          Gestión de Acceso Compartido
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Share Access Section */}
+        <div className="border-b pb-4">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Compartir Nuevo Acceso
+          </h3>
+          {photocopiers.length === 0 ? (
+            <p className="text-gray-500">No hay fotocopiadoras disponibles para compartir.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {photocopiers.map((photocopier) => (
+                <Button
+                  key={photocopier.id}
+                  onClick={() => handleShareAccess(photocopier)}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Printer className="w-4 h-4" />
+                  Compartir acceso a {photocopier.nombre}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Summary Table of Active Shared Access */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Resumen de Accesos Compartidos Activos</h3>
+          {Object.keys(groupedSharedAccess).length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <Share2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">No has compartido acceso con ningún usuario</p>
+              <p className="text-gray-400 text-sm">Usa los botones de arriba para comenzar a compartir acceso</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-200 rounded-lg">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-700">
+                      Usuario
+                    </th>
+                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-700">
+                      Fotocopiadora
+                    </th>
+                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-700">
+                      Módulos Compartidos
+                    </th>
+                    <th className="border border-gray-200 px-4 py-3 text-left font-medium text-gray-700">
+                      Fecha de Expiración
+                    </th>
+                    <th className="border border-gray-200 px-4 py-3 text-center font-medium text-gray-700">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.values(groupedSharedAccess).map((group, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {group.user?.nombre || group.user?.email}
+                            </p>
+                            <p className="text-sm text-gray-500">{group.user?.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Printer className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="font-medium text-gray-900">{group.photocopier.nombre}</p>
+                            {group.photocopier.ubicacion && (
+                              <p className="text-sm text-gray-500">{group.photocopier.ubicacion}</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {group.modules.map((access: any) => (
+                            <Badge key={access.id} variant="secondary" className="text-xs">
+                              {getModuleDisplayName(access.module_type)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3">
+                        {group.modules.some((access: any) => access.expires_at) ? (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Calendar className="w-3 h-3 text-gray-500" />
+                            <span>
+                              {format(
+                                new Date(group.modules.find((access: any) => access.expires_at)?.expires_at),
+                                'dd/MM/yyyy',
+                                { locale: es }
+                              )}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">Sin expiración</span>
+                        )}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3">
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {group.modules.map((access: any) => (
+                            <Button
+                              key={access.id}
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRevokeAccess(access.id)}
+                              className="text-red-600 hover:text-red-700 hover:border-red-300 text-xs"
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Revocar {getModuleDisplayName(access.module_type)}
+                            </Button>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {selectedPhotocopier && (
+          <ShareAccessModal
+            isOpen={isShareModalOpen}
+            onClose={() => {
+              setIsShareModalOpen(false);
+              setSelectedPhotocopier(null);
+              loadAllSharedAccess(); // Refresh the list when modal closes
+            }}
+            fotocopiadoraId={selectedPhotocopier.id}
+            fotocopiadoraNombre={selectedPhotocopier.nombre}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 };

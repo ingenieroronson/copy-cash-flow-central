@@ -79,6 +79,7 @@ export const useSharedAccess = () => {
         fotocopiadora_id: fotocopiadoraId,
         module_type: module as ModuleType,
         expires_at: expiresAt || null,
+        is_active: true,
       }));
 
       const { error } = await supabase
@@ -87,7 +88,10 @@ export const useSharedAccess = () => {
           onConflict: 'owner_id,shared_with_id,fotocopiadora_id,module_type'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error sharing access:', error);
+        throw error;
+      }
 
       toast({
         title: "Acceso compartido",
@@ -122,7 +126,12 @@ export const useSharedAccess = () => {
         .eq('fotocopiadora_id', fotocopiadoraId)
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting shared access:', error);
+        throw error;
+      }
+      
+      console.log('Shared access data for photocopier', fotocopiadoraId, ':', data);
       return data || [];
     } catch (error) {
       console.error('Error getting shared access:', error);
@@ -131,14 +140,19 @@ export const useSharedAccess = () => {
   };
 
   const revokeAccess = async (sharedAccessId: string) => {
+    if (!user) throw new Error('User not authenticated');
+
     try {
       const { error } = await supabase
         .from('shared_access')
         .update({ is_active: false })
         .eq('id', sharedAccessId)
-        .eq('owner_id', user?.id);
+        .eq('owner_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error revoking access:', error);
+        throw error;
+      }
 
       toast({
         title: "Acceso revocado",
@@ -146,11 +160,11 @@ export const useSharedAccess = () => {
       });
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error revoking access:', error);
       toast({
         title: "Error",
-        description: "No se pudo revocar el acceso.",
+        description: error.message || "No se pudo revocar el acceso.",
         variant: "destructive",
       });
       throw error;
@@ -172,7 +186,12 @@ export const useSharedAccess = () => {
         .eq('is_active', true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting shared with me:', error);
+        throw error;
+      }
+      
+      console.log('Shared with me data:', data);
       return data || [];
     } catch (error) {
       console.error('Error getting shared with me:', error);
