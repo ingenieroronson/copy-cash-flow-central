@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Save, Trash2, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { SharedAccessManager } from './SharedAccessManager';
 
 export const PhotocopierManagement = () => {
   const { photocopiers, loading, refetch } = usePhotocopiers();
@@ -175,141 +174,130 @@ export const PhotocopierManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Printer className="w-5 h-5" />
-            Gestión de Fotocopiadoras
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Add New Photocopier */}
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-semibold mb-3">Agregar Nueva Fotocopiadora</h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <Label htmlFor="new-photocopier-name">Nombre</Label>
-                <Input
-                  id="new-photocopier-name"
-                  value={newPhotocopier.nombre}
-                  onChange={(e) => setNewPhotocopier(prev => ({ ...prev, nombre: e.target.value }))}
-                  placeholder="Ej: Fotocopiadora Principal"
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="new-photocopier-location">Ubicación</Label>
-                <Input
-                  id="new-photocopier-location"
-                  value={newPhotocopier.ubicacion}
-                  onChange={(e) => setNewPhotocopier(prev => ({ ...prev, ubicacion: e.target.value }))}
-                  placeholder="Ej: Oficina, Sucursal 1"
-                />
-              </div>
-              <div className="flex items-end">
-                <Button onClick={handleAddPhotocopier} className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar
-                </Button>
-              </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Printer className="w-5 h-5" />
+          Gestión de Fotocopiadoras
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Add New Photocopier */}
+        <div className="border-b pb-4">
+          <h3 className="text-lg font-semibold mb-3">Agregar Nueva Fotocopiadora</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Label htmlFor="new-photocopier-name">Nombre</Label>
+              <Input
+                id="new-photocopier-name"
+                value={newPhotocopier.nombre}
+                onChange={(e) => setNewPhotocopier(prev => ({ ...prev, nombre: e.target.value }))}
+                placeholder="Ej: Fotocopiadora Principal"
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="new-photocopier-location">Ubicación</Label>
+              <Input
+                id="new-photocopier-location"
+                value={newPhotocopier.ubicacion}
+                onChange={(e) => setNewPhotocopier(prev => ({ ...prev, ubicacion: e.target.value }))}
+                placeholder="Ej: Oficina, Sucursal 1"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={handleAddPhotocopier} className="w-full sm:w-auto">
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar
+              </Button>
             </div>
           </div>
+        </div>
 
-          {/* Existing Photocopiers */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Fotocopiadoras Existentes</h3>
-            {photocopiers.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                No hay fotocopiadoras configuradas. Agrega una nueva arriba.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {photocopiers.map((photocopier) => {
-                  const isEditing = editingPhotocopiers[photocopier.id];
-                  
-                  return (
-                    <div key={photocopier.id} className="border rounded-lg p-4">
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="flex-1">
-                          {isEditing ? (
-                            <Input
-                              value={isEditing.nombre}
-                              onChange={(e) => updateEditingField(photocopier.id, 'nombre', e.target.value)}
-                              placeholder="Nombre de la fotocopiadora"
-                            />
-                          ) : (
-                            <div>
-                              <h4 className="font-medium">{photocopier.nombre}</h4>
-                              <p className="text-sm text-gray-500">{photocopier.ubicacion || 'Sin ubicación'}</p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {isEditing && (
-                          <div className="flex-1">
-                            <Input
-                              value={isEditing.ubicacion}
-                              onChange={(e) => updateEditingField(photocopier.id, 'ubicacion', e.target.value)}
-                              placeholder="Ubicación"
-                            />
+        {/* Existing Photocopiers */}
+        <div>
+          <h3 className="text-lg font-semibold mb-3">Fotocopiadoras Existentes</h3>
+          {photocopiers.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">
+              No hay fotocopiadoras configuradas. Agrega una nueva arriba.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {photocopiers.map((photocopier) => {
+                const isEditing = editingPhotocopiers[photocopier.id];
+                
+                return (
+                  <div key={photocopier.id} className="border rounded-lg p-4">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1">
+                        {isEditing ? (
+                          <Input
+                            value={isEditing.nombre}
+                            onChange={(e) => updateEditingField(photocopier.id, 'nombre', e.target.value)}
+                            placeholder="Nombre de la fotocopiadora"
+                          />
+                        ) : (
+                          <div>
+                            <h4 className="font-medium">{photocopier.nombre}</h4>
+                            <p className="text-sm text-gray-500">{photocopier.ubicacion || 'Sin ubicación'}</p>
                           </div>
                         )}
-                        
-                        <div className="flex gap-2">
-                          {isEditing ? (
-                            <>
-                              <Button
-                                onClick={() => handleUpdatePhotocopier(photocopier.id)}
-                                size="sm"
-                                variant="default"
-                              >
-                                <Save className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                onClick={() => cancelEditing(photocopier.id)}
-                                size="sm"
-                                variant="outline"
-                              >
-                                Cancelar
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                onClick={() => startEditing(photocopier)}
-                                size="sm"
-                                variant="outline"
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                onClick={() => handleDeletePhotocopier(photocopier.id)}
-                                size="sm"
-                                variant="destructive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </>
-                          )}
+                      </div>
+                      
+                      {isEditing && (
+                        <div className="flex-1">
+                          <Input
+                            value={isEditing.ubicacion}
+                            onChange={(e) => updateEditingField(photocopier.id, 'ubicacion', e.target.value)}
+                            placeholder="Ubicación"
+                          />
                         </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        {isEditing ? (
+                          <>
+                            <Button
+                              onClick={() => handleUpdatePhotocopier(photocopier.id)}
+                              size="sm"
+                              variant="default"
+                            >
+                              <Save className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => cancelEditing(photocopier.id)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              Cancelar
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => startEditing(photocopier)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              onClick={() => handleDeletePhotocopier(photocopier.id)}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Shared Access Management for each photocopier */}
-      {photocopiers.map((photocopier) => (
-        <SharedAccessManager
-          key={photocopier.id}
-          fotocopiadoraId={photocopier.id}
-          fotocopiadoraNombre={photocopier.nombre || 'Fotocopiadora'}
-        />
-      ))}
-    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

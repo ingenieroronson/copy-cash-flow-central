@@ -3,6 +3,7 @@ import React from 'react';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { PhotocopierManagement } from '@/components/PhotocopierManagement';
 import { SharedModulesView } from '@/components/SharedModulesView';
+import { SharedAccessSummary } from '@/components/SharedAccessSummary';
 import { ServicePricesSection } from '@/components/ServicePricesSection';
 import { ProcedureManagementSection } from '@/components/ProcedureManagementSection';
 import { SupplyManagementSection } from '@/components/SupplyManagementSection';
@@ -19,6 +20,9 @@ export const SettingsLayout = () => {
         <div className="space-y-8">
           {/* Photocopier Management */}
           <PhotocopierManagement />
+
+          {/* Shared Access Management - Consolidated */}
+          <SharedAccessSummary />
 
           {/* Shared Modules View */}
           <SharedModulesView />
