@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Filter, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Filter, RefreshCw, Users } from 'lucide-react';
 import { usePhotocopiers } from '@/hooks/usePhotocopiers';
 import type { ReportFilters } from '@/pages/Reports';
 
@@ -16,7 +17,7 @@ interface ReportsFiltersProps {
 }
 
 export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: ReportsFiltersProps) => {
-  const { photocopiers } = usePhotocopiers();
+  const { allPhotocopiers } = usePhotocopiers();
 
   const handlePeriodChange = (period: 'week' | 'month' | 'custom') => {
     let dateRange = filters.dateRange;
@@ -127,9 +128,17 @@ export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: Re
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                {photocopiers.map((photocopier) => (
+                {allPhotocopiers.map((photocopier) => (
                   <SelectItem key={photocopier.id} value={photocopier.id}>
-                    {photocopier.nombre || 'Sin nombre'}
+                    <div className="flex items-center gap-2 w-full">
+                      <span className="font-medium">{photocopier.nombre || 'Sin nombre'}</span>
+                      {photocopier.isShared && (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                          <Users className="w-2 h-2 mr-1" />
+                          Compartida
+                        </Badge>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

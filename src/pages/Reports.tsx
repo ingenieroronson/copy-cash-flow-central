@@ -11,8 +11,10 @@ import { SalesChartSection } from '@/components/SalesChartSection';
 import { ItemSalesSummary } from '@/components/ItemSalesSummary';
 import { ExportCSVButton } from '@/components/ExportCSVButton';
 import { useReportsData } from '@/hooks/useReportsData';
+import { usePhotocopiers } from '@/hooks/usePhotocopiers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, FileText, Package } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { BarChart3, FileText, Package, Users } from 'lucide-react';
 
 export interface DateRange {
   startDate: string;
@@ -27,6 +29,7 @@ export interface ReportFilters {
 
 const Reports = () => {
   const { user, loading: authLoading } = useAuth();
+  const { allPhotocopiers, hasModuleAccess } = usePhotocopiers();
   const [filters, setFilters] = useState<ReportFilters>({
     dateRange: {
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -36,6 +39,9 @@ const Reports = () => {
   });
 
   const [activeTab, setActiveTab] = useState<string>('table');
+
+  // Check if user has access to reportes module for selected photocopier
+  const hasReportesAccess = filters.photocopierId ? hasModuleAccess(filters.photocopierId, 'reportes') : true;
 
   const { 
     summaryData, 
@@ -47,18 +53,54 @@ const Reports = () => {
   if (authLoading) return <LoadingSpinner />;
   if (!user) return <AuthForm />;
 
+  // Find selected photocopier to show shared indicator
+  const selectedPhotocopier = allPhotocopiers.find(p => p.id === filters.photocopierId);
+
+  if (!hasReportesAccess && filters.photocopierId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-8">
+          <div className="text-center py-12">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md mx-auto">
+              <h2 className="text-lg font-semibold text-yellow-800 mb-2">Acceso Restringido</h2>
+              <p className="text-yellow-700">
+                No tienes acceso al módulo de Reportes para esta fotocopiadora.
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
       <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-8">
         <div className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            Reportes de Ventas
-          </h1>
-          <p className="text-sm md:text-base text-gray-600">
-            Analiza tus ventas con reportes detallados y exporta los datos
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                Reportes de Ventas
+              </h1>
+              <p className="text-sm md:text-base text-gray-600">
+                Analiza tus ventas con reportes detallados y exporta los datos
+              </p>
+            </div>
+            {selectedPhotocopier?.isShared && (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  <Users className="w-3 h-3 mr-1" />
+                  Acceso Compartido
+                </Badge>
+                <span className="text-sm text-gray-500">
+                  Por: {selectedPhotocopier.ownerEmail}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6 lg:space-y-8">

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, Printer, Inbox, Eye } from 'lucide-react';
+import { Calendar, User, Printer, Inbox, Eye, RefreshCw } from 'lucide-react';
 import { useSharedAccess } from '@/hooks/useSharedAccess';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -46,26 +46,35 @@ interface GroupedSharedModule {
 export const SharedModulesView = () => {
   const [sharedWithMe, setSharedWithMe] = useState<SharedAccessRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { getSharedWithMe } = useSharedAccess();
 
-  const loadSharedWithMe = async () => {
-    setLoading(true);
+  const loadSharedWithMe = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
     try {
       const data = await getSharedWithMe();
-      console.log('Shared with me data:', data);
+      console.log('Shared with me data loaded:', data);
       setSharedWithMe(data as SharedAccessRecord[]);
     } catch (error) {
       console.error('Error loading shared with me:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     loadSharedWithMe();
     
-    // Set up interval to refresh every 30 seconds for real-time updates
-    const interval = setInterval(loadSharedWithMe, 30000);
+    // Set up interval for real-time updates every 30 seconds
+    const interval = setInterval(() => {
+      loadSharedWithMe(true);
+    }, 30000);
     
     return () => clearInterval(interval);
   }, []);
@@ -146,14 +155,30 @@ export const SharedModulesView = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Inbox className="w-5 h-5" />
-          Módulos Compartidos Conmigo
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Inbox className="w-5 h-5" />
+            Módulos Compartidos Conmigo
+          </div>
+          <button
+            onClick={() => loadSharedWithMe(true)}
+            disabled={refreshing}
+            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+            title="Actualizar"
+          >
+            <RefreshCw className={`w-4 h-4 text-gray-500 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Accesos Recibidos</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-700">Accesos Recibidos</h3>
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span className="text-xs text-blue-700 font-medium">Acceso Compartido</span>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-200 rounded-lg">
               <thead>
@@ -174,10 +199,13 @@ export const SharedModulesView = () => {
               </thead>
               <tbody>
                 {Object.values(groupedByPhotocopier).map((group) => (
-                  <tr key={group.fotocopiadora.id} className="hover:bg-blue-50">
+                  <tr key={group.fotocopiadora.id} className="hover:bg-blue-50 transition-colors">
                     <td className="border border-gray-200 px-4 py-2">
                       <div className="flex items-center gap-2">
-                        <Printer className="w-4 h-4 text-blue-600" />
+                        <div className="relative">
+                          <Printer className="w-4 h-4 text-blue-600" />
+                          <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+                        </div>
                         <div>
                           <p className="font-medium text-sm text-blue-900">{group.fotocopiadora.nombre}</p>
                           {group.fotocopiadora.ubicacion && (
