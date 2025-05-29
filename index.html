@@ -41,20 +41,6 @@
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="./src/main.tsx"></script>
     
-    <!-- Service Worker Registration - Completely disabled until issues are resolved -->
-    <!--
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('./sw.js')
-            .then(function(registration) {
-              console.log('SW registered: ', registration);
-            }, function(registrationError) {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
-      }
-    </script>
-    -->
+    <!-- Service Worker completely removed - no registration at all -->
   </body>
 </html>
