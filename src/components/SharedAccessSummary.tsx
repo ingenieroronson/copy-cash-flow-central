@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Trash2, Users, Printer } from 'lucide-react';
 import { useSharedAccess } from '@/hooks/useSharedAccess';
+import { usePhotocopiers } from '@/hooks/usePhotocopiers';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -40,20 +41,33 @@ interface GroupedSharedAccess {
 }
 
 interface SharedAccessSummaryProps {
-  fotocopiadoraId: string;
+  fotocopiadoraId?: string;
 }
 
 export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProps) => {
   const [sharedAccess, setSharedAccess] = useState<SharedAccessRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const { getSharedAccess, revokeAccess } = useSharedAccess();
+  const { photocopiers } = usePhotocopiers();
 
   const loadSharedAccess = async () => {
     setLoading(true);
     try {
-      const data = await getSharedAccess(fotocopiadoraId);
-      console.log('Loaded shared access data:', data);
-      setSharedAccess(data as SharedAccessRecord[]);
+      if (fotocopiadoraId) {
+        // Load for specific photocopier
+        const data = await getSharedAccess(fotocopiadoraId);
+        console.log('Loaded shared access data for photocopier:', fotocopiadoraId, data);
+        setSharedAccess(data as SharedAccessRecord[]);
+      } else {
+        // Load for all owned photocopiers
+        const allSharedAccess: SharedAccessRecord[] = [];
+        for (const photocopier of photocopiers) {
+          const data = await getSharedAccess(photocopier.id);
+          allSharedAccess.push(...(data as SharedAccessRecord[]));
+        }
+        console.log('Loaded shared access data for all photocopiers:', allSharedAccess);
+        setSharedAccess(allSharedAccess);
+      }
     } catch (error) {
       console.error('Error loading shared access:', error);
     } finally {
@@ -62,10 +76,10 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
   };
 
   useEffect(() => {
-    if (fotocopiadoraId) {
+    if (fotocopiadoraId || photocopiers.length > 0) {
       loadSharedAccess();
     }
-  }, [fotocopiadoraId]);
+  }, [fotocopiadoraId, photocopiers]);
 
   const handleRevokeAccess = async (sharedAccessId: string) => {
     try {
@@ -87,6 +101,11 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
     return moduleNames[moduleType] || moduleType;
   };
 
+  const getPhotocopierName = (fotocopiadoraId: string) => {
+    const photocopier = photocopiers.find(p => p.id === fotocopiadoraId);
+    return photocopier?.nombre || 'Fotocopiadora';
+  };
+
   // Group by user and photocopier
   const groupedSharedAccess = sharedAccess.reduce((acc, access) => {
     const key = `${access.shared_with_id}-${access.fotocopiadora_id}`;
@@ -95,7 +114,7 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
         user: access.shared_with,
         photocopier: {
           id: access.fotocopiadora_id,
-          nombre: 'Fotocopiadora',
+          nombre: getPhotocopierName(access.fotocopiadora_id),
           ubicacion: null,
         },
         modules: [],
@@ -162,6 +181,11 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
                   <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
                     Usuario
                   </th>
+                  {!fotocopiadoraId && (
+                    <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
+                      Fotocopiadora
+                    </th>
+                  )}
                   <th className="border border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-700">
                     Módulos Compartidos
                   </th>
@@ -185,6 +209,14 @@ export const SharedAccessSummary = ({ fotocopiadoraId }: SharedAccessSummaryProp
                         </div>
                       </div>
                     </td>
+                    {!fotocopiadoraId && (
+                      <td className="border border-gray-200 px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <Printer className="w-4 h-4 text-gray-500" />
+                          <p className="font-medium text-sm">{group.photocopier.nombre}</p>
+                        </div>
+                      </td>
+                    )}
                     <td className="border border-gray-200 px-4 py-2">
                       <div className="flex flex-wrap gap-1">
                         {group.modules.map((access) => (
