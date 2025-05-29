@@ -1,4 +1,8 @@
 
+// Service Worker completely disabled to prevent deployment issues
+// All caching and service worker functionality commented out
+
+/*
 const CACHE_NAME = 'integracopias-v1';
 const urlsToCache = [
   './',
@@ -14,19 +18,18 @@ self.addEventListener('install', function(event) {
     caches.open(CACHE_NAME)
       .then(function(cache) {
         console.log('Service Worker: Caching files...');
-        // Try to cache each file individually to avoid complete failure
         return Promise.allSettled(
           urlsToCache.map(url => {
             return cache.add(url).catch(error => {
               console.warn(`Service Worker: Failed to cache ${url}:`, error);
-              return Promise.resolve(); // Continue despite individual failures
+              return Promise.resolve();
             });
           })
         );
       })
       .then(() => {
         console.log('Service Worker: Installation completed');
-        return self.skipWaiting(); // Activate immediately
+        return self.skipWaiting();
       })
       .catch(function(error) {
         console.error('Service Worker: Installation failed:', error);
@@ -35,7 +38,6 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-  // Only handle GET requests
   if (event.request.method !== 'GET') {
     return;
   }
@@ -43,7 +45,6 @@ self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
-        // Return cached version or fetch from network
         if (response) {
           console.log('Service Worker: Serving from cache:', event.request.url);
           return response;
@@ -52,7 +53,6 @@ self.addEventListener('fetch', function(event) {
         console.log('Service Worker: Fetching from network:', event.request.url);
         return fetch(event.request).catch(function(error) {
           console.warn('Service Worker: Network fetch failed:', error);
-          // Return a basic response for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html').then(response => {
               return response || new Response('App not available offline', { 
@@ -85,7 +85,11 @@ self.addEventListener('activate', function(event) {
       );
     }).then(() => {
       console.log('Service Worker: Activation completed');
-      return self.clients.claim(); // Take control immediately
+      return self.clients.claim();
     })
   );
 });
+*/
+
+// Empty service worker - no functionality
+console.log('Service Worker: Disabled for clean deployment');
