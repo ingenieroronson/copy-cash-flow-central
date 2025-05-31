@@ -3,7 +3,7 @@
   "name": "IntegraCopias",
   "short_name": "IntegraCopias",
   "description": "Sistema de gestión para fotocopiadoras y suministros",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f97316",
