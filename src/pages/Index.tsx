@@ -1,14 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AppWrapper } from '../components/AppWrapper';
 import { DailySalesCalculator } from '../components/DailySalesCalculator';
 import { useSalesState } from '../hooks/useSalesState';
 
 const Index = () => {
-  // Redirección automática a /settings
-  useEffect(() => {
-    window.location.replace('/settings');
-  }, []);
-
   const {
     // Loading states
     authLoading,
@@ -17,10 +12,10 @@ const Index = () => {
     proceduresLoading,
     salesLoading,
     photocopiersLoading,
-
+    
     // User and auth
     user,
-
+    
     // Data
     services,
     procedures,
@@ -30,7 +25,7 @@ const Index = () => {
     photocopiers,
     selectedPhotocopierId,
     selectedDate,
-
+    
     // Actions
     updateService,
     updateProcedure,
@@ -38,7 +33,7 @@ const Index = () => {
     setSelectedPhotocopierId,
     setSelectedDate,
     handleSaveSales,
-
+    
     // Calculations
     calculateServiceTotal,
     calculateProcedureTotal,
@@ -49,9 +44,37 @@ const Index = () => {
     getSupplyPrice,
   } = useSalesState();
 
-  // Retorna null porque nunca se mostrará esta pantalla
-  return null;
+  return (
+    <AppWrapper
+      authLoading={authLoading}
+      pricingLoading={pricingLoading || proceduresLoading}
+      suppliesLoading={suppliesLoading}
+      user={user}
+    >
+      <DailySalesCalculator
+        services={services}
+        procedures={procedures}
+        suppliesData={suppliesData}
+        dbSupplies={dbSupplies}
+        dbProcedures={dbProcedures}
+        photocopiers={photocopiers}
+        selectedPhotocopierId={selectedPhotocopierId}
+        selectedDate={selectedDate}
+        onUpdateService={updateService}
+        onUpdateProcedure={updateProcedure}
+        onUpdateSupply={updateSupply}
+        onPhotocopierChange={setSelectedPhotocopierId}
+        onDateChange={setSelectedDate}
+        onSaveSales={handleSaveSales}
+        salesLoading={salesLoading}
+        photocopiersLoading={photocopiersLoading}
+        getServicePrice={getServicePrice}
+        getProcedurePrice={getProcedurePrice}
+        getSupplyPrice={getSupplyPrice}
+        totalSales={getTotalSales()}
+      />
+    </AppWrapper>
+  );
 };
 
 export default Index;
-
