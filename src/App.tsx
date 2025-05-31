@@ -17,13 +17,13 @@ const AppContent = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Index />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/sales-history" element={<SalesHistory />} />
         <Route path="/reports" element={<Reports />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );
