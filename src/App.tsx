@@ -5,8 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { SettingsLoadingState } from "@/components/SettingsLoadingState";
+import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import SalesHistory from "./pages/SalesHistory";
+import NotFound from "./pages/NotFound";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 
@@ -26,20 +28,21 @@ const AppContent = () => {
         {user ? (
           // Usuario autenticado - rutas normales
           <>
-            <Route path="/" element={<Navigate to="/settings" replace />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/home" element={<Index />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/sales-history" element={<SalesHistory />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/login" element={<Navigate to="/settings" replace />} />
-            <Route path="*" element={<Navigate to="/settings" replace />} />
+            <Route path="/login" element={<Navigate to="/home" replace />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </>
         ) : (
-          // Usuario NO autenticado - todas las rutas van a settings (y ahí se pide login)
+          // Usuario NO autenticado - todas las rutas van al login
           <>
             <Route path="/login" element={<Login />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/" element={<Navigate to="/settings" replace />} />
-            <Route path="*" element={<Navigate to="/settings" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </>
         )}
       </Routes>
