@@ -29,7 +29,7 @@ const AppContent = () => {
         {user ? (
           // Usuario autenticado - rutas normales
           <>
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/" element={<Navigate to="/settings" replace />} />
             <Route path="/home" element={<Index />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/sales-history" element={<SalesHistory />} />
