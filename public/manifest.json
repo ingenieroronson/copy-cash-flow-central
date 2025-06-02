@@ -3,22 +3,22 @@
   "name": "IntegraCopias",
   "short_name": "IntegraCopias",
   "description": "Sistema de gestión para fotocopiadoras y suministros",
-  "start_url": "/login",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#f97316",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./placeholder.svg",
+      "src": "/lovable-uploads/4517a6a6-c751-4311-9228-2e4746126835.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "./placeholder.svg",
+      "src": "/lovable-uploads/4517a6a6-c751-4311-9228-2e4746126835.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
