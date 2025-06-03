@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AppWrapper } from '../components/AppWrapper';
 import { DailySalesCalculator } from '../components/DailySalesCalculator';
@@ -12,6 +13,7 @@ const Index = () => {
     proceduresLoading,
     salesLoading,
     photocopiersLoading,
+    procedureDataError,
     
     // User and auth
     user,
@@ -72,6 +74,8 @@ const Index = () => {
         getProcedurePrice={getProcedurePrice}
         getSupplyPrice={getSupplyPrice}
         totalSales={getTotalSales()}
+        procedureDataError={procedureDataError}
+        proceduresLoading={proceduresLoading}
       />
     </AppWrapper>
   );

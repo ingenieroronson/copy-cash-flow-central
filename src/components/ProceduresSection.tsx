@@ -14,6 +14,8 @@ interface ProceduresSectionProps {
   onUpdateProcedure: (procedureName: string, field: string, value: number) => void;
   getProcedurePrice: (procedureName: string) => number;
   calculateProcedureTotal: (procedure: ProcedureState, price: number) => number;
+  procedureDataError?: string | null;
+  proceduresLoading?: boolean;
 }
 
 export const ProceduresSection = ({
@@ -21,7 +23,9 @@ export const ProceduresSection = ({
   dbProcedures,
   onUpdateProcedure,
   getProcedurePrice,
-  calculateProcedureTotal
+  calculateProcedureTotal,
+  procedureDataError,
+  proceduresLoading
 }: ProceduresSectionProps) => {
   const activeProcedures = dbProcedures.filter(p => p.is_active);
 
@@ -33,10 +37,21 @@ export const ProceduresSection = ({
     );
   }
 
+  if (procedureDataError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+        <p className="text-red-600">{procedureDataError}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 mb-4 md:mb-6 px-2">
         Servicios - Procedimientos
+        {proceduresLoading && (
+          <span className="ml-2 text-sm text-gray-500">Cargando...</span>
+        )}
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 lg:gap-6 px-2">
         {activeProcedures.map((dbProcedure) => {

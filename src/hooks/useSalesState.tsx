@@ -12,6 +12,7 @@ import { useProceduresState } from './useProceduresState';
 import { calculateServiceTotal, calculateSupplyTotal } from '@/utils/salesCalculations';
 import { checkAndPerformServiceRollover } from '@/utils/serviceRollover';
 import { ServiceState } from '../types/sales';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useSalesState = () => {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +20,9 @@ export const useSalesState = () => {
   const { supplies: dbSupplies, loading: suppliesLoading } = useSupplies();
   const { procedures: dbProcedures, getProcedurePrice, loading: proceduresLoading } = useProcedures();
   const { saveDailySales, loadDailySales, loadServiceCounterPreload, loading: salesLoading } = useSalesRecords();
+  
+  const [procedureDataLoading, setProcedureDataLoading] = React.useState(false);
+  const [procedureDataError, setProcedureDataError] = React.useState<string | null>(null);
   
   const {
     photocopiers,
@@ -51,6 +55,52 @@ export const useSalesState = () => {
     setSuppliesDataDirect,
     updateSuppliesFromDb,
   } = useSuppliesState();
+
+  // Load procedure sales data for historical dates
+  const loadProcedureSalesData = async (date: string, photocopierId: string) => {
+    if (!user || !photocopierId) return {};
+
+    setProcedureDataLoading(true);
+    setProcedureDataError(null);
+
+    try {
+      const { data: procedureRecords, error } = await supabase
+        .from('procedure_sales')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .eq('fecha', date)
+        .eq('fotocopiadora_id', photocopierId);
+
+      if (error) throw error;
+
+      if (!procedureRecords || procedureRecords.length === 0) {
+        console.log('No procedure sales data found for date:', date, 'photocopier:', photocopierId);
+        return {};
+      }
+
+      // Transform procedure sales data to the format expected by the UI
+      const procedureData: Record<string, any> = {};
+      for (const record of procedureRecords) {
+        if (record.procedure_name) {
+          procedureData[record.procedure_name] = {
+            yesterday: record.valor_anterior || 0,
+            today: record.valor_actual || 0,
+            errors: record.errores || 0
+          };
+        }
+      }
+
+      console.log('Loaded procedure sales data for date:', date, procedureData);
+      return procedureData;
+
+    } catch (error) {
+      console.error('Error loading procedure sales data:', error);
+      setProcedureDataError('Error al cargar datos de procedimientos');
+      return {};
+    } finally {
+      setProcedureDataLoading(false);
+    }
+  };
 
   // Load existing sales data and preload service counters when photocopier or date changes
   React.useEffect(() => {
@@ -96,8 +146,13 @@ export const useSalesState = () => {
           }
         }
         
-        // Handle procedures data
-        if (salesData && 'procedures' in salesData && salesData.procedures && Object.keys(salesData.procedures).length > 0) {
+        // Handle procedures data - load from procedure_sales table for historical dates
+        const procedureSalesData = await loadProcedureSalesData(selectedDate, selectedPhotocopierId);
+        
+        if (procedureSalesData && Object.keys(procedureSalesData).length > 0) {
+          console.log('Found procedure sales data for photocopier:', selectedPhotocopierId, procedureSalesData);
+          setProceduresData({ ...procedures, ...procedureSalesData });
+        } else if (salesData && 'procedures' in salesData && salesData.procedures && Object.keys(salesData.procedures).length > 0) {
           console.log('Found existing procedure data for photocopier:', selectedPhotocopierId, salesData.procedures);
           setProceduresData({ ...procedures, ...salesData.procedures });
         } else {
@@ -176,9 +231,10 @@ export const useSalesState = () => {
     authLoading,
     pricingLoading,
     suppliesLoading,
-    proceduresLoading,
+    proceduresLoading: proceduresLoading || procedureDataLoading,
     salesLoading,
     photocopiersLoading,
+    procedureDataError,
     
     // User and auth
     user,
