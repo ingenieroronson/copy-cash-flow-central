@@ -52,6 +52,8 @@ interface DailySalesCalculatorProps {
   getProcedurePrice: (procedureName: string) => number;
   getSupplyPrice: (supplyName: string) => number;
   totalSales: number;
+  procedureDataError?: string | null;
+  proceduresLoading?: boolean;
 }
 
 export const DailySalesCalculator = ({
@@ -74,7 +76,9 @@ export const DailySalesCalculator = ({
   getServicePrice,
   getProcedurePrice,
   getSupplyPrice,
-  totalSales
+  totalSales,
+  procedureDataError,
+  proceduresLoading
 }: DailySalesCalculatorProps) => {
   const navigate = useNavigate();
 
@@ -163,6 +167,8 @@ export const DailySalesCalculator = ({
               onUpdateProcedure={onUpdateProcedure}
               getProcedurePrice={getProcedurePrice}
               calculateProcedureTotal={calculateProcedureTotal}
+              procedureDataError={procedureDataError}
+              proceduresLoading={proceduresLoading}
             />
 
             <SupplySection
