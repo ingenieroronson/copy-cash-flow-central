@@ -10,6 +10,7 @@ import { useServicesState } from './useServicesState';
 import { useSuppliesState } from './useSuppliesState';
 import { useProceduresState } from './useProceduresState';
 import { calculateServiceTotal, calculateSupplyTotal } from '@/utils/salesCalculations';
+import { checkAndPerformServiceRollover } from '@/utils/serviceRollover';
 import { ServiceState } from '../types/sales';
 
 export const useSalesState = () => {
@@ -50,6 +51,15 @@ export const useSalesState = () => {
     setSuppliesDataDirect,
     updateSuppliesFromDb,
   } = useSuppliesState();
+
+  // Check for rollover whenever the selected date changes
+  React.useEffect(() => {
+    const rolledOverServices = checkAndPerformServiceRollover(services);
+    if (rolledOverServices) {
+      console.log('Applying date-based service rollover for date:', selectedDate);
+      setServicesData(rolledOverServices);
+    }
+  }, [selectedDate]); // Trigger when date changes
 
   // Load existing sales data and preload service counters when photocopier or date changes
   React.useEffect(() => {
