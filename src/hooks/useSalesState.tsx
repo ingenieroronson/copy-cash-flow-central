@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from './useAuth';
 import { usePricing } from './usePricing';
@@ -52,15 +51,6 @@ export const useSalesState = () => {
     updateSuppliesFromDb,
   } = useSuppliesState();
 
-  // Check for rollover whenever the selected date changes
-  React.useEffect(() => {
-    const rolledOverServices = checkAndPerformServiceRollover(services);
-    if (rolledOverServices) {
-      console.log('Applying date-based service rollover for date:', selectedDate);
-      setServicesData(rolledOverServices);
-    }
-  }, [selectedDate]); // Trigger when date changes
-
   // Load existing sales data and preload service counters when photocopier or date changes
   React.useEffect(() => {
     const loadExistingSalesAndPreload = async () => {
@@ -71,18 +61,34 @@ export const useSalesState = () => {
         
         if (salesData.services && Object.keys(salesData.services).length > 0) {
           console.log('Found existing sales data for photocopier:', selectedPhotocopierId, salesData.services);
-          setServicesData({ ...services, ...salesData.services });
+          
+          // Check for rollover before setting existing data
+          const rolledOverServices = checkAndPerformServiceRollover(salesData.services as ServiceState);
+          if (rolledOverServices) {
+            console.log('Applying rollover to existing sales data');
+            setServicesData(rolledOverServices);
+          } else {
+            setServicesData({ ...services, ...salesData.services });
+          }
         } else {
           const servicePreload = await loadServiceCounterPreload(selectedPhotocopierId, selectedDate);
           if (servicePreload && Object.keys(servicePreload).length > 0 && 'colorCopies' in servicePreload) {
             const typedPreload = servicePreload as ServiceState;
             console.log('Setting service counter preload from previous day for photocopier:', selectedPhotocopierId, typedPreload);
-            setServicesData({
-              colorCopies: { yesterday: typedPreload.colorCopies?.yesterday || 0, today: 0, errors: 0 },
-              bwCopies: { yesterday: typedPreload.bwCopies?.yesterday || 0, today: 0, errors: 0 },
-              colorPrints: { yesterday: typedPreload.colorPrints?.yesterday || 0, today: 0, errors: 0 },
-              bwPrints: { yesterday: typedPreload.bwPrints?.yesterday || 0, today: 0, errors: 0 }
-            });
+            
+            // Check for rollover before setting preload data
+            const rolledOverServices = checkAndPerformServiceRollover(typedPreload);
+            if (rolledOverServices) {
+              console.log('Applying rollover to preload data');
+              setServicesData(rolledOverServices);
+            } else {
+              setServicesData({
+                colorCopies: { yesterday: typedPreload.colorCopies?.yesterday || 0, today: 0, errors: 0 },
+                bwCopies: { yesterday: typedPreload.bwCopies?.yesterday || 0, today: 0, errors: 0 },
+                colorPrints: { yesterday: typedPreload.colorPrints?.yesterday || 0, today: 0, errors: 0 },
+                bwPrints: { yesterday: typedPreload.bwPrints?.yesterday || 0, today: 0, errors: 0 }
+              });
+            }
           } else {
             console.log('No previous service data found for photocopier:', selectedPhotocopierId, 'setting all values to 0');
             resetServices();

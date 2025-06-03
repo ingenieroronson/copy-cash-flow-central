@@ -5,6 +5,20 @@ import { getTodayInMexicoTimezone } from './dateUtils';
 const ROLLOVER_STORAGE_KEY = 'lastRolloverDate';
 
 /**
+ * Initializes or updates the rollover date tracking
+ * This should be called on every app load
+ */
+export const initializeRolloverTracking = (): void => {
+  const today = getTodayInMexicoTimezone();
+  const lastRolloverDate = localStorage.getItem(ROLLOVER_STORAGE_KEY);
+  
+  console.log('Initializing rollover tracking - Today:', today, 'Last rollover:', lastRolloverDate);
+  
+  // Always update the date to today when the app loads
+  localStorage.setItem(ROLLOVER_STORAGE_KEY, today);
+};
+
+/**
  * Checks if a rollover is needed and performs it if necessary
  * @param currentServices Current service state
  * @returns Updated service state if rollover was performed, null if no rollover needed

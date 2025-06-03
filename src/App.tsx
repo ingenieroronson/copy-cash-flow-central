@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { SettingsLoadingState } from "@/components/SettingsLoadingState";
+import { initializeRolloverTracking } from "@/utils/serviceRollover";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import SalesHistory from "./pages/SalesHistory";
@@ -16,6 +19,12 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user, loading } = useAuth();
+
+  // Initialize rollover tracking on every app load
+  useEffect(() => {
+    console.log('App loaded - initializing rollover tracking');
+    initializeRolloverTracking();
+  }, []);
 
   // Mientras está cargando, mostrar loading
   if (loading) {
