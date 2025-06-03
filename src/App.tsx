@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { SettingsLoadingState } from "@/components/SettingsLoadingState";
-import { initializeRolloverTracking } from "@/utils/serviceRollover";
+import { shouldPerformRollover, markRolloverCompleted } from "@/utils/serviceRollover";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
@@ -20,10 +20,16 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   const { user, loading } = useAuth();
 
-  // Initialize rollover tracking on every app load
+  // Check for rollover need on every app load - but only mark as completed when actually needed
   useEffect(() => {
-    console.log('App loaded - initializing rollover tracking');
-    initializeRolloverTracking();
+    console.log('App loaded - checking rollover status');
+    if (shouldPerformRollover()) {
+      console.log('Rollover will be handled by useSalesState when data loads');
+      // Note: We don't mark as completed here because the actual rollover
+      // will be performed in useSalesState when the service data loads
+    } else {
+      console.log('No rollover needed today');
+    }
   }, []);
 
   // Mientras está cargando, mostrar loading
