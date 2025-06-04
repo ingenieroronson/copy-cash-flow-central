@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "nxp vite build",
+    "build": "npx vite build",
     "start": "serve -s dist -l ${PORT:-3000} --single",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
