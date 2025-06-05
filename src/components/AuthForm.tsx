@@ -54,19 +54,26 @@ export const AuthForm = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Purple gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900"></div>
+      {/* Dark indigo to deep navy gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900"></div>
       
       {/* Animated floating particles */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-40 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-4000"></div>
+        {/* Large floating orbs */}
+        <div className="particle-large particle-1"></div>
+        <div className="particle-large particle-2"></div>
+        <div className="particle-large particle-3"></div>
         
-        {/* Additional floating orbs */}
-        <div className="absolute top-1/4 left-1/3 w-32 h-32 bg-white rounded-full opacity-5 animate-bounce animation-delay-1000"></div>
-        <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-white rounded-full opacity-5 animate-bounce animation-delay-3000"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-16 h-16 bg-white rounded-full opacity-5 animate-bounce animation-delay-5000"></div>
+        {/* Medium floating orbs */}
+        <div className="particle-medium particle-4"></div>
+        <div className="particle-medium particle-5"></div>
+        <div className="particle-medium particle-6"></div>
+        
+        {/* Small floating orbs */}
+        <div className="particle-small particle-7"></div>
+        <div className="particle-small particle-8"></div>
+        <div className="particle-small particle-9"></div>
+        <div className="particle-small particle-10"></div>
       </div>
 
       {/* Glassmorphism card */}
@@ -144,23 +151,154 @@ export const AuthForm = () => {
         </CardContent>
       </Card>
 
-      <style jsx>{`
-        .animation-delay-1000 {
-          animation-delay: 1s;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-3000 {
-          animation-delay: 3s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        .animation-delay-5000 {
-          animation-delay: 5s;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .particle-large {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.1) 70%, transparent 100%);
+            filter: blur(1px);
+          }
+          
+          .particle-medium {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(147, 197, 253, 0.4) 0%, rgba(147, 197, 253, 0.1) 70%, transparent 100%);
+            filter: blur(1px);
+          }
+          
+          .particle-small {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 70%, transparent 100%);
+            filter: blur(0.5px);
+          }
+          
+          .particle-1 {
+            top: 10%;
+            left: 15%;
+            animation: float-1 8s ease-in-out infinite;
+          }
+          
+          .particle-2 {
+            top: 60%;
+            right: 10%;
+            animation: float-2 10s ease-in-out infinite;
+          }
+          
+          .particle-3 {
+            bottom: 15%;
+            left: 35%;
+            animation: float-3 12s ease-in-out infinite;
+          }
+          
+          .particle-4 {
+            top: 25%;
+            right: 30%;
+            animation: float-4 7s ease-in-out infinite;
+          }
+          
+          .particle-5 {
+            bottom: 40%;
+            left: 10%;
+            animation: float-5 9s ease-in-out infinite;
+          }
+          
+          .particle-6 {
+            top: 70%;
+            left: 60%;
+            animation: float-6 11s ease-in-out infinite;
+          }
+          
+          .particle-7 {
+            top: 15%;
+            left: 70%;
+            animation: float-7 6s ease-in-out infinite;
+          }
+          
+          .particle-8 {
+            bottom: 25%;
+            right: 25%;
+            animation: float-8 8s ease-in-out infinite;
+          }
+          
+          .particle-9 {
+            top: 45%;
+            left: 5%;
+            animation: float-9 10s ease-in-out infinite;
+          }
+          
+          .particle-10 {
+            bottom: 10%;
+            right: 45%;
+            animation: float-10 7s ease-in-out infinite;
+          }
+          
+          @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            25% { transform: translate(30px, -20px) scale(1.1); opacity: 0.5; }
+            50% { transform: translate(-20px, 30px) scale(0.9); opacity: 0.4; }
+            75% { transform: translate(20px, 10px) scale(1.05); opacity: 0.6; }
+          }
+          
+          @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            33% { transform: translate(-25px, 20px) scale(1.2); opacity: 0.3; }
+            66% { transform: translate(15px, -25px) scale(0.8); opacity: 0.5; }
+          }
+          
+          @keyframes float-3 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+            50% { transform: translate(40px, -30px) scale(1.3); opacity: 0.4; }
+          }
+          
+          @keyframes float-4 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+            25% { transform: translate(-15px, 25px) scale(0.9); opacity: 0.3; }
+            75% { transform: translate(25px, -15px) scale(1.1); opacity: 0.4; }
+          }
+          
+          @keyframes float-5 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            40% { transform: translate(20px, 30px) scale(1.2); opacity: 0.6; }
+            80% { transform: translate(-30px, -10px) scale(0.8); opacity: 0.4; }
+          }
+          
+          @keyframes float-6 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            60% { transform: translate(-20px, -25px) scale(1.1); opacity: 0.2; }
+          }
+          
+          @keyframes float-7 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            30% { transform: translate(15px, -20px) scale(0.7); opacity: 0.8; }
+            70% { transform: translate(-10px, 15px) scale(1.3); opacity: 0.4; }
+          }
+          
+          @keyframes float-8 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+            50% { transform: translate(-25px, 20px) scale(1.4); opacity: 0.3; }
+          }
+          
+          @keyframes float-9 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+            35% { transform: translate(30px, -15px) scale(0.9); opacity: 0.7; }
+            65% { transform: translate(-15px, 25px) scale(1.2); opacity: 0.3; }
+          }
+          
+          @keyframes float-10 {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            45% { transform: translate(20px, 20px) scale(1.1); opacity: 0.6; }
+            85% { transform: translate(-25px, -20px) scale(0.8); opacity: 0.4; }
+          }
+        `
+      }} />
     </div>
   );
 };
