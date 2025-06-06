@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Filter, RefreshCw, Users } from 'lucide-react';
+import { Calendar, Filter, RefreshCw, Users, Printer } from 'lucide-react';
 import { usePhotocopiers } from '@/hooks/usePhotocopiers';
 import type { ReportFilters } from '@/pages/Reports';
 
@@ -18,6 +18,9 @@ interface ReportsFiltersProps {
 
 export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: ReportsFiltersProps) => {
   const { allPhotocopiers } = usePhotocopiers();
+
+  // Filter out photocopiers with invalid IDs
+  const validPhotocopiers = allPhotocopiers.filter(p => p && p.id && p.id.trim() !== '');
 
   const handlePeriodChange = (period: 'week' | 'month' | 'custom') => {
     let dateRange = filters.dateRange;
@@ -127,10 +130,16 @@ export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: Re
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {allPhotocopiers.map((photocopier) => (
+                <SelectItem value="all">
+                  <div className="flex items-center gap-2">
+                    <Printer className="w-4 h-4" />
+                    Todas
+                  </div>
+                </SelectItem>
+                {validPhotocopiers.map((photocopier) => (
                   <SelectItem key={photocopier.id} value={photocopier.id}>
                     <div className="flex items-center gap-2 w-full">
+                      <Printer className="w-4 h-4" />
                       <span className="font-medium">{photocopier.nombre || 'Sin nombre'}</span>
                       {photocopier.isShared && (
                         <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
@@ -141,6 +150,11 @@ export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: Re
                     </div>
                   </SelectItem>
                 ))}
+                {validPhotocopiers.length === 0 && (
+                  <SelectItem value="" disabled>
+                    No hay fotocopiadoras disponibles
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
