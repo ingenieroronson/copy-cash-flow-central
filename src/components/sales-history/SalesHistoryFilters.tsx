@@ -16,10 +16,13 @@ export const SalesHistoryFilters = ({
   onPhotocopierChange,
   loading
 }: SalesHistoryFiltersProps) => {
+  // Filter out photocopiers with invalid IDs
+  const validPhotocopiers = allPhotocopiers.filter(p => p && p.id && p.id.trim() !== '');
+
   return (
     <div className="mb-6">
       <PhotocopierSelector
-        photocopiers={allPhotocopiers}
+        photocopiers={validPhotocopiers}
         selectedPhotocopierId={selectedPhotocopierId}
         onPhotocopierChange={onPhotocopierChange}
         loading={loading}

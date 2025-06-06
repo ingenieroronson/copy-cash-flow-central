@@ -82,6 +82,9 @@ export const DailySalesCalculator = ({
 }: DailySalesCalculatorProps) => {
   const navigate = useNavigate();
 
+  // Filter out photocopiers with invalid IDs
+  const validPhotocopiers = photocopiers.filter(p => p && p.id && p.id.trim() !== '');
+
   const calculateServiceTotal = (service: any, price: number) => {
     const difference = Math.max(0, service.today - (service.errors || 0) - service.yesterday);
     return difference * price;
@@ -132,7 +135,7 @@ export const DailySalesCalculator = ({
           <div className="space-y-6 md:space-y-8">
             <div className="px-2">
               <PhotocopierSelector
-                photocopiers={photocopiers}
+                photocopiers={validPhotocopiers}
                 selectedPhotocopierId={selectedPhotocopierId}
                 onPhotocopierChange={onPhotocopierChange}
                 loading={photocopiersLoading}
