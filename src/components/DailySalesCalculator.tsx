@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Settings } from 'lucide-react';
@@ -129,14 +128,15 @@ export const DailySalesCalculator = ({
             </div>
           </div>
 
-         <div className="px-2">
-            <PhotocopierSelector
-              items={photocopiers}
-              selectedPhotocopierId={selectedPhotocopierId}
-              onPhotocopierChange={onPhotocopierChange}
-              loading={photocopiersLoading}
-            />
-          </div>
+          <div className="space-y-6 md:space-y-8">
+            <div className="px-2">
+              <PhotocopierSelector
+                items={photocopiers}
+                selectedPhotocopierId={selectedPhotocopierId}
+                onPhotocopierChange={onPhotocopierChange}
+                loading={photocopiersLoading}
+              />
+            </div>
 
             <div className="px-2">
               <DateSelector
