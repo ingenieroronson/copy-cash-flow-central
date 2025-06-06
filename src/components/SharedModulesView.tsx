@@ -56,20 +56,9 @@ export const SharedModulesView = () => {
     }
     
     try {
-      console.log('Loading shared modules with me...');
       const data = await getSharedWithMe();
       console.log('Shared with me data loaded:', data);
-      
-      // Filter to ensure we only show active, non-expired access
-      const activeData = data.filter((item: any) => {
-        const isActive = item.is_active;
-        const isNotExpired = !item.expires_at || new Date(item.expires_at) > new Date();
-        console.log(`Access ${item.id}: active=${isActive}, notExpired=${isNotExpired}`);
-        return isActive && isNotExpired;
-      });
-      
-      console.log('Active shared access:', activeData);
-      setSharedWithMe(activeData as SharedAccessRecord[]);
+      setSharedWithMe(data as SharedAccessRecord[]);
     } catch (error) {
       console.error('Error loading shared with me:', error);
     } finally {
@@ -102,8 +91,6 @@ export const SharedModulesView = () => {
     acc[fotocopiadoraId].modules.push(access);
     return acc;
   }, {} as Record<string, GroupedSharedModule>);
-
-  console.log('Grouped by photocopier:', groupedByPhotocopier);
 
   if (loading) {
     return (
@@ -164,9 +151,7 @@ export const SharedModulesView = () => {
             <h3 className="text-sm font-medium text-gray-700">Accesos Recibidos</h3>
             <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-xs text-blue-700 font-medium">
-                {Object.keys(groupedByPhotocopier).length} fotocopiadora{Object.keys(groupedByPhotocopier).length !== 1 ? 's' : ''} compartida{Object.keys(groupedByPhotocopier).length !== 1 ? 's' : ''}
-              </span>
+              <span className="text-xs text-blue-700 font-medium">Acceso Compartido</span>
             </div>
           </div>
           <SharedModulesTable groupedByPhotocopier={groupedByPhotocopier} />
