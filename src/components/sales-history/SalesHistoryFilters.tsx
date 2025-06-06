@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { PhotocopierSelector } from '@/components/PhotocopierSelector';
 import { Photocopier } from '@/hooks/usePhotocopiers';
@@ -22,11 +21,13 @@ export const SalesHistoryFilters = ({
   return (
     <div className="mb-6">
       <PhotocopierSelector
+        items={validPhotocopiers} // <<< LA MISMA LÍNEA IMPORTANTE QUE FALTABA AQUÍ
         value={selectedPhotocopierId}
         onValueChange={onPhotocopierChange}
         label="Fotocopiadora"
         placeholder="Selecciona una fotocopiadora"
         includeAll={true}
+        loading={loading}
       />
     </div>
   );
