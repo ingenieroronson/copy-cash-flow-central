@@ -19,9 +19,6 @@ interface ReportsFiltersProps {
 export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: ReportsFiltersProps) => {
   const { allPhotocopiers } = usePhotocopiers();
 
-  // Filter out photocopiers with invalid IDs
-  const validPhotocopiers = allPhotocopiers.filter(p => p && p.id && p.id.trim() !== '');
-
   const handlePeriodChange = (period: 'week' | 'month' | 'custom') => {
     let dateRange = filters.dateRange;
     
@@ -131,7 +128,7 @@ export const ReportsFilters = ({ filters, onFiltersChange, loading = false }: Re
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
-                {validPhotocopiers.map((photocopier) => (
+                {allPhotocopiers.map((photocopier) => (
                   <SelectItem key={photocopier.id} value={photocopier.id}>
                     <div className="flex items-center gap-2 w-full">
                       <span className="font-medium">{photocopier.nombre || 'Sin nombre'}</span>
