@@ -77,6 +77,8 @@ export const useSharedAccess = () => {
     if (!user) return [];
 
     try {
+      console.log('Getting shared access for photocopier:', fotocopiadoraId);
+      
       const { data, error } = await supabase
         .from('shared_access')
         .select(`
@@ -104,6 +106,8 @@ export const useSharedAccess = () => {
     if (!user) throw new Error('User not authenticated');
 
     try {
+      console.log('Revoking access for:', sharedAccessId);
+      
       const { error } = await supabase
         .from('shared_access')
         .update({ is_active: false })
@@ -133,9 +137,14 @@ export const useSharedAccess = () => {
   };
 
   const getSharedWithMe = async () => {
-    if (!user) return [];
+    if (!user) {
+      console.log('No user found');
+      return [];
+    }
 
     try {
+      console.log('Getting shared with me for user:', user.id);
+      
       const { data, error } = await supabase
         .from('shared_access')
         .select(`
@@ -152,8 +161,15 @@ export const useSharedAccess = () => {
         throw error;
       }
       
-      console.log('Shared with me data:', data);
-      return data || [];
+      console.log('Raw shared with me data:', data);
+      
+      // Additional filtering to ensure data integrity
+      const validData = (data || []).filter(item => 
+        item.owner && item.fotocopiadora && item.is_active
+      );
+      
+      console.log('Filtered shared with me data:', validData);
+      return validData;
     } catch (error) {
       console.error('Error getting shared with me:', error);
       return [];

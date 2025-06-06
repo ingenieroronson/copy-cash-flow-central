@@ -1,107 +1,103 @@
-
 import React from 'react';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Printer, Users } from 'lucide-react';
+import { usePhotocopiers } from '@/hooks/usePhotocopiers';
 import { Badge } from '@/components/ui/badge';
-import { Photocopier } from '@/hooks/usePhotocopiers';
+import { Users, Printer } from 'lucide-react';
 
 interface PhotocopierSelectorProps {
-  photocopiers: Photocopier[];
-  selectedPhotocopierId: string;
-  onPhotocopierChange: (photocopierId: string) => void;
-  loading?: boolean;
+  value?: string;
+  onValueChange: (value: string) => void;
+  label?: string;
+  placeholder?: string;
+  includeAll?: boolean;
+  moduleFilter?: string; // Filter photocopiers by module access
 }
 
 export const PhotocopierSelector = ({ 
-  photocopiers, 
-  selectedPhotocopierId, 
-  onPhotocopierChange,
-  loading = false 
+  value, 
+  onValueChange, 
+  label = "Fotocopiadora",
+  placeholder = "Selecciona una fotocopiadora",
+  includeAll = false,
+  moduleFilter
 }: PhotocopierSelectorProps) => {
+  const { allPhotocopiers, loading, hasModuleAccess } = usePhotocopiers();
+
+  // ***** LA CORRECCIÓN CLAVE ESTÁ AQUÍ *****
+  // 1. Primero, creamos una lista segura, filtrando CUALQUIER fotocopiadora con un ID inválido.
+  const validPhotocopiers = allPhotocopiers.filter(p => p && p.id && p.id.trim() !== '');
+
+  // 2. Luego, sobre esa lista YA LIMPIA, aplicamos el filtro del módulo si es necesario.
+  const availablePhotocopiers = validPhotocopiers.filter(photocopier => {
+    if (!moduleFilter) return true; // Si no hay filtro de módulo, se muestran todas las válidas.
+    return hasModuleAccess(photocopier.id, moduleFilter);
+  });
+  // ***** FIN DE LA CORRECCIÓN *****
+
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center gap-3">
-          <Printer className="w-5 h-5 text-orange-500" />
-          <span className="text-gray-600">Cargando fotocopiadoras...</span>
-        </div>
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <div className="h-10 bg-gray-100 rounded-md animate-pulse" />
       </div>
     );
   }
-
-  if (photocopiers.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center gap-3">
-          <Printer className="w-5 h-5 text-orange-500" />
-          <span className="text-gray-600">No hay fotocopiadoras configuradas</span>
-        </div>
-      </div>
-    );
-  }
-
-  const selectedPhotocopier = photocopiers.find(p => p.id === selectedPhotocopierId);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <Printer className="w-5 h-5 text-orange-500" />
-          {selectedPhotocopier?.isShared && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Select value={value} onValueChange={onValueChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {includeAll && (
+            <SelectItem value="all">
+              <div className="flex items-center gap-2">
+                <Printer className="w-4 h-4" />
+                Todas las fotocopiadoras
+              </div>
+            </SelectItem>
           )}
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <label className="text-sm font-medium text-gray-700">
-              Seleccionar Fotocopiadora
-            </label>
-            {selectedPhotocopier?.isShared && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                <Users className="w-3 h-3 mr-1" />
-                Compartida
-              </Badge>
-            )}
-          </div>
-          <Select value={selectedPhotocopierId} onValueChange={onPhotocopierChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecciona una fotocopiadora" />
-            </SelectTrigger>
-            <SelectContent>
-              {photocopiers.map((photocopier) => (
-                <SelectItem key={photocopier.id} value={photocopier.id}>
-                  <div className="flex items-center gap-2 w-full">
-                    <div className="flex flex-col flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{photocopier.nombre || 'Sin nombre'}</span>
-                        {photocopier.isShared && (
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                            <Users className="w-2 h-2 mr-1" />
-                            Compartida
-                          </Badge>
-                        )}
-                      </div>
-                      {photocopier.ubicacion && (
-                        <span className="text-sm text-gray-500">{photocopier.ubicacion}</span>
-                      )}
-                      {photocopier.isShared && photocopier.ownerEmail && (
-                        <span className="text-xs text-blue-600">Por: {photocopier.ownerEmail}</span>
-                      )}
-                    </div>
+          {availablePhotocopiers.map((photocopier) => (
+            <SelectItem key={photocopier.id} value={photocopier.id}>
+              <div className="flex items-center gap-2 w-full">
+                <Printer className="w-4 h-4" />
+                <span className="flex-1">
+                  {photocopier.nombre || 'Sin nombre'}
+                  {photocopier.ubicacion && (
+                    <span className="text-gray-500 text-sm ml-1">
+                      - {photocopier.ubicacion}
+                    </span>
+                  )}
+                </span>
+                {photocopier.isShared && (
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                      <Users className="w-3 h-3 mr-1" />
+                      Compartida
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      ({photocopier.ownerName || photocopier.ownerEmail})
+                    </span>
                   </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {selectedPhotocopier?.isShared && (
-            <div className="mt-2 p-2 bg-blue-50 rounded-md">
-              <p className="text-xs text-blue-700">
-                <strong>Módulos compartidos:</strong> {selectedPhotocopier.sharedModules?.join(', ')}
-              </p>
-            </div>
+                )}
+              </div>
+            </SelectItem>
+          ))}
+          {availablePhotocopiers.length === 0 && !includeAll && (
+            <SelectItem value="no-options" disabled>
+              No hay fotocopiadoras disponibles
+            </SelectItem>
           )}
-        </div>
-      </div>
+        </SelectContent>
+      </Select>
+      {moduleFilter && (
+        <p className="text-xs text-gray-500">
+          Mostrando solo fotocopiadoras con acceso al módulo de {moduleFilter}
+        </p>
+      )}
     </div>
   );
 };

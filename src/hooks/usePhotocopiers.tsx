@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -12,6 +11,7 @@ export interface Photocopier {
   isShared?: boolean;
   sharedModules?: string[];
   ownerEmail?: string;
+  ownerName?: string;
 }
 
 export const usePhotocopiers = () => {
@@ -69,36 +69,48 @@ export const usePhotocopiers = () => {
           .single();
 
         if (createError) throw createError;
-        ownedPhotocopiers = [newPhotocopier];
+        ownedPhotocopiers = newPhotocopier ? [newPhotocopier] : [];
       }
 
-      // Load shared photocopiers with full details
+      // Load shared photocopiers with improved query
       const { data: sharedData, error: sharedError } = await supabase
         .from('shared_access')
         .select(`
           fotocopiadora_id,
           module_type,
+          expires_at,
+          is_active,
+          created_at,
           fotocopiadora:fotocopiadoras(id, nombre, ubicacion, usuario_id),
-          owner:usuarios!shared_access_owner_id_fkey(email, nombre)
+          owner:usuarios!shared_access_owner_id_fkey(id, email, nombre)
         `)
         .eq('shared_with_id', user.id)
         .eq('is_active', true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-      if (sharedError) throw sharedError;
+      if (sharedError) {
+        console.error('Error loading shared photocopiers:', sharedError);
+        throw sharedError;
+      }
 
       // Group shared photocopiers by fotocopiadora_id and include all available modules
       const sharedPhotocopiersMap = (sharedData || []).reduce((acc, item) => {
-        const id = item.fotocopiadora_id;
-        if (!acc[id]) {
-          acc[id] = {
-            ...item.fotocopiadora,
-            isShared: true,
-            sharedModules: [],
-            ownerEmail: item.owner?.email,
-          };
+        // Condition to prevent creating phantom objects
+        if (item.fotocopiadora && item.fotocopiadora.id) {
+          const id = item.fotocopiadora.id;
+          if (!acc[id]) {
+            acc[id] = {
+              ...item.fotocopiadora,
+              isShared: true,
+              sharedModules: [],
+              ownerEmail: item.owner?.email,
+              ownerName: item.owner?.nombre,
+            };
+          }
+          if (acc[id] && item.module_type) {
+            acc[id].sharedModules!.push(item.module_type);
+          }
         }
-        acc[id].sharedModules.push(item.module_type);
         return acc;
       }, {} as Record<string, Photocopier>);
 
@@ -110,14 +122,14 @@ export const usePhotocopiers = () => {
         ...sharedPhotocopiers,
       ];
 
-      console.log('Loaded photocopiers:', {
-        owned: ownedPhotocopiers.length,
-        shared: sharedPhotocopiers.length,
-        total: allPhotocopyMachines.length
-      });
+      // ***** INICIO DE LA CORRECCIÓN FINAL *****
+      // Filtro de seguridad definitivo para eliminar cualquier dato corrupto antes de guardarlo.
+      const finalCleanData = allPhotocopyMachines.filter(p => p && p.id);
+      // ***** FIN DE LA CORRECCIÓN FINAL *****
 
       setPhotocopiers(ownedPhotocopiers);
-      setAllPhotocopiers(allPhotocopyMachines);
+      setAllPhotocopiers(finalCleanData); // Usamos la data limpia
+
     } catch (error) {
       console.error('Error loading photocopiers:', error);
       toast({

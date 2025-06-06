@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Settings } from 'lucide-react';
@@ -37,7 +36,6 @@ interface DailySalesCalculatorProps {
   suppliesData: Record<string, { startStock: number; endStock: number }>;
   dbSupplies: Supply[];
   dbProcedures: Procedure[];
-  photocopiers: Photocopier[];
   selectedPhotocopierId: string;
   selectedDate: string;
   onUpdateService: (serviceId: string, field: string, value: number) => void;
@@ -62,7 +60,6 @@ export const DailySalesCalculator = ({
   suppliesData,
   dbSupplies,
   dbProcedures,
-  photocopiers,
   selectedPhotocopierId,
   selectedDate,
   onUpdateService,
@@ -132,10 +129,10 @@ export const DailySalesCalculator = ({
           <div className="space-y-6 md:space-y-8">
             <div className="px-2">
               <PhotocopierSelector
-                photocopiers={photocopiers}
-                selectedPhotocopierId={selectedPhotocopierId}
-                onPhotocopierChange={onPhotocopierChange}
-                loading={photocopiersLoading}
+                value={selectedPhotocopierId}
+                onValueChange={onPhotocopierChange}
+                label="Fotocopiadora"
+                placeholder="Selecciona una fotocopiadora"
               />
             </div>
 
