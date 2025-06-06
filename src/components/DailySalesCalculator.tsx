@@ -129,15 +129,14 @@ export const DailySalesCalculator = ({
             </div>
           </div>
 
-          <div className="space-y-6 md:space-y-8">
-            <div className="px-2">
-              <PhotocopierSelector
-                photocopiers={photocopiers}
-                selectedPhotocopierId={selectedPhotocopierId}
-                onPhotocopierChange={onPhotocopierChange}
-                loading={photocopiersLoading}
-              />
-            </div>
+         <div className="px-2">
+            <PhotocopierSelector
+              items={photocopiers}
+              selectedPhotocopierId={selectedPhotocopierId}
+              onPhotocopierChange={onPhotocopierChange}
+              loading={photocopiersLoading}
+            />
+          </div>
 
             <div className="px-2">
               <DateSelector
