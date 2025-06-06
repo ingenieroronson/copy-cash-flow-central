@@ -19,7 +19,7 @@ export const SalesHistoryFilters = ({
   return (
     <div className="mb-6">
       <PhotocopierSelector
-        photocopiers={allPhotocopiers}
+        items={allPhotocopiers}
         selectedPhotocopierId={selectedPhotocopierId}
         onPhotocopierChange={onPhotocopierChange}
         loading={loading}
