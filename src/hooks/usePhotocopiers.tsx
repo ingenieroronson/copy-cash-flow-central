@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -70,7 +69,7 @@ export const usePhotocopiers = () => {
           .single();
 
         if (createError) throw createError;
-        ownedPhotocopiers = [newPhotocopier];
+        ownedPhotocopiers = newPhotocopier ? [newPhotocopier] : [];
       }
 
       // Load shared photocopiers with improved query
@@ -94,29 +93,28 @@ export const usePhotocopiers = () => {
         throw sharedError;
       }
 
-      console.log('Raw shared data:', sharedData);
-
       // Group shared photocopiers by fotocopiadora_id and include all available modules
       const sharedPhotocopiersMap = (sharedData || []).reduce((acc, item) => {
-        const id = item.fotocopiadora_id;
-        if (!acc[id] && item.fotocopiadora) {
-          acc[id] = {
-            ...item.fotocopiadora,
-            isShared: true,
-            sharedModules: [],
-            ownerEmail: item.owner?.email,
-            ownerName: item.owner?.nombre,
-          };
-        }
-        if (acc[id]) {
-          acc[id].sharedModules.push(item.module_type);
+        // Condition to prevent creating phantom objects
+        if (item.fotocopiadora && item.fotocopiadora.id) {
+          const id = item.fotocopiadora.id;
+          if (!acc[id]) {
+            acc[id] = {
+              ...item.fotocopiadora,
+              isShared: true,
+              sharedModules: [],
+              ownerEmail: item.owner?.email,
+              ownerName: item.owner?.nombre,
+            };
+          }
+          if (acc[id] && item.module_type) {
+            acc[id].sharedModules!.push(item.module_type);
+          }
         }
         return acc;
       }, {} as Record<string, Photocopier>);
 
       const sharedPhotocopiers = Object.values(sharedPhotocopiersMap);
-
-      console.log('Processed shared photocopiers:', sharedPhotocopiers);
 
       // Combine owned and shared photocopiers
       const allPhotocopyMachines = [
@@ -124,15 +122,14 @@ export const usePhotocopiers = () => {
         ...sharedPhotocopiers,
       ];
 
-      console.log('Final photocopiers data:', {
-        owned: ownedPhotocopiers.length,
-        shared: sharedPhotocopiers.length,
-        total: allPhotocopyMachines.length,
-        sharedDetails: sharedPhotocopiers
-      });
+      // ***** INICIO DE LA CORRECCIÓN FINAL *****
+      // Filtro de seguridad definitivo para eliminar cualquier dato corrupto antes de guardarlo.
+      const finalCleanData = allPhotocopyMachines.filter(p => p && p.id);
+      // ***** FIN DE LA CORRECCIÓN FINAL *****
 
       setPhotocopiers(ownedPhotocopiers);
-      setAllPhotocopiers(allPhotocopyMachines);
+      setAllPhotocopiers(finalCleanData); // Usamos la data limpia
+
     } catch (error) {
       console.error('Error loading photocopiers:', error);
       toast({
