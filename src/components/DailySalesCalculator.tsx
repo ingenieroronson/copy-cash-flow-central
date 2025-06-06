@@ -134,10 +134,12 @@ export const DailySalesCalculator = ({
           <div className="space-y-6 md:space-y-8">
             <div className="px-2">
               <PhotocopierSelector
+                items={validPhotocopiers} // <<< LA LÍNEA MÁS IMPORTANTE QUE FALTABA
                 value={selectedPhotocopierId}
                 onValueChange={onPhotocopierChange}
                 label="Fotocopiadora"
                 placeholder="Selecciona una fotocopiadora"
+                loading={photocopiersLoading}
               />
             </div>
 
