@@ -12,6 +12,7 @@ export interface Photocopier {
   isShared?: boolean;
   sharedModules?: string[];
   ownerEmail?: string;
+  ownerName?: string;
 }
 
 export const usePhotocopiers = () => {
@@ -72,37 +73,50 @@ export const usePhotocopiers = () => {
         ownedPhotocopiers = [newPhotocopier];
       }
 
-      // Load shared photocopiers with full details
+      // Load shared photocopiers with improved query
       const { data: sharedData, error: sharedError } = await supabase
         .from('shared_access')
         .select(`
           fotocopiadora_id,
           module_type,
+          expires_at,
+          is_active,
+          created_at,
           fotocopiadora:fotocopiadoras(id, nombre, ubicacion, usuario_id),
-          owner:usuarios!shared_access_owner_id_fkey(email, nombre)
+          owner:usuarios!shared_access_owner_id_fkey(id, email, nombre)
         `)
         .eq('shared_with_id', user.id)
         .eq('is_active', true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-      if (sharedError) throw sharedError;
+      if (sharedError) {
+        console.error('Error loading shared photocopiers:', sharedError);
+        throw sharedError;
+      }
+
+      console.log('Raw shared data:', sharedData);
 
       // Group shared photocopiers by fotocopiadora_id and include all available modules
       const sharedPhotocopiersMap = (sharedData || []).reduce((acc, item) => {
         const id = item.fotocopiadora_id;
-        if (!acc[id]) {
+        if (!acc[id] && item.fotocopiadora) {
           acc[id] = {
             ...item.fotocopiadora,
             isShared: true,
             sharedModules: [],
             ownerEmail: item.owner?.email,
+            ownerName: item.owner?.nombre,
           };
         }
-        acc[id].sharedModules.push(item.module_type);
+        if (acc[id]) {
+          acc[id].sharedModules.push(item.module_type);
+        }
         return acc;
       }, {} as Record<string, Photocopier>);
 
       const sharedPhotocopiers = Object.values(sharedPhotocopiersMap);
+
+      console.log('Processed shared photocopiers:', sharedPhotocopiers);
 
       // Combine owned and shared photocopiers
       const allPhotocopyMachines = [
@@ -110,10 +124,11 @@ export const usePhotocopiers = () => {
         ...sharedPhotocopiers,
       ];
 
-      console.log('Loaded photocopiers:', {
+      console.log('Final photocopiers data:', {
         owned: ownedPhotocopiers.length,
         shared: sharedPhotocopiers.length,
-        total: allPhotocopyMachines.length
+        total: allPhotocopyMachines.length,
+        sharedDetails: sharedPhotocopiers
       });
 
       setPhotocopiers(ownedPhotocopiers);
