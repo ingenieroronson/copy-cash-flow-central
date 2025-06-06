@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,11 +24,16 @@ export const PhotocopierSelector = ({
 }: PhotocopierSelectorProps) => {
   const { allPhotocopiers, loading, hasModuleAccess } = usePhotocopiers();
 
-  // Filter photocopiers based on module access if moduleFilter is provided
-  const availablePhotocopiers = allPhotocopiers.filter(photocopier => {
-    if (!moduleFilter) return true;
+  // ***** LA CORRECCIÓN CLAVE ESTÁ AQUÍ *****
+  // 1. Primero, creamos una lista segura, filtrando CUALQUIER fotocopiadora con un ID inválido.
+  const validPhotocopiers = allPhotocopiers.filter(p => p && p.id && p.id.trim() !== '');
+
+  // 2. Luego, sobre esa lista YA LIMPIA, aplicamos el filtro del módulo si es necesario.
+  const availablePhotocopiers = validPhotocopiers.filter(photocopier => {
+    if (!moduleFilter) return true; // Si no hay filtro de módulo, se muestran todas las válidas.
     return hasModuleAccess(photocopier.id, moduleFilter);
   });
+  // ***** FIN DE LA CORRECCIÓN *****
 
   if (loading) {
     return (
@@ -82,8 +86,8 @@ export const PhotocopierSelector = ({
               </div>
             </SelectItem>
           ))}
-          {availablePhotocopiers.length === 0 && (
-            <SelectItem value="" disabled>
+          {availablePhotocopiers.length === 0 && !includeAll && (
+            <SelectItem value="no-options" disabled>
               No hay fotocopiadoras disponibles
             </SelectItem>
           )}
