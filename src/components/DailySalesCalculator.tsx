@@ -36,7 +36,6 @@ interface DailySalesCalculatorProps {
   suppliesData: Record<string, { startStock: number; endStock: number }>;
   dbSupplies: Supply[];
   dbProcedures: Procedure[];
-  photocopiers: Photocopier[];
   selectedPhotocopierId: string;
   selectedDate: string;
   onUpdateService: (serviceId: string, field: string, value: number) => void;
@@ -61,7 +60,6 @@ export const DailySalesCalculator = ({
   suppliesData,
   dbSupplies,
   dbProcedures,
-  photocopiers,
   selectedPhotocopierId,
   selectedDate,
   onUpdateService,
@@ -80,9 +78,6 @@ export const DailySalesCalculator = ({
   proceduresLoading
 }: DailySalesCalculatorProps) => {
   const navigate = useNavigate();
-
-  // Filter out photocopiers with invalid IDs
-  const validPhotocopiers = photocopiers.filter(p => p && p.id && p.id.trim() !== '');
 
   const calculateServiceTotal = (service: any, price: number) => {
     const difference = Math.max(0, service.today - (service.errors || 0) - service.yesterday);
@@ -134,12 +129,10 @@ export const DailySalesCalculator = ({
           <div className="space-y-6 md:space-y-8">
             <div className="px-2">
               <PhotocopierSelector
-                items={validPhotocopiers} // <<< LA LÍNEA MÁS IMPORTANTE QUE FALTABA
                 value={selectedPhotocopierId}
                 onValueChange={onPhotocopierChange}
                 label="Fotocopiadora"
                 placeholder="Selecciona una fotocopiadora"
-                loading={photocopiersLoading}
               />
             </div>
 
